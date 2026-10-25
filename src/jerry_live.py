@@ -369,6 +369,9 @@ def schedule_flags(con, team_name, commence):
     return b2b, three_in_four
 
 
+NHL_ANCHOR = 0.35   # weight on the model vs the market price until NHL has 150 graded bets
+
+
 def _gsax60(gsax, ice_seconds, prior_hours=25.0, cap=0.35):
     """Goals saved above expected per 60, shrunk toward 0 (about 25 hours of average goaltending) and capped."""
     return float(np.clip(float(gsax) / (float(ice_seconds) / 3600 + prior_hours), -cap, cap))
@@ -389,7 +392,7 @@ def refresh_nhl(con, now):
     lg_pp = (pp.xGoalsFor / hrs(pp)).mean(); lg_pk = (pk.xGoalsAgainst / hrs(pk)).mean()
     pp_minutes = 4.5  # expected PP time per team per game, league average
     confirmed = dailyfaceoff_goalies(); confirmed.update(goalie_overrides(con))
-    out = []
+    out = []; pend = []
     for _, ev in quotes.drop_duplicates("event_id").iterrows():
         h, a = NHL_TEAMS.get(ev.home), NHL_TEAMS.get(ev.away)
         if not h or not a or h not in t5.index or a not in t5.index:
@@ -426,6 +429,28 @@ def refresh_nhl(con, now):
         lam_h += (pph - base_pp); lam_a += (ppa - base_pp)
         if h34: lam_h *= 0.98
         if a34: lam_a *= 0.98
+        pend.append((ev, h, a, lam_h, lam_a, gh_txt, ga_txt, hb2b, ab2b))
+    # slate calibration: scale every game so the model's average total matches the market's average total
+    # (matched on Under probability, not raw goals: a 6.5 line at even money means about 6.1 expected goals)
+    cal = []
+    for ev, h, a, lam_h, lam_a, *_ in pend:
+        ol, op = pinnacle_line(quotes, ev.event_id, "totals", "Over"); _ul, up = pinnacle_line(quotes, ev.event_id, "totals", "Under")
+        if ol is not None and op and up:
+            cal.append((lam_h, lam_a, float(ol), fair_two_way(up, op)))
+    k = 1.0
+    if cal:
+        def gap(kk):
+            return np.mean([JM.nhl_summarize(lh * kk, la * kk, ln)["p_under"] - fu for lh, la, ln, fu in cal])
+        lo, hi = 0.80, 1.25
+        if gap(lo) <= 0: k = lo
+        elif gap(hi) >= 0: k = hi
+        else:
+            for _ in range(30):
+                mid = (lo + hi) / 2
+                lo, hi = (mid, hi) if gap(mid) > 0 else (lo, mid)
+            k = (lo + hi) / 2
+    for ev, h, a, lam_h, lam_a, gh_txt, ga_txt, hb2b, ab2b in pend:
+        lam_h *= k; lam_a *= k
         oline, oprice = pinnacle_line(quotes, ev.event_id, "totals", "Over"); uline, uprice = pinnacle_line(quotes, ev.event_id, "totals", "Under")
         hml_l, hmlp = pinnacle_line(quotes, ev.event_id, "h2h", ev.home); _, amlp = pinnacle_line(quotes, ev.event_id, "h2h", ev.away)
         hpl, hplp = pinnacle_line(quotes, ev.event_id, "spreads", ev.home); _, aplp = pinnacle_line(quotes, ev.event_id, "spreads", ev.away)
@@ -455,13 +480,29 @@ def refresh_nhl(con, now):
             out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.away, line=-float(hpl), model_prob=1 - p, fair_prob=1 - f, edge=-e, call="see home row"))
         # sanity gate: real NHL games sit in this range; anything outside means bad inputs, not an edge
         bad = not (4.5 <= lam_h + lam_a <= 7.5) or abs(lam_h - lam_a) > 1.6
-        for r in out[n0:]:
-            if r["call"].startswith("see"):
-                continue
+        # market anchor: start from Pinnacle's fair price and move only NHL_ANCHOR of the way toward the model
+        for i in range(n0, len(out), 2):
+            r, pair = out[i], out[i + 1]
+            raw = r["model_prob"]
+            r["model_prob"] = r["fair_prob"] + NHL_ANCHOR * (raw - r["fair_prob"])
+            r["edge"] = r["model_prob"] - r["fair_prob"]
+            pair["model_prob"] = 1 - r["model_prob"]; pair["edge"] = -r["edge"]
+            e = r["edge"]
+            if r["market"] == "totals":
+                side = "Under" if e > 0 else "Over"
+            else:
+                side = ev.home if e > 0 else ev.away
             if bad:
                 r["call"] = "Sit (sanity check failed)"
-            elif abs(r["edge"]) > 0.12:
+            elif abs(e) > 0.06:
                 r["call"] = "Sit (edge too large to trust)"
+            elif r["market"] == "totals" and unconf:
+                r["call"] = "Sit (goalie unconfirmed)"
+            elif abs(e) >= 0.03:
+                r["call"] = f"{call_for(e, 0.03, 0.05, cap_lean=True)} {side}"
+            else:
+                r["call"] = "Sit"
+            r["note"] = (r.get("note") or "") + f"; raw model {raw:.1%}, anchored {NHL_ANCHOR:.0%} to market, slate scale {k:.2f}"
     write_probs(con, out, now)
     return out
 
