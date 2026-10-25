@@ -1,5 +1,5 @@
-JERRY DESK SUMMARY  (generated 2026-10-25T16:27:29+00:00)
-credits left 2387 | budget/day 315 | spent today 105 | reset in 6.31d | backfill days {}
+JERRY DESK SUMMARY  (generated 2026-10-25T16:37:30+00:00)
+credits left 2385 | budget/day 315 | spent today 107 | reset in 6.31d | backfill days {}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
@@ -12,15 +12,15 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 233 rows
-all: {"n": 233, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+all: {"n": 233, "closed": 25, "clv_pp_avg": 0.8, "beat_close_pct": 0.52, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NBA props (price edge): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL moneyline (model): {"n": 15, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NFL moneyline (model): {"n": 15, "closed": 1, "clv_pp_avg": 0.37, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NFL moneyline (price edge): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL props (model): {"n": 136, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL props (price edge): {"n": 31, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL spread (model): {"n": 22, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NFL props (model): {"n": 136, "closed": 15, "clv_pp_avg": -0.14, "beat_close_pct": 0.267, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NFL props (price edge): {"n": 31, "closed": 7, "clv_pp_avg": 3.09, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NFL spread (model): {"n": 22, "closed": 1, "clv_pp_avg": 0.51, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NFL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL total (model): {"n": 24, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NFL total (model): {"n": 24, "closed": 1, "clv_pp_avg": -0.48, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 NFL 2026-10-25T17:00Z Cleveland Browns @ Tennessee Titans | player_anytime_td KC Concepcion Yes  | fanatics 4.6 vs fair 23.4% | EV +7.9%
@@ -113,7 +113,7 @@ NFL 2026-10-25T17:00Z San Francisco 49ers @ Atlanta Falcons | player_reception_y
 NFL 2026-10-25T17:00Z New York Giants @ Houston Texans | player_anytime_td Devin Singletary Yes  | model 18.7% fair 14.3% edge +4.4 | Lean Yes | proj 0.3 (sd 0.0) from last 3 games x opp factor 1.00; raw model 26.9%, anchored 35%
 NFL 2026-10-25T20:25Z Los Angeles Rams @ Las Vegas Raiders | player_receptions Tre Tucker Over 3.5 | model 50.0% fair 45.6% edge +4.4 | Lean Over 3.5 | proj 4.0 (sd 2.2) from last 6 games x opp factor 0.94; raw model 58.2%, anchored 35%
 NFL 2026-10-25T17:00Z Tampa Bay Buccaneers @ Carolina Panthers | player_reception_yds Ted Hurst III Over 39.5 | model 45.6% fair 50.0% edge -4.4 | Lean Under 39.5 | proj 34.0 (sd 17.0) from last 5 games x opp factor 1.00; raw model 37.4%, anchored 35%
-(models last refreshed: 2026-10-25T15:36:03+00:00 {"NFL": 156, "NFL_PROPS": 455, "NHL": 0, "UFC": 0, "PRICE": 28, "MLB": 0})
+(models last refreshed: 2026-10-25T16:36:07+00:00 {"NFL": 156, "NFL_PROPS": 455, "NHL": 0, "UFC": 0, "PRICE": 28, "MLB": 0})
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-25T13:26:24+00:00 Steam NFL Pittsburgh Steelers @ New Orleans Saints | totals  Under 43.5->43.0 1.87->1.91 (fanatics)
@@ -278,6 +278,12 @@ NHL 2026-10-25T23:10:00Z Montréal Canadiens @ Winnipeg Jets  id=cd9f65faa44f221
 NHL 2026-10-26T00:10:00Z Colorado Avalanche @ Nashville Predators  id=61198113cc96cb987aad067a15911db8
    ML: 
 NHL 2026-10-26T02:10:00Z Minnesota Wild @ Vancouver Canucks  id=ccf447f1bbe822d28f87352436f70c7c
+   ML: 
+NHL 2026-10-26T23:10:00Z Los Angeles Kings @ New York Rangers  id=daa5166685c4ca1a4f033d8bff91a6ba
+   ML: 
+NHL 2026-10-27T00:40:00Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde35c5494acdb5912a68
+   ML: 
+NHL 2026-10-27T01:40:00Z Detroit Red Wings @ Edmonton Oilers  id=5b70654c977b6cc9a110ad8c04c57cac
    ML: 
 MLB 2026-10-27T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=82812d5c946d4e055002fcb42673a38b
    ML: 
