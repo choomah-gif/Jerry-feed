@@ -369,6 +369,11 @@ def schedule_flags(con, team_name, commence):
     return b2b, three_in_four
 
 
+def _gsax60(gsax, ice_seconds, prior_hours=25.0, cap=0.35):
+    """Goals saved above expected per 60, shrunk toward 0 (about 25 hours of average goaltending) and capped."""
+    return float(np.clip(float(gsax) / (float(ice_seconds) / 3600 + prior_hours), -cap, cap))
+
+
 def refresh_nhl(con, now):
     season = nhl_season(now)
     teams_all = JM._daily(f"{JM.MP_BASE}/{season}/regular/teams.csv", f"mp_teams_raw_{season}")
@@ -390,8 +395,10 @@ def refresh_nhl(con, now):
         if not h or not a or h not in t5.index or a not in t5.index:
             continue
         def rates(t):
-            r = t5.loc[t]; gp = max(r.games_played, 1); H = r.iceTime / 3600
-            xgf, xga, gf, ga = r.xGoalsFor / H, r.xGoalsAgainst / H, r.goalsFor / H, r.goalsAgainst / H
+            # shrink toward league average with ~10 hours (about 12 games) of average 5v5 play
+            r = t5.loc[t]; gp = max(r.games_played, 1); H = r.iceTime / 3600; H0 = 10.0
+            xgf = (r.xGoalsFor + lg_xg5 * H0) / (H + H0); xga = (r.xGoalsAgainst + lg_xg5 * H0) / (H + H0)
+            gf = (r.goalsFor + lg_xg5 * H0) / (H + H0); ga = (r.goalsAgainst + lg_xg5 * H0) / (H + H0)
             w = min(gp, 20) / 20 * 0.35                 # finishing talent: trust actual goals more as the season goes on
             return {"xgf_60": (1 - w) * xgf + w * gf, "xga_60": (1 - w) * xga + w * ga}
         rh, ra = rates(h), rates(a)
@@ -401,17 +408,20 @@ def refresh_nhl(con, now):
                 cand = goalies[(goalies.team == t)]
                 hit = cand[cand.name.str.lower().str.contains(_norm(g[0]).split(" ")[-1])]
                 if not hit.empty:
-                    return float(hit.iloc[0].gsax_per_60), f"{g[0]} ({g[1]})"
+                    return _gsax60(hit.iloc[0].gsax, hit.iloc[0].iceTime), f"{g[0]} ({g[1]})"
             tg = goalies[goalies.team == t]
             if tg.empty:
                 return 0.0, "goalie unconfirmed (league avg)"
-            return float((tg.gsax * 1.0).sum() / max(tg.iceTime.sum() / 3600, 1)), "goalie unconfirmed (team avg)"
+            return _gsax60(tg.gsax.sum(), tg.iceTime.sum()), "goalie unconfirmed (team avg)"
         gh, gh_txt = goalie_term(h); ga_, ga_txt = goalie_term(a)
         hb2b, h34 = schedule_flags(con, ev.home, ev.commence); ab2b, a34 = schedule_flags(con, ev.away, ev.commence)
         lam_h, lam_a = JM.expected_goals(pd.Series(rh), pd.Series(ra), lg_xg5, gh, ga_, hb2b, ab2b)
         # power play: own 5on4 xGF/60 vs opponent 4on5 xGA/60, scaled to expected PP minutes
-        pph = (pp.loc[h].xGoalsFor / hrs(pp).loc[h] / lg_pp) * (pk.loc[a].xGoalsAgainst / hrs(pk).loc[a] / lg_pk) * lg_pp * pp_minutes / 60
-        ppa = (pp.loc[a].xGoalsFor / hrs(pp).loc[a] / lg_pp) * (pk.loc[h].xGoalsAgainst / hrs(pk).loc[h] / lg_pk) * lg_pp * pp_minutes / 60
+        def rel(df, team, col, lg):  # special-teams rate vs league, shrunk with 2 hours of average play, capped
+            H = hrs(df).loc[team]
+            return float(np.clip((df.loc[team][col] + lg * 2.0) / (H + 2.0) / lg, 0.6, 1.6))
+        pph = rel(pp, h, "xGoalsFor", lg_pp) * rel(pk, a, "xGoalsAgainst", lg_pk) * lg_pp * pp_minutes / 60
+        ppa = rel(pp, a, "xGoalsFor", lg_pp) * rel(pk, h, "xGoalsAgainst", lg_pk) * lg_pp * pp_minutes / 60
         base_pp = lg_pp * pp_minutes / 60
         lam_h += (pph - base_pp); lam_a += (ppa - base_pp)
         if h34: lam_h *= 0.98
@@ -422,6 +432,7 @@ def refresh_nhl(con, now):
         total = float(oline) if oline is not None else 6.0
         s = JM.nhl_summarize(lam_h, lam_a, total, pl_line=abs(float(hpl)) if hpl is not None else 1.5)
         unconf = "unconfirmed" in gh_txt or "unconfirmed" in ga_txt
+        n0 = len(out)
         note = f"xG {lam_h:.2f}-{lam_a:.2f}; {h} G: {gh_txt}; {a} G: {ga_txt}" + ("; B2B " + ",".join(t for t, b in ((h, hb2b), (a, ab2b)) if b) if (hb2b or ab2b) else "")
         if hmlp and amlp:
             f = fair_two_way(hmlp, amlp); e = s["p_home_ml"] - f
@@ -442,6 +453,15 @@ def refresh_nhl(con, now):
             out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.home, line=hpl, model_prob=p, fair_prob=f, edge=e,
                             call=f"{call_for(e, 0.03, 0.05, cap_lean=True)} {ev.home if e > 0 else ev.away}" if abs(e) >= 0.03 else "Sit", note=note))
             out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.away, line=-float(hpl), model_prob=1 - p, fair_prob=1 - f, edge=-e, call="see home row"))
+        # sanity gate: real NHL games sit in this range; anything outside means bad inputs, not an edge
+        bad = not (4.5 <= lam_h + lam_a <= 7.5) or abs(lam_h - lam_a) > 1.6
+        for r in out[n0:]:
+            if r["call"].startswith("see"):
+                continue
+            if bad:
+                r["call"] = "Sit (sanity check failed)"
+            elif abs(r["edge"]) > 0.12:
+                r["call"] = "Sit (edge too large to trust)"
     write_probs(con, out, now)
     return out
 
