@@ -905,29 +905,49 @@ PAGE = """<!doctype html><meta charset="utf-8"><meta name="viewport" content="wi
 <title>Jerry desk</title>
 <style>
 body{margin:0;font:15px Georgia,serif;background:#f4f1ea;color:#1c1a17}
-header{padding:18px 22px 6px}h1{font-weight:500;font-size:34px;margin:0}.sub{color:#6d675e}
-.bar{padding:6px 22px 12px;color:#6d675e;font-size:14px}
-nav{padding:0 22px}nav button{border:0;background:none;font:16px Georgia,serif;margin-right:14px;cursor:pointer;padding:6px 0}
-nav button.on{font-weight:700;border-bottom:2px solid #1c1a17}
-main{display:grid;grid-template-columns:1fr 340px;gap:18px;padding:12px 22px}
+header{padding:16px 16px 4px}h1{font-weight:500;font-size:32px;margin:0}.sub{color:#6d675e;font-size:13px;letter-spacing:.05em}
+.bar{padding:4px 16px 10px;color:#6d675e;font-size:13px}
+nav{padding:0 16px;position:sticky;top:0;background:#f4f1ea;z-index:5;border-bottom:1px solid #e2dcd0}
+nav button{border:0;background:none;font:16px Georgia,serif;margin-right:14px;cursor:pointer;padding:10px 0;color:#2a5db0}
+nav button.on{font-weight:700;color:#1c1a17;border-bottom:2px solid #1c1a17}
+main{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:12px 16px}
 @media(max-width:900px){main{grid-template-columns:1fr}}
+.slate{color:#6d675e;font-size:14px;margin:4px 0 12px}
+.card{background:#fffdf8;border:1px solid #e2dcd0;border-radius:10px;padding:12px 12px 8px;margin-bottom:12px}
+.card.hot{border-color:#b9a77a}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.when{font-size:13px;color:#6d675e}.title{font-size:18px;margin:2px 0 8px}
+.grid{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:6px 8px;font-size:15px;align-items:start}
+.grid .h{font-size:12px;color:#8a8378;text-transform:uppercase;letter-spacing:.04em}
+.grid .team{font-weight:600}
+.was{font-size:11px;color:#8a8378}.best{font-size:11px;color:#1d5a3a}
+.up{background:#e7f0e4;padding:0 3px;border-radius:3px}.down{background:#f6e4df;padding:0 3px;border-radius:3px}
+.call{margin-top:8px;padding:8px 10px;border-radius:8px;background:#eef4ec;font-size:14px}
+.call.play{background:#f6ead9}.call b{font-size:15px}.call .note{font-size:12px;color:#6d675e;margin-top:2px}
+.call button,.prow button{font:12px Georgia,serif;margin-left:6px;padding:2px 8px;border:1px solid #b9b2a5;background:#fff;border-radius:6px}
+details.props{margin-top:8px;border-top:1px solid #eee7da;padding-top:6px}
+details.props summary{cursor:pointer;color:#2a5db0;font-size:14px}
+.prow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f0ebe1;font-size:14px}
+.prow .pl{font-weight:600}.prow .sit{color:#8a8378}
+.badge{font-size:12px;padding:1px 6px;border-radius:10px;margin-left:4px}
+.Steam{color:#8a3b12;font-weight:700}.Sharp{color:#1d5a3a;font-weight:700}.Move{color:#555}
+.mute{color:#8a8378}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #e2dcd0;font-size:14px;vertical-align:top}
-.mute{color:#8a8378}.Steam{color:#8a3b12;font-weight:700}.Sharp{color:#1d5a3a;font-weight:700}.Move{color:#555}
-.up{background:#e7f0e4}.down{background:#f6e4df}
+form input,form select{font:14px Georgia,serif;margin:2px 0}
 </style>
 <header><div class="sub">THE SPORTS DESK</div><h1>Jerry</h1></header>
 <div class="bar" id="bar">loading…</div>
 <nav id="nav"></nav>
 <main><section>
-<h3>Jerry's edges <span class=mute id="mlast"></span></h3><div id="edges"></div>
+<div class="slate" id="slate"></div>
 <div id="board"></div>
-<h3>Log a bet</h3>
+<h3 id="logbet">Log a bet</h3>
 <form id="betform" method="post" action="/api/bet">
 <select name="event_id" id="ev"></select> <select name="market" id="mk"><option value="h2h">moneyline</option><option value="spreads">spread</option><option value="totals">total</option><option value="method">method of victory (UFC)</option><option value="rounds">rounds over/under (UFC)</option><option value="prop">player prop</option><option value="parlay">parlay</option></select>
 <input name="selection" id="sel" list="sellist" placeholder="side / fighter" size=16><datalist id="sellist"></datalist>
 <input name="player" id="det" placeholder="detail" size=16><input type=hidden name="sport" id="sp">
-<input name="line" placeholder="line" size=5> <input name="odds" placeholder="odds e.g. -110" size=7 required>
-<input name="book" placeholder="book" size=9> <input name="stake" value="1" size=3> <input name="model_prob" placeholder="model prob" size=8>
+<input name="line" id="ln" placeholder="line" size=5> <input name="odds" id="od" placeholder="odds e.g. -110" size=7 required>
+<input name="book" placeholder="book" size=9> <input name="stake" value="1" size=3> <input name="model_prob" id="mp" placeholder="model prob" size=8>
 <button>Log</button></form>
 <form method="post" action="/api/goalie" class=mute>Confirm NHL goalie by hand: <input name="team" placeholder="BOS" size=4> <input name="name" placeholder="Jeremy Swayman" size=16> <button>Set</button> <button formaction="/api/refresh-models" formmethod="post">Re-run models now</button></form>
 <h3>Bets</h3><div id="bets"></div>
@@ -938,43 +958,81 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;
 <details><summary class=mute>Plain-text summary (what Claude reads)</summary><pre id="summary" style="white-space:pre-wrap;font-size:12px">__SUMMARY__</pre></details>
 <details><summary class=mute>Fresh-read links for Claude (one per hour, next 14 days)</summary><p class=mute style="font-size:11px">__SLOTS__</p></details>
 <script>
-const SPORTS=["NFL","NBA","NHL","MLB","UFC","WS"];let sport="NFL";
+const SPORTS=["NFL","NBA","NHL","MLB","UFC","WS"];let sport="NFL";let BOARD=[],EDGES=[];
 const am=d=>d==null?"—":(d>=2?"+"+Math.round((d-1)*100):Math.round(-100/(d-1)));
 const t=s=>new Date(s).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
-function side(x,showLine){if(!x)return"—";let l=showLine&&x.line!=null?(x.line>0&&showLine==="s"?"+":"")+x.line+" ":"";
- let o=x.open_line!=null&&x.open_line!==x.line?` <span class=mute>(${x.open_line})</span>`:"";
- let cls=x.open_price&&x.price!==x.open_price?(1/x.price>1/x.open_price?"up":"down"):"";
- return `<span class="${cls}">${l}${am(x.price)}</span>${o}<br><span class=mute>best ${am(x.best)}</span>`}
-function modelCell(r,n,i){const m=r.model||{};const parts=[];
- const f=(k,lab)=>{const v=m[k];if(!v)return;const c=v.call&&v.call!="Sit"&&!v.call.startsWith("see")?`<b class="${v.call.startsWith("Play")?"Steam":"Sharp"}">${v.call}</b>`:"";
-  parts.push(`${lab} ${(v.p*100).toFixed(0)}% <span class=mute>(${(v.edge*100).toFixed(1)>0?"+":""}${(v.edge*100).toFixed(1)})</span> ${c}`)};
- f("h2h|"+n,"ML");f("spreads|"+n,"Spr");if(!i)f("totals|Under","Under");return parts.join("<br>")||"<span class=mute>—</span>"}
-async function edges(){const e=(await (await fetch("/api/edges")).json()).filter(r=>r.sport==sport);
- document.getElementById("edges").innerHTML=e.length?"<table><tr><th>Start</th><th>Game</th><th>Bet</th><th>Model</th><th>Fair</th><th>Edge</th><th>Call</th></tr>"+e.map(r=>`<tr><td>${t(r.commence)}</td><td>${r.sport} ${r.away} @ ${r.home}</td><td>${r.market.replace("player_","")} ${r.player||""} ${r.outcome} ${r.line??""}</td><td>${(r.model_prob*100).toFixed(1)}%</td><td>${(r.fair_prob*100).toFixed(1)}%</td><td>${(r.edge*100).toFixed(1)>0?"+":""}${(r.edge*100).toFixed(1)}</td><td><b class="${r.call.startsWith("Play")?"Steam":"Sharp"}">${r.call}</b><br><span class=mute>${r.note||""}</span></td></tr>`).join("")+"</table>":"<p class=mute>No "+sport+" edges right now. Models run hourly once prices are in.</p>"}
-function pick(s){sport=s;load();edges()}
+const pct=x=>(x*100).toFixed(0)+"%";
+const sgn=x=>(x>0?"+":"")+(x*100).toFixed(1)+"%";
+const TWO=["Maple Leafs","Golden Knights","Blue Jackets","Red Wings","Red Sox","White Sox","Blue Jays","Trail Blazers"];
+function short(n){if(!n)return"";if(sport=="UFC")return n.split(" ").slice(-1)[0];for(const w of TWO){if(n.endsWith(w))return w}return n.split(" ").slice(-1)[0]}
+const MK={player_pass_yds:"pass yds",player_rush_yds:"rush yds",player_reception_yds:"rec yds",player_receptions:"receptions",player_anytime_td:"anytime TD",player_pass_tds:"pass TDs"};
+const isCall=c=>c&&(c.startsWith("Lean")||c.startsWith("Play"));
+function px(x,kind,pre){if(!x)return'<span class=mute>—</span>';
+ let l="";if(kind=="s"&&x.line!=null)l=(x.line>0?"+":"")+x.line+" ";if(kind=="t"&&x.line!=null)l=pre+x.line+" ";
+ const ch=x.open_price&&x.price!==x.open_price,lch=x.open_line!=null&&x.open_line!==x.line;
+ const cls=ch?(1/x.price>1/x.open_price?"up":"down"):"";
+ const was=(ch||lch)?`<div class="was">was ${lch?x.open_line+" ":""}${am(x.open_price)}</div>`:"";
+ const best=x.best&&x.best>x.price+0.001?`<div class="best">best ${am(x.best)}</div>`:"";
+ return `<span class="${cls}">${l}${am(x.price)}</span>${was}${best}`}
+function callSel(c,market){const s=c.split(" ").slice(1).join(" ");return market=="totals"?s.split(" ")[0]:s}
+function callBox(r,k,v){const market=k.split("|")[0],out=k.split("|").slice(1).join("|");const sel=callSel(v.call,market);
+ const mine=sel==out;const p=mine?v.p:1-v.p,f=mine?v.fair:1-v.fair;
+ return `<div class="call ${v.call.startsWith("Play")?"play":""}"><b>${v.call}</b> <span class=mute>${sgn(p-f)} · model ${pct(p)} vs market ${pct(f)}</span>
+ <button onclick="logCall('${r.event_id}','${market}','${sel.replace(/'/g,"")}',${p.toFixed(3)})">Log</button><div class="note">${v.note||""}</div></div>`}
+function card(r){const ml=r.h2h||{},sp=r.spreads||{},to=r.totals||{};
+ const mv=Object.entries(r.moves||{}).map(([k,n])=>`<span class="badge ${k}">${k} ${n}</span>`).join("");
+ const calls=Object.entries(r.model||{}).filter(([k,v])=>isCall(v.call));
+ const nprops=EDGES.filter(e=>e.event_id==r.event_id&&e.player).length;
+ let body="";
+ if(r.away){const hasS=Object.keys(sp).length>0,hasT=Object.keys(to).length>0;
+  body=`<div class="grid"><div class="h"></div><div class="h">Money</div><div class="h">${hasS?"Spread":""}</div><div class="h">${hasT?"Total":""}</div>`;
+  [[r.away,"Over","o"],[r.home,"Under","u"]].forEach(([n,tk,pre])=>{body+=`<div class="team">${short(n)}</div><div>${px(ml[n])}</div><div>${hasS?px(sp[n],"s"):""}</div><div>${hasT?px(to[tk],"t",pre):""}</div>`});
+  body+="</div>"}
+ else{body="<div>"+Object.entries(ml).sort((a,b)=>a[1].price-b[1].price).slice(0,20).map(([n,x])=>`<div class="prow"><span>${n}</span><span>${px(x)}</span></div>`).join("")+"</div>"}
+ const title=r.away?`${short(r.away)} @ ${short(r.home)}`:r.home;
+ const props=sport=="NFL"&&r.away?`<details class="props" ontoggle="props(this,'${r.event_id}')"><summary>Props${nprops?" · "+nprops+" Jerry call"+(nprops>1?"s":""):""}</summary><div class=mute>loading…</div></details>`:"";
+ return `<div class="card ${calls.length?"hot":""}"><div class="top"><span class="when">${t(r.start)}${r.card?" · "+r.card:""}</span><span>${mv}</span></div>
+ <div class="title">${title}</div>${body}${calls.map(([k,v])=>callBox(r,k,v)).join("")}${props}</div>`}
+async function props(el,eid){if(!el.open||el.dataset.done)return;el.dataset.done=1;
+ const rows=(await (await fetch("/api/model?event_id="+eid)).json()).filter(x=>x.player&&!String(x.call).startsWith("see"));
+ const live=rows.filter(x=>isCall(x.call)).sort((a,b)=>Math.abs(b.edge)-Math.abs(a.edge));
+ const rest=rows.filter(x=>!isCall(x.call)).sort((a,b)=>a.player.localeCompare(b.player));
+ const line=x=>{const c=isCall(x.call);const sel=c?x.call.split(" ")[1]:"";const mine=sel==x.outcome||!c;const p=mine?x.model_prob:1-x.model_prob,f=mine?x.fair_prob:1-x.fair_prob;
+  return `<div class="prow"><span><span class="pl">${x.player}</span> · ${MK[x.market]||x.market}${x.line!=null?" "+x.line:""}<div class="was">${x.note||""}</div></span>
+  <span class="${c?"":"sit"}" style="text-align:right;white-space:nowrap">${c?"<b>"+x.call.split(" ").slice(0,2).join(" ")+"</b><br>"+sgn(p-f):x.call}${c?`<button onclick="logProp('${eid}','${x.player.replace(/'/g,"")}','${sel}',${x.line??"null"},${p.toFixed(3)},'${x.market}')">Log</button>`:""}</span></div>`};
+ el.querySelector("div").innerHTML=(live.length?live.map(line).join(""):"<p class=mute>No prop calls for this game.</p>")+
+  (rest.length?`<details><summary class=mute>All other props (${rest.length})</summary>${rest.map(line).join("")}</details>`:"")}
+function pick(s){sport=s;load()}
 function nav(){document.getElementById("nav").innerHTML=SPORTS.map(s=>`<button class="${s==sport?"on":""}" onclick="pick('${s}')">${s}</button>`).join("")}
-async function load(){nav();const rows=await (await fetch("/api/board?sport="+sport)).json();
- if(!rows.length){document.getElementById("board").innerHTML="<p class=mute>Nothing on the board.</p>";return}
- let h="<table><tr><th>Start</th><th>Game</th><th>Side</th><th>Moneyline</th><th>Spread</th><th>Total</th><th>Model</th><th>Moves</th></tr>";
- rows.forEach(r=>{const ml=r.h2h||{},sp=r.spreads||{},to=r.totals||{};const names=[r.away,r.home].filter(Boolean);
-  const mv=Object.entries(r.moves).map(([k,n])=>`<span class="${k}">${k} ${n}</span>`).join("<br>");
-  names.forEach((n,i)=>{h+=`<tr>${i?"<td></td><td></td>":`<td rowspan=1>${t(r.start)}</td><td>${r.card?r.card+"<br>":""}${r.away||""} @ ${r.home}</td>`}
-   <td>${n}</td><td>${side(ml[n])}</td><td>${side(sp[n],"s")}</td><td>${side(to[i?"Under":"Over"],"t")}${i?"":" <span class=mute>o</span>"}</td><td>${modelCell(r,n,i)}</td><td>${i?"":mv}</td></tr>`})});
- document.getElementById("board").innerHTML=h+"</table><p class=mute>Prices are Pinnacle (else sharpest available). Green = got more expensive since open, red = cheaper. (x) = opening line.</p>"}
+async function load(){nav();
+ const [rows,e]=await Promise.all([fetch("/api/board?sport="+sport).then(x=>x.json()),fetch("/api/edges?min=0&limit=1000").then(x=>x.json())]);
+ BOARD=rows.sort((a,b)=>a.start<b.start?-1:1);EDGES=e.filter(x=>x.sport==sport);
+ const ncalls=BOARD.reduce((n,r)=>n+Object.values(r.model||{}).filter(v=>isCall(v.call)).length,0);
+ const np=EDGES.filter(x=>x.player).length;
+ document.getElementById("slate").innerHTML=BOARD.length?`${BOARD.length} ${sport=="UFC"?"fights":"games"} · ${ncalls} Jerry call${ncalls==1?"":"s"} on sides/totals${np?" · "+np+" on props":""}`:"";
+ const open=[...document.querySelectorAll("details.props[open]")].map(d=>d.getAttribute("ontoggle"));
+ document.getElementById("board").innerHTML=BOARD.length?BOARD.map(card).join("")+"<p class=mute>Prices are Pinnacle (else sharpest). Green = got more expensive since open, red = cheaper. “was” = opening number.</p>":"<p class=mute>Nothing on the board for "+sport+".</p>";
+ document.querySelectorAll("details.props").forEach(d=>{if(open.includes(d.getAttribute("ontoggle")))d.open=true});
+ fillForm()}
 async function status(){const s=await (await fetch("/api/status")).json();
- document.getElementById("bar").innerHTML=`${s.remaining??"—"} credits left · ${s.allowance_per_day}/day budget · spent today ${s.spent_today} · bucket ${s.tokens}/${s.bucket_cap} · reset in ${s.days_to_reset}d · backfill ${JSON.stringify(s.backfill_days)}`
+ document.getElementById("bar").innerHTML=`${s.remaining??"—"} credits left · ${s.allowance_per_day}/day · spent today ${s.spent_today} · reset in ${s.days_to_reset}d`;
  const f=await (await fetch("/api/feed")).json();
- document.getElementById("feed").innerHTML=f.slice(0,40).map(a=>`<div><span class="${a.kind}">${a.kind}</span> ${a.sport} ${a.player?a.player+" ":""}${a.outcome} ${a.market}
+ document.getElementById("feed").innerHTML=f.slice(0,40).map(a=>`<div style="padding:4px 0;border-bottom:1px solid #eee7da"><span class="${a.kind}">${a.kind}</span> ${a.sport} ${a.player?a.player+" ":""}${a.outcome} ${a.market}
   ${a.line_from!==a.line_to?(a.line_from+"→"+a.line_to):""} ${am(a.price_from)}→${am(a.price_to)} <span class=mute>${a.book} · ${t(a.ts)}</span></div>`).join("")||"<p class=mute>No signals yet.</p>"}
-let BOARD=[];
 function fillForm(){const ev=document.getElementById("ev"),mk=document.getElementById("mk"),sel=document.getElementById("sel");
- ev.innerHTML=BOARD.map(r=>`<option value="${r.event_id}">${t(r.start)} ${r.away||""} @ ${r.home}</option>`).join("");
+ ev.innerHTML=BOARD.map(r=>`<option value="${r.event_id}">${t(r.start)} ${r.away?short(r.away)+" @ "+short(r.home):r.home}</option>`).join("");
  const upd=()=>{const r=BOARD.find(x=>x.event_id==ev.value)||{};const m=mk.value;
   const opts=(m=="totals"||m=="rounds"||m=="prop")?["Over","Under","Yes"]:m=="parlay"?[]:[r.away,r.home].filter(Boolean);
   document.getElementById("sellist").innerHTML=opts.map(o=>`<option value="${o}">`).join("");
   sel.value=opts[0]||""; document.getElementById("sp").value=sport;
   document.getElementById("det").placeholder={method:"KO/TKO, SUB or DEC",prop:"player name",parlay:"legs, e.g. Evloev ML + Merab ML",rounds:"",h2h:"",spreads:"",totals:""}[m]||"detail"};
  ev.onchange=upd;mk.onchange=upd;upd()}
+function prefill(eid,market,sel,line,price,p,player){const ev=document.getElementById("ev"),mk=document.getElementById("mk");
+ ev.value=eid;mk.value=market;ev.onchange();document.getElementById("sel").value=sel;document.getElementById("det").value=player||"";
+ document.getElementById("ln").value=line??"";document.getElementById("od").value=price?am(price):"";document.getElementById("mp").value=p;
+ document.getElementById("logbet").scrollIntoView({behavior:"smooth"})}
+function logCall(eid,market,sel,p){const r=BOARD.find(x=>x.event_id==eid)||{};const x=(r[market]||{})[sel]||{};prefill(eid,market,sel,x.line,x.price,p)}
+function logProp(eid,player,sel,line,p,market){prefill(eid,"prop",sel,line,null,p,player+" "+(MK[market]||market))}
 async function bets(){const r=await (await fetch("/api/report")).json();
  let h=`<p>${r.graded} graded · ${r.pending} pending · ${r.all?("record "+r.all.record+" · "+r.all.units+"u · ROI "+(r.all.roi*100).toFixed(1)+"% (90% CI "+(r.all.roi_90ci[0]*100).toFixed(0)+"% to "+(r.all.roi_90ci[1]*100).toFixed(0)+"%) · CLV "+r.all.clv_pp_avg+"pp"):""}</p><table><tr><th>#</th><th>Game</th><th>Bet</th><th>Price</th><th>Result</th><th>Close / CLV</th></tr>`;
  r.recent.slice().reverse().forEach(b=>{h+=`<tr><td>${b.id}</td><td>${b.sport} ${b.game}</td><td>${b.market} ${b.player||""} ${b.selection} ${b.line??""}</td><td>${am(b.price)}</td>
@@ -985,8 +1043,7 @@ async function bets(){const r=await (await fetch("/api/report")).json();
   return "<table><tr><th></th><th>Bets</th><th>Record</th><th>Units</th><th>ROI</th><th>CLV</th></tr>"+e.map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${v.record}</td><td>${v.units>0?"+":""}${v.units}</td><td>${(v.roi*100).toFixed(1)}%</td><td>${v.clv_pp_avg??"—"}</td></tr>`).join("")+"</table>"};
  document.getElementById("bytype").innerHTML=bt(r.by_type);
  document.getElementById("byfighter").innerHTML="<p class=mute>Backing</p>"+bt(r.by_fighter)+"<p class=mute>Betting against</p>"+bt(r.against_fighter)}
-const _load=load;load=async function(){await _load();BOARD=await (await fetch("/api/board?sport="+sport)).json();fillForm()};
-load();status();bets();edges();setInterval(status,30000);setInterval(load,60000);setInterval(bets,60000);setInterval(edges,120000);
+load();status();bets();setInterval(status,30000);setInterval(load,90000);setInterval(bets,60000);
 </script>"""
 
 
@@ -1111,7 +1168,7 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == "/api/report":
             return self.send(json.dumps(DESK.report()))
         if u.path == "/api/edges":
-            return self.send(json.dumps(DESK.edges(float(q.get("min", 0.015)))))
+            return self.send(json.dumps(DESK.edges(float(q.get("min", 0.015)), int(q.get("limit", 60)))))
         if u.path == "/api/model":
             return self.send(json.dumps(DESK.model_rows(q.get("event_id", ""))))
         if u.path == "/api/status":
