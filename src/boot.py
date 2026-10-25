@@ -207,13 +207,6 @@ except Exception:
 _orig_refresh_all = L.refresh_all if L else None
 def refresh_all(db_path, sports=None):
     res = _orig_refresh_all(db_path) if sports is None else _orig_refresh_all(db_path, sports=tuple(s for s in sports if s != "MLB"))
-    try:  # NHL quarantine: model output failed sanity checks on 2026-10-24
-        c = sqlite3.connect(db_path, timeout=60)
-        c.execute("""update model_probs set call='Sit (NHL under repair)'
-                     where event_id in (select event_id from events where sport='NHL') and call not like 'see %'""")
-        c.commit(); c.close()
-    except Exception:
-        traceback.print_exc()
     if sports is None or "MLB" in sports:
         try:
             res["MLB"] = refresh_mlb(db_path)
