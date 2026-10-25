@@ -174,7 +174,12 @@ def init_db():
         model_prob real, note text, result text default 'pending', pnl real, home_score real, away_score real,
         close_book text, close_line real, close_price real, clv_pp real, graded_ts text);
     create index if not exists bets_res on bets(result);
+    create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
+        book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book));
     """)
+    if "paper" not in {r[1] for r in con.execute("pragma table_info(bets)")}:
+        con.execute("alter table bets add column paper int default 0")
+    con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
     con.commit()
     con.close()
 
@@ -656,6 +661,7 @@ class Desk:
             out.append({"event_id": e["event_id"], "start": e["commence"], "home": e["home"], "away": e["away"],
                         "card": e["card"], "h2h": summary("h2h"), "spreads": summary("spreads"), "totals": summary("totals"),
                         "moves": kinds, "last_signal": dict(last) if last else None,
+                        "value": [dict(v) for v in con.execute("select * from value_edges where event_id=? order by ev desc", (e["event_id"],))],
                         "model": {f"{k[0]}|{k[1]}": {"p": v["model_prob"], "fair": v["fair_prob"], "edge": v["edge"], "call": v["call"], "note": v["note"]} for k, v in mp.items()}})
         con.close()
         return out
@@ -751,6 +757,13 @@ class Desk:
     def auto_grade(self, con, now):
         pend = con.execute("select * from bets where result='pending' and commence<=?",
                            (iso(now - timedelta(hours=3)),)).fetchall()
+        for b in pend:   # closing line value can be filled as soon as the game starts, even for props we can't score
+            if b["close_price"] is None:
+                c = self.closing(con, b)
+                if c and c["price"]:
+                    clv = round((1 / c["price"] - 1 / b["price"]) * 100, 2) if (c["line"] == b["line"] or b["market"] == "h2h") else None
+                    con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=? where id=?",
+                                (c["book"], c["line"], c["price"], clv, b["id"]))
         if not pend:
             return
         sports = {b["sport"] for b in pend if b["sport"] in SPORTS and b["market"] in ("h2h", "spreads", "totals")}
@@ -796,7 +809,7 @@ class Desk:
     def report(self):
         import random
         con = db()
-        rows = [dict(r) for r in con.execute("select * from bets order by id")]
+        rows = [dict(r) for r in con.execute("select * from bets where coalesce(paper,0)=0 order by id")]
         con.close()
         done = [r for r in rows if r["result"] in ("W", "L", "P")]
         out = {"bets_total": len(rows), "pending": sum(r["result"] == "pending" for r in rows), "graded": len(done)}
@@ -837,6 +850,32 @@ class Desk:
         out["recent"] = rows[-25:]
         return out
 
+    def paper_report(self):
+        """Every Lean/Play and every price edge, paper-traded at 1u: the evidence for which markets have a real edge."""
+        con = db()
+        rows = [dict(r) for r in con.execute("select * from bets where paper=1 order by id")]
+        con.close()
+        def kind(r):
+            return "price edge" if (r["note"] or "").startswith("price edge") else "model"
+        def fam(r):
+            m = r["market"]
+            return "props" if m.startswith("player_") else {"h2h": "moneyline", "spreads": "spread", "totals": "total"}.get(m, m)
+        def block(rs):
+            clv = [r["clv_pp"] for r in rs if r["clv_pp"] is not None]
+            done = [r for r in rs if r["result"] in ("W", "L", "P")]
+            st = sum(r["stake"] for r in done); pnl = sum(r["pnl"] or 0 for r in done)
+            return {"n": len(rs), "closed": len(clv), "clv_pp_avg": round(sum(clv) / len(clv), 2) if clv else None,
+                    "beat_close_pct": round(sum(c > 0 for c in clv) / len(clv), 3) if clv else None,
+                    "graded": len(done), "record": f"{sum(r['result']=='W' for r in done)}-{sum(r['result']=='L' for r in done)}-{sum(r['result']=='P' for r in done)}",
+                    "units": round(pnl, 2), "roi": round(pnl / st, 4) if st else None}
+        groups = {}
+        for r in rows:
+            groups.setdefault(f"{r['sport']} {fam(r)} ({kind(r)})", []).append(r)
+        out = {"total": len(rows), "all": block(rows) if rows else None,
+               "by_group": {k: block(v) for k, v in sorted(groups.items())},
+               "recent": rows[-40:]}
+        return out
+
     def summary_text(self):
         """Plain-text digest embedded in the home page so a web fetch (no JavaScript) can read everything."""
         st = self.status(); rp = self.report()
@@ -855,6 +894,18 @@ class Desk:
                          f"{'' if b['line'] is None else b['line']} @ {b['price']} ({b['book']}) x{b['stake']} | "
                          f"model {b['model_prob']} | {b['result']} pnl {b['pnl']} | close {b['close_book']} "
                          f"{b['close_line']} @ {b['close_price']} | CLV {b['clv_pp']}pp | score {b['away_score']}-{b['home_score']}")
+        pr = self.paper_report()
+        lines += ["", f"PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): {pr['total']} rows",
+                  f"all: {json.dumps(pr['all'])}"]
+        for k, v in pr["by_group"].items():
+            lines.append(f"  {k}: {json.dumps(v)}")
+        lines += ["", "PRICE EDGES (soft-book price beats Pinnacle fair; CT books):"]
+        c3 = db()
+        for v in c3.execute("""select v.*, e.sport, e.home, e.away, e.commence from value_edges v join events e using(event_id)
+                               where e.commence>? order by v.ev desc limit 40""", (iso(now_utc()),)):
+            lines.append(f"{v['sport']} {v['commence'][:16]}Z {v['away']} @ {v['home']} | {v['market']} {v['player'] or ''} {v['outcome']} "
+                         f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%}")
+        c3.close()
         lines += ["", "MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):"]
         for r in self.edges():
             lines.append(f"{r['sport']} {r['commence'][:16]}Z {r['away']} @ {r['home']} | {r['market']} {r['player'] or ''} {r['outcome']} "
@@ -930,6 +981,7 @@ details.props summary{cursor:pointer;color:#2a5db0;font-size:14px}
 .prow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f0ebe1;font-size:14px}
 .prow .pl{font-weight:600}.prow .sit{color:#8a8378}
 .badge{font-size:12px;padding:1px 6px;border-radius:10px;margin-left:4px}
+.value{margin-top:6px;padding:6px 10px;border-radius:8px;background:#fdf6e3;font-size:13px}.value b{color:#8a3b12}
 .Steam{color:#8a3b12;font-weight:700}.Sharp{color:#1d5a3a;font-weight:700}.Move{color:#555}
 .mute{color:#8a8378}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #e2dcd0;font-size:14px;vertical-align:top}
@@ -951,6 +1003,7 @@ form input,form select{font:14px Georgia,serif;margin:2px 0}
 <button>Log</button></form>
 <form method="post" action="/api/goalie" class=mute>Confirm NHL goalie by hand: <input name="team" placeholder="BOS" size=4> <input name="name" placeholder="Jeremy Swayman" size=16> <button>Set</button> <button formaction="/api/refresh-models" formmethod="post">Re-run models now</button></form>
 <h3>Bets</h3><div id="bets"></div>
+<h3>Paper ledger <span class=mute style="font-size:13px">every call, auto-logged at 1u, graded vs Pinnacle close</span></h3><div id="paper"></div>
 <h3>By bet type</h3><div id="bytype"></div>
 <h3>UFC fighters</h3><div id="byfighter"></div>
 <p class=mute><a href="/picks">Public picks page →</a></p></section>
@@ -991,8 +1044,10 @@ function card(r){const ml=r.h2h||{},sp=r.spreads||{},to=r.totals||{};
  else{body="<div>"+Object.entries(ml).sort((a,b)=>a[1].price-b[1].price).slice(0,20).map(([n,x])=>`<div class="prow"><span>${n}</span><span>${px(x)}</span></div>`).join("")+"</div>"}
  const title=r.away?`${short(r.away)} @ ${short(r.home)}`:r.home;
  const props=sport=="NFL"&&r.away?`<details class="props" ontoggle="props(this,'${r.event_id}')"><summary>Props${nprops?" · "+nprops+" Jerry call"+(nprops>1?"s":""):""}</summary><div class=mute>loading…</div></details>`:"";
- return `<div class="card ${calls.length?"hot":""}"><div class="top"><span class="when">${t(r.start)}${r.card?" · "+r.card:""}</span><span>${mv}</span></div>
- <div class="title">${title}</div>${body}${calls.map(([k,v])=>callBox(r,k,v)).join("")}${props}</div>`}
+ const BK={draftkings:"DraftKings",fanduel:"FanDuel",fanatics:"Fanatics",betmgm:"BetMGM",espnbet:"ESPN Bet",betrivers:"BetRivers",williamhill_us:"Caesars"};
+ const vals=(r.value||[]).slice(0,4).map(v=>`<div class="value"><b>${BK[v.book]||v.book}</b> ${v.player?v.player+" ":""}${v.market.startsWith("player_")?(MK[v.market]||v.market)+" ":""}${v.market=="spreads"||v.market=="totals"||v.market.startsWith("player_")?short(v.outcome)+" "+(v.line??""):short(v.outcome)} ${am(v.price)} <span class=mute>vs fair ${am(1/v.fair)} · EV ${sgn(v.ev)}</span></div>`).join("");
+ return `<div class="card ${calls.length||vals?"hot":""}"><div class="top"><span class="when">${t(r.start)}${r.card?" · "+r.card:""}</span><span>${mv}</span></div>
+ <div class="title">${title}</div>${body}${calls.map(([k,v])=>callBox(r,k,v)).join("")}${vals}${props}</div>`}
 async function props(el,eid){if(!el.open||el.dataset.done)return;el.dataset.done=1;
  const rows=(await (await fetch("/api/model?event_id="+eid)).json()).filter(x=>x.player&&!String(x.call).startsWith("see"));
  const live=rows.filter(x=>isCall(x.call)).sort((a,b)=>Math.abs(b.edge)-Math.abs(a.edge));
@@ -1043,14 +1098,17 @@ async function bets(){const r=await (await fetch("/api/report")).json();
   return "<table><tr><th></th><th>Bets</th><th>Record</th><th>Units</th><th>ROI</th><th>CLV</th></tr>"+e.map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${v.record}</td><td>${v.units>0?"+":""}${v.units}</td><td>${(v.roi*100).toFixed(1)}%</td><td>${v.clv_pp_avg??"—"}</td></tr>`).join("")+"</table>"};
  document.getElementById("bytype").innerHTML=bt(r.by_type);
  document.getElementById("byfighter").innerHTML="<p class=mute>Backing</p>"+bt(r.by_fighter)+"<p class=mute>Betting against</p>"+bt(r.against_fighter)}
-load();status();bets();setInterval(status,30000);setInterval(load,90000);setInterval(bets,60000);
+async function paper(){const r=await (await fetch("/api/paper")).json();const e=Object.entries(r.by_group||{});
+ document.getElementById("paper").innerHTML=(r.all?`<p>${r.total} paper bets · ${r.all.closed} with a closing line · CLV ${r.all.clv_pp_avg??"—"}pp · beat close ${r.all.beat_close_pct!=null?(r.all.beat_close_pct*100).toFixed(0)+"%":"—"} · ${r.all.graded} graded ${r.all.record} (${r.all.units>0?"+":""}${r.all.units}u)</p>`:"<p class=mute>No paper bets yet. They appear as soon as the models make a call.</p>")+
+ (e.length?"<table><tr><th>Group</th><th>Bets</th><th>CLV</th><th>Beat close</th><th>Record</th><th>Units</th></tr>"+e.map(([k,v])=>`<tr><td>${k}</td><td>${v.n}</td><td>${v.clv_pp_avg??"—"}</td><td>${v.beat_close_pct!=null?(v.beat_close_pct*100).toFixed(0)+"%":"—"}</td><td>${v.graded?v.record:"—"}</td><td>${v.graded?(v.units>0?"+":"")+v.units:"—"}</td></tr>`).join("")+"</table>":"")}
+load();status();bets();paper();setInterval(status,30000);setInterval(load,90000);setInterval(bets,60000);setInterval(paper,300000);
 </script>"""
 
 
 def picks_page(rp, desk):
     import html as h
     con = db()
-    rows = [dict(r) for r in con.execute("select * from bets order by commence desc, id desc limit 200")]
+    rows = [dict(r) for r in con.execute("select * from bets where coalesce(paper,0)=0 order by commence desc, id desc limit 200")]
     con.close()
     a = rp.get("all") or {}
     def amer(d):
@@ -1167,6 +1225,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(DESK.summary_text(), "text/plain; charset=utf-8")
         if u.path == "/api/report":
             return self.send(json.dumps(DESK.report()))
+        if u.path == "/api/paper":
+            return self.send(json.dumps(DESK.paper_report()))
         if u.path == "/api/edges":
             return self.send(json.dumps(DESK.edges(float(q.get("min", 0.015)), int(q.get("limit", 60)))))
         if u.path == "/api/model":
