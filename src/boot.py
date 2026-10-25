@@ -219,6 +219,11 @@ def refresh_all(db_path, sports=None):
                 c.commit(); c.close()
             except Exception:
                 pass
+    try:
+        if hasattr(L, "health_check"):
+            L.health_check(db_path, res)
+    except Exception:
+        traceback.print_exc()
     return res
 if L:
     L.refresh_all = refresh_all
