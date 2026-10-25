@@ -224,10 +224,16 @@ def _player_rates(pw, team_week, season, week):
     pw["games"] = 1
     stats = ["passing_yards", "rushing_yards", "receiving_yards", "receptions", "td", "targets", "carries", "attempts"]
     out = {}
-    pw = pw[(pw.attempts + pw.carries + pw.targets) > 0]            # drop games the player didn't really play
+    pw[stats] = pw[stats].fillna(0)
+    pw["usage"] = pw.attempts + pw.carries + pw.targets
+    pw = pw[pw.usage > 0]
     for (pid, name, team, pos), d in pw.groupby(["player_id", "player_display_name", "team", "position"]):
+        # drop games where he barely played (injury exit, benching): under 40% of his usual touches
+        d = d[d.usage >= 0.4 * d.usage.median()]
         d = d.sort_values("week").tail(6)
-        w = np.array([0.5 ** (len(d) - 1 - i) for i in range(len(d))]); w /= w.sum()
+        if d.empty:
+            continue
+        w = np.array([0.8 ** (len(d) - 1 - i) for i in range(len(d))]); w /= w.sum()   # gentle recency, not last-game-heavy
         mean = {s: float((d[s].values * w).sum()) for s in stats}
         mean["td"] = (mean["td"] * len(d) + 0.35 * 4) / (len(d) + 4)   # shrink TD rate: 6 games is nothing
         sd = {s: float(d[s].std(ddof=0)) if len(d) > 1 else float("nan") for s in stats}
@@ -311,13 +317,24 @@ def refresh_nfl_props(con, now):
             fair = fair_two_way(po, pu)
             edge = p_over - fair
             o_name, p_model = "Over", p_over
+        # market anchor: start from the de-vigged price, move only PROPS_ANCHOR of the way toward the model
+        raw = p_model
+        p_model = fair + PROPS_ANCHOR * (raw - fair)
+        edge = p_model - fair
         status = "OUT" if _norm(name) in out_players else "Q" if _norm(name) in quest else ""
+        note = f"proj {mu:.1f} (sd {sd_use if kind != 'poisson' else 0:.1f}) from last {r['n']} games x opp factor {f:.2f}; raw model {raw:.1%}, anchored {PROPS_ANCHOR:.0%}" + (" — Questionable" if status == "Q" else "")
+        off_line = line is not None and kind != "poisson" and line > 0 and not (0.6 <= mu / line <= 1.6)
         if status == "OUT":
             tag = "Sit"
             note = f"{name} listed Out/Doubtful — no bet"
+        elif off_line:
+            tag = "Sit"
+            note += " — projection far from the line (role change or data gap), no bet"
+        elif abs(edge) > 0.06:
+            tag = "Sit"
+            note += " — edge too large to trust"
         else:
-            tag = call_for(edge, 0.05, 0.08, cap_lean=True)   # props: capped at Lean until validated by live CLV
-            note = f"proj {mu:.1f} (sd {sd_use if kind != 'poisson' else 0:.1f}) from last {r['n']} games x opp factor {f:.2f}" + (" — Questionable" if status == "Q" else "")
+            tag = call_for(edge, 0.03, 0.05, cap_lean=True)   # props: capped at Lean until validated by live CLV
         side = o_name if edge > 0 else ("Under" if o_name == "Over" else "No")
         out.append(dict(event_id=eid, market=market, outcome=o_name, player=player, line=line, model_prob=p_model, fair_prob=fair, edge=edge,
                         call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note))
@@ -369,7 +386,8 @@ def schedule_flags(con, team_name, commence):
     return b2b, three_in_four
 
 
-NHL_ANCHOR = 0.35   # weight on the model vs the market price until NHL has 150 graded bets
+NHL_ANCHOR = 0.35
+PROPS_ANCHOR = 0.35   # same idea for NFL props until 150 graded prop bets   # weight on the model vs the market price until NHL has 150 graded bets
 
 
 def _gsax60(gsax, ice_seconds, prior_hours=25.0, cap=0.35):
