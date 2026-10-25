@@ -398,6 +398,11 @@ def _gsax60(gsax, ice_seconds, prior_hours=25.0, cap=0.35):
 def refresh_nhl(con, now):
     season = nhl_season(now)
     teams_all = JM._daily(f"{JM.MP_BASE}/{season}/regular/teams.csv", f"mp_teams_raw_{season}")
+    try:   # last season's rates are the prior for early-season shrinkage (a flat league average if unavailable)
+        prev_all = JM._daily(f"{JM.MP_BASE}/{season - 1}/regular/teams.csv", f"mp_teams_raw_{season - 1}")
+        t5_prev = prev_all[prev_all.situation == "5on5"].set_index("team")
+    except Exception as e:
+        log(f"NHL prior season unavailable: {e}"); t5_prev = None
     goalies = JM.goalies(season)
     quotes = desk_quotes(con, "NHL", ["h2h", "spreads", "totals"])
     if quotes.empty:
@@ -417,9 +422,13 @@ def refresh_nhl(con, now):
             continue
         def rates(t):
             # shrink toward league average with ~10 hours (about 12 games) of average 5v5 play
-            r = t5.loc[t]; gp = max(r.games_played, 1); H = r.iceTime / 3600; H0 = 10.0
-            xgf = (r.xGoalsFor + lg_xg5 * H0) / (H + H0); xga = (r.xGoalsAgainst + lg_xg5 * H0) / (H + H0)
-            gf = (r.goalsFor + lg_xg5 * H0) / (H + H0); ga = (r.goalsAgainst + lg_xg5 * H0) / (H + H0)
+            r = t5.loc[t]; gp = max(r.games_played, 1); H = r.iceTime / 3600; H0 = 12.0
+            pf = pa = lg_xg5
+            if t5_prev is not None and t in t5_prev.index:   # 70% last season, 30% league, as the prior
+                p = t5_prev.loc[t]; Hp = max(p.iceTime / 3600, 1)
+                pf = 0.7 * p.xGoalsFor / Hp + 0.3 * lg_xg5; pa = 0.7 * p.xGoalsAgainst / Hp + 0.3 * lg_xg5
+            xgf = (r.xGoalsFor + pf * H0) / (H + H0); xga = (r.xGoalsAgainst + pa * H0) / (H + H0)
+            gf = (r.goalsFor + pf * H0) / (H + H0); ga = (r.goalsAgainst + pa * H0) / (H + H0)
             w = min(gp, 20) / 20 * 0.35                 # finishing talent: trust actual goals more as the season goes on
             return {"xgf_60": (1 - w) * xgf + w * gf, "xga_60": (1 - w) * xga + w * ga}
         rh, ra = rates(h), rates(a)
@@ -606,6 +615,188 @@ def alert_new_plays(con, rows):
 
 
 # ---------------------------------------------------------------- entry point
+# ---------------------------------------------------------------- paper ledger, price edges, health checks
+PAPER_BOOKS = ("pinnacle", "lowvig", "betonlineag", "draftkings", "fanduel", "fanatics", "betmgm", "williamhill_us", "espnbet", "betrivers")
+PRICE_BOOKS = tuple(b.strip() for b in os.environ.get("PRICE_BOOKS", "draftkings,fanduel,fanatics").split(",") if b.strip())
+PRICE_EDGE_MIN = 0.015     # +EV vs Pinnacle fair needed to flag a soft-book price
+BIG_EDGE = 0.08            # a model edge above this is treated as a bug, not a bet
+
+
+def _is_call(c):
+    return bool(c) and (str(c).startswith("Lean") or str(c).startswith("Play"))
+
+
+def ensure_paper_schema(con):
+    cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    if "paper" not in cols:
+        con.execute("alter table bets add column paper int default 0")
+    con.execute("""create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
+                   book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book))""")
+    con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
+
+
+def _quote_for(con, event_id, market, outcome, player, line, books=PAPER_BOOKS):
+    """Best available quote for a selection, preferring sharp books and the exact line."""
+    rows = [dict(r) for r in con.execute("select book, line, price from last_quote where event_id=? and market=? and outcome=? and player=?",
+                                         (event_id, market, outcome, player or ""))]
+    if not rows:
+        return None
+    rank = {b: i for i, b in enumerate(books)}
+    same = [r for r in rows if line is None or r["line"] is None or abs(float(r["line"]) - float(line)) < 1e-9]
+    pool = same or rows
+    pool.sort(key=lambda r: rank.get(r["book"], 99))
+    return pool[0]
+
+
+def _selection(row):
+    """(selection, selection line, model prob for that selection) from a model row's call."""
+    call = str(row["call"]); market = row["market"]
+    words = call.split(" ")[1:]
+    if market in ("totals",) or market.startswith("player_"):
+        sel = words[0] if words else row["outcome"]
+    else:
+        sel = " ".join(words)
+    mine = sel == row["outcome"]
+    p = row["model_prob"] if mine else (1 - row["model_prob"] if row["model_prob"] is not None else None)
+    line = row.get("line")
+    if market == "spreads" and not mine and line is not None:
+        line = -float(line)
+    return sel, line, p
+
+
+def paper_log(con, rows, now):
+    """Record every Lean/Play as a paper bet at the price available when the call was first made."""
+    ensure_paper_schema(con)
+    n = 0
+    for r in rows:
+        if not _is_call(r.get("call")):
+            continue
+        sel, line, p = _selection(r)
+        player = r.get("player", "") or ""
+        if con.execute("select 1 from bets where paper=1 and event_id=? and market=? and selection=? and player=? and note not like 'price edge%'",
+                       (r["event_id"], r["market"], sel, player)).fetchone():
+            continue
+        ev = con.execute("select sport, home, away, commence from events where event_id=?", (r["event_id"],)).fetchone()
+        if not ev or ev["commence"] <= now.isoformat(timespec="seconds"):
+            continue
+        q = _quote_for(con, r["event_id"], r["market"], sel, player, line)
+        if not q:
+            continue
+        con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price, book, stake,
+                       model_prob, note, paper) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)""",
+                    (now.isoformat(timespec="seconds"), ev["sport"], r["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"],
+                     r["market"], sel, player, q["line"] if q["line"] is not None else line, q["price"], q["book"], 1.0,
+                     None if p is None else round(float(p), 4), f"{r['call']} | {r.get('note') or ''}"[:300]))
+        n += 1
+    return n
+
+
+def price_edges(con, now):
+    """Soft-book prices that beat Pinnacle's de-vigged fair price: an edge that needs no model."""
+    ensure_paper_schema(con)
+    lim = (now + timedelta(hours=48)).isoformat(timespec="seconds")
+    evs = [dict(r) for r in con.execute("select event_id, sport, home, away, commence from events where commence>? and commence<?",
+                                        (now.isoformat(timespec="seconds"), lim))]
+    con.execute("delete from value_edges where event_id in (select event_id from events where commence>?)", (now.isoformat(timespec="seconds"),))
+    out = []
+    for ev in evs:
+        q = [dict(r) for r in con.execute("select * from last_quote where event_id=?", (ev["event_id"],))]
+        if not q:
+            continue
+        groups = {}
+        for r in q:
+            groups.setdefault((r["market"], r["player"] or ""), []).append(r)
+        for (market, player), rows in groups.items():
+            sharp = [r for r in rows if r["book"] == "pinnacle"] or [r for r in rows if r["book"] in ("lowvig", "betonlineag")]
+            if len({r["outcome"] for r in sharp}) != 2:
+                continue
+            by = {}
+            for r in sharp:
+                by.setdefault(r["outcome"], r)
+            o1, o2 = list(by.values())[:2]
+            if o1["line"] is not None and o2["line"] is not None and market != "spreads" and abs(float(o1["line"]) - float(o2["line"])) > 1e-9:
+                continue
+            fair = {o1["outcome"]: fair_two_way(o1["price"], o2["price"]), o2["outcome"]: fair_two_way(o2["price"], o1["price"])}
+            lines = {o1["outcome"]: o1["line"], o2["outcome"]: o2["line"]}
+            for r in rows:
+                if r["book"] not in PRICE_BOOKS or r["outcome"] not in fair or not r["price"]:
+                    continue
+                L = lines[r["outcome"]]
+                if (L is None) != (r["line"] is None) or (L is not None and abs(float(L) - float(r["line"])) > 1e-9):
+                    continue
+                evv = float(r["price"]) * fair[r["outcome"]] - 1
+                if evv >= PRICE_EDGE_MIN:
+                    row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
+                               price=r["price"], fair=round(fair[r["outcome"]], 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
+                               commence=ev["commence"])
+                    out.append(row)
+                    con.execute("insert or replace into value_edges values(?,?,?,?,?,?,?,?,?,?)",
+                                (row["event_id"], market, r["outcome"], player, r["line"], r["book"], r["price"], row["fair"], row["ev"],
+                                 now.isoformat(timespec="seconds")))
+    # paper-trade them too (one per outcome, first book seen)
+    n = 0
+    for row in out:
+        if con.execute("select 1 from bets where paper=1 and event_id=? and market=? and selection=? and player=? and note like 'price edge%'",
+                       (row["event_id"], row["market"], row["outcome"], row["player"])).fetchone():
+            continue
+        con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price, book, stake,
+                       model_prob, note, paper) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)""",
+                    (now.isoformat(timespec="seconds"), row["sport"], row["event_id"], f"{row['away']} @ {row['home']}", row["commence"],
+                     row["market"], row["outcome"], row["player"], row["line"], row["price"], row["book"], 1.0, row["fair"],
+                     f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}"))
+        n += 1
+    return out, n
+
+
+def health_check(db_path, results):
+    """After every model run: catch broken data before it reaches the board. Returns the list of problems."""
+    now = datetime.now(UTC)
+    con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
+    probs = []
+    d = os.environ.get("JERRY_DATA_DIR", "/data")
+    try:
+        if os.path.exists(d) and os.stat(d).st_dev == os.stat("/").st_dev:
+            probs.append(f"{d} is not a mounted volume: data will be lost on the next redeploy")
+    except Exception:
+        pass
+    for s, v in (results or {}).items():
+        if isinstance(v, str):
+            probs.append(f"{s} model error: {v}")
+    t0 = now.isoformat(timespec="seconds"); t1 = (now + timedelta(hours=36)).isoformat(timespec="seconds")
+    for sport in ("NFL", "NHL", "MLB", "UFC", "NBA"):
+        ev = [r[0] for r in con.execute("select event_id from events where sport=? and commence>? and commence<?", (sport, t0, t1))]
+        if not ev:
+            continue
+        marks = ",".join("?" * len(ev))
+        nq = con.execute(f"select count(*) from last_quote where event_id in ({marks})", ev).fetchone()[0]
+        nm = con.execute(f"select count(*) from model_probs where event_id in ({marks})", ev).fetchone()[0]
+        if not nq:
+            probs.append(f"{sport}: {len(ev)} games within 36h but no prices on the board")
+        elif not nm and sport in (results or {}) and sport != "NBA":
+            probs.append(f"{sport}: prices present but the model produced 0 rows")
+    big = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>? and abs(coalesce(m.edge,0))>?
+                         and (m.call like 'Lean%' or m.call like 'Play%')""", (t0, BIG_EDGE)).fetchone()[0]
+    if big:
+        probs.append(f"{big} live calls with edge above {BIG_EDGE:.0%}: model output suspect")
+    for k, v in con.execute("select k, v from meta where k like 'error_%'"):
+        try:
+            if now - datetime.fromisoformat(v[:19]).replace(tzinfo=UTC) < timedelta(hours=1):
+                probs.append(f"{k}: {v[20:120]}")
+        except Exception:
+            pass
+    con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v",
+                ("health", f"{t0} " + ("ok" if not probs else " || ".join(probs))[:900]))
+    if probs:
+        key = str(abs(hash(" | ".join(sorted(probs)))))
+        last = con.execute("select v from meta where k='health_sent'").fetchone()
+        if not last or last[0].split(" ", 1)[0] != key or now - datetime.fromisoformat(last[0].split(" ", 1)[1]).replace(tzinfo=UTC) > timedelta(hours=6):
+            telegram("JERRY HEALTH CHECK\n" + "\n".join(f"- {p}" for p in probs))
+            con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v", ("health_sent", f"{key} {t0}"))
+    con.commit(); con.close()
+    log(f"health: {'ok' if not probs else probs}")
+    return probs
+
+
 def refresh_all(db_path, sports=("NFL", "NFL_PROPS", "NHL", "UFC")):
     now = datetime.now(UTC)
     con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
@@ -621,6 +812,10 @@ def refresh_all(db_path, sports=("NFL", "NFL_PROPS", "NHL", "UFC")):
             results[s] = len(rows)
             alert_new_plays(con, rows)
             con.commit()
+            try:
+                paper_log(con, rows, now); con.commit()
+            except Exception as e:
+                con.rollback(); log(f"paper log failed for {s}: {e}")
         except Exception as e:
             con.rollback()
             results[s] = f"error: {e}"
@@ -628,5 +823,10 @@ def refresh_all(db_path, sports=("NFL", "NFL_PROPS", "NHL", "UFC")):
             con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v",
                         (f"error_model_{s}", f"{now.isoformat(timespec='seconds')} {e}"[:200]))
             con.commit()
+    try:
+        edges_, n_new = price_edges(con, now); con.commit()
+        results["PRICE"] = len(edges_)
+    except Exception as e:
+        con.rollback(); results["PRICE"] = f"error: {e}"; log(f"price edges failed: {e}")
     con.close()
     return results
