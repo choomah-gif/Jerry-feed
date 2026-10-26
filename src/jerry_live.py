@@ -127,12 +127,13 @@ def pinnacle_line(df, event_id, market, outcome):
 
 def write_probs(con, rows, now):
     for r in rows:
-        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts)
-                       values(?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
+        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
                        line=excluded.line, model_prob=excluded.model_prob, fair_prob=excluded.fair_prob, edge=excluded.edge,
-                       call=excluded.call, note=excluded.note, ts=excluded.ts""",
+                       call=excluded.call, note=excluded.note, ts=excluded.ts, reasoning=excluded.reasoning""",
                     (r["event_id"], r["market"], r["outcome"], r.get("player", ""), r.get("line"), r["model_prob"],
-                     r.get("fair_prob"), r.get("edge"), r["call"], r.get("note", ""), now.isoformat(timespec="seconds")))
+                     r.get("fair_prob"), r.get("edge"), r["call"], r.get("note", ""), now.isoformat(timespec="seconds"),
+                     r.get("reasoning")))
 
 
 # ---------------------------------------------------------------- NFL sides / totals
@@ -148,6 +149,40 @@ def nfl_injuries(season, week):
 def current_week(games, now):
     g = games[(games.season == nfl_season(now)) & (games.gameday >= pd.Timestamp(now.date()) - pd.Timedelta(days=1))]
     return int(g.week.min()) if len(g) else None
+
+
+
+# Injury adjustment to the margin model. The regression has no injury input, so a
+# team missing its starting QB is modelled as if he were playing — exactly the case
+# where the market knows more than the model. These are transparent priors, not
+# fitted coefficients; they are logged in components so they can be audited.
+QB_OUT_PTS = 4.0          # points of margin for a confirmed-Out starting QB
+STARTER_OUT_PTS = 0.5     # per Out starter at RB/WR/TE/OL, capped below
+STARTER_OUT_CAP = 2.0
+QB_OUT_TOTAL = 2.0        # a backup QB also lowers the total
+
+def _starting_qbs(pw, season, week, lookback=3):
+    """Team -> QB with the most pass attempts over the last few weeks. Data we already load."""
+    d = pw[(pw.season == season) & (pw.week < week) & (pw.week >= week - lookback) & (pw.position == "QB")]
+    if d.empty:
+        return {}
+    att = d.groupby(["team", "player_display_name"])["attempts"].sum().reset_index()
+    return {t: g.sort_values("attempts", ascending=False).iloc[0].player_display_name for t, g in att.groupby("team")}
+
+def injury_adjustment(inj, team, qb_name):
+    """(margin_pts, total_pts, detail) — positive margin_pts means this team is WEAKER by that much."""
+    d = inj[inj.team == team] if inj is not None and not inj.empty else inj
+    if d is None or d.empty:
+        return 0.0, 0.0, ""
+    out = d[d.report_status.isin(["Out", "Doubtful"])]
+    pts = tot = 0.0; bits = []
+    if qb_name and (out.full_name == qb_name).any():
+        pts += QB_OUT_PTS; tot += QB_OUT_TOTAL; bits.append(f"starting QB {qb_name} out ({QB_OUT_PTS:+.1f})")
+    starters = out[out.position.isin(["RB", "WR", "TE", "T", "G", "C", "OL"])]
+    k = min(len(starters), int(STARTER_OUT_CAP / STARTER_OUT_PTS))
+    if k:
+        pts += STARTER_OUT_PTS * k; bits.append(f"{len(starters)} skill/OL out ({STARTER_OUT_PTS*k:+.1f})")
+    return pts, tot, "; ".join(bits)
 
 
 def refresh_nfl(con, now):
@@ -169,6 +204,11 @@ def refresh_nfl(con, now):
     std = JM._season_to_date(stats)
     rows, out = [], []
     inj = nfl_injuries(season, week)
+    try:
+        _pw = JM._cached_csv(f"{NFLVERSE}/stats_player/stats_player_week_{season}.csv", f"nfl_player_week_{season}.csv", refresh=False)
+        qbs = _starting_qbs(_pw, season, week)
+    except Exception as _e:   # noqa: BLE001
+        qbs = {}
     for _, ev in quotes.drop_duplicates("event_id").iterrows():
         h, a = NFL_TEAMS.get(ev.home), NFL_TEAMS.get(ev.away)
         if not h or not a:
@@ -195,6 +235,20 @@ def refresh_nfl(con, now):
                "a_off": float(as_.off_epa_play_std.iloc[0]), "a_def": float(as_.def_epa_play_std.iloc[0]),
                "h_rest_edge": float(np.clip((7 if pd.isna(nv.home_rest) else nv.home_rest) - (7 if pd.isna(nv.away_rest) else nv.away_rest), -7, 7))}
         pred = model.predict(pd.DataFrame([row])).iloc[0]
+        # ---- injury adjustment (#4): shift margin/total, then recompute the probabilities
+        adj_h, tot_h, det_h = injury_adjustment(inj, h, qbs.get(h))
+        adj_a, tot_a, det_a = injury_adjustment(inj, a, qbs.get(a))
+        inj_margin = adj_a - adj_h            # away team weaker -> home margin up
+        inj_total = -(tot_h + tot_a)
+        inj_detail = "; ".join(x for x in (f"{h}: {det_h}" if det_h else "", f"{a}: {det_a}" if det_a else "") if x)
+        if inj_margin or inj_total:
+            pred = pred.copy()
+            pred["pred_margin"] = float(pred.pred_margin) + inj_margin
+            pred["pred_total"] = float(pred.pred_total) + inj_total
+            pred["p_home_cover"] = float(norm.cdf((pred.pred_margin + float(hline)) / 13.5))
+            pred["p_under"] = float(norm.cdf((float(oline) - pred.pred_total) / 13.0))
+            if "p_home_ml" in pred.index:
+                pred["p_home_ml"] = float(norm.cdf(pred.pred_margin / 13.5))
         # fair probs from Pinnacle two-way prices
         f_hcov = fair_two_way(hprice, aprice) if hprice and aprice else 0.5
         f_under = fair_two_way(uprice, oprice) if uprice and oprice else 0.5
@@ -206,15 +260,38 @@ def refresh_nfl(con, now):
         if qs:
             note += (" | " if note else "") + "Questionable: " + ", ".join(f"{r.full_name} ({r.team})" for r in qs[:6])
         e = pred.p_home_cover - f_hcov
+        sp_comp = {"model_number": round(float(pred.pred_margin), 2), "market_number": round(float(-hline), 2),
+                   "key3": round(float(pred.abs_margin_3), 3), "key7": round(float(pred.abs_margin_7), 3),
+                   "injuries": note[:240], "raw_prob": round(float(pred.p_home_cover), 4),
+                   "injury_margin_adj": round(float(inj_margin), 2), "injury_detail": inj_detail}
+        sp_ratio = jr.edge_ratio(pred.pred_margin - (-hline), jr.DEFAULT_MODEL_MAE["spreads"])
+        sp_tag, _sp_stake, _ = jr.size_from_ratio(sp_ratio, e, cap_lean=True)
+        sp_side = ev.home if e > 0 else ev.away
         out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.home, line=hline, model_prob=pred.p_home_cover, fair_prob=f_hcov, edge=e,
-                        call=f"{call_for(e, LEAN, PLAY, cap_lean=True)} {ev.home if e > 0 else ev.away}" if abs(e) >= LEAN else "Sit",
-                        note=f"model margin {pred.pred_margin:+.1f} (home) vs line {-hline:+.1f}; P(|margin|=3) {pred.abs_margin_3:.0%}, =7 {pred.abs_margin_7:.0%}. {note}"))
+                        call=f"{sp_tag} {sp_side}" if sp_tag != "Sit" else "Sit",
+                        note=f"model margin {pred.pred_margin:+.1f} (home) vs line {-hline:+.1f}; ratio {sp_ratio:.2f} of a {jr.DEFAULT_MODEL_MAE['spreads']}-pt error band; P(|margin|=3) {pred.abs_margin_3:.0%}, =7 {pred.abs_margin_7:.0%}. {note}",
+                        components=sp_comp, model_number=sp_comp["model_number"], market_number=sp_comp["market_number"],
+                        reasoning=jr.render_reasoning(market="spreads", player="", selection=sp_side, line=hline if e > 0 else aline,
+                                                      model_prob=pred.p_home_cover if e > 0 else 1 - pred.p_home_cover,
+                                                      fair_prob=f_hcov if e > 0 else 1 - f_hcov, components=sp_comp,
+                                                      opponent=ev.away if e > 0 else ev.home, status="", n_games=None)))
         out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.away, line=aline, model_prob=1 - pred.p_home_cover, fair_prob=1 - f_hcov, edge=-e, call="see home row"))
         eu = pred.p_under - f_under
-        big = abs(pred.pred_total - float(oline)) >= 1.5          # the only NFL signal the backtest supported
+        tot_comp = {"model_number": round(float(pred.pred_total), 2), "market_number": round(float(oline), 2),
+                    "raw_prob": round(float(pred.p_under), 4), "injury_total_adj": round(float(inj_total), 2),
+                    "injury_detail": inj_detail}
+        tot_ratio = jr.edge_ratio(pred.pred_total - float(oline), jr.DEFAULT_MODEL_MAE["totals"])
+        tot_tag, _t_stake, _ = jr.size_from_ratio(tot_ratio, eu)
+        tot_side = "Under" if eu > 0 else "Over"
         out.append(dict(event_id=ev.event_id, market="totals", outcome="Under", line=uline, model_prob=pred.p_under, fair_prob=f_under, edge=eu,
-                        call=f"{call_for(eu, LEAN, PLAY, cap_lean=not big)} {'Under' if eu > 0 else 'Over'}" if abs(eu) >= LEAN else "Sit",
-                        note=f"model total {pred.pred_total:.1f} vs {oline}; backtest: 1.5+ pt disagreements went 58.5% (n=159)"))
+                        call=f"{tot_tag} {tot_side}" if tot_tag != "Sit" else "Sit",
+                        note=f"model total {pred.pred_total:.1f} vs {oline}; ratio {tot_ratio:.2f} of a {jr.DEFAULT_MODEL_MAE['totals']}-pt error band "
+                             f"(backtest 58.5% at n=159 has a 95% interval of 50.8-66.2%, not significant vs 52.4% break-even)",
+                        components=tot_comp, model_number=tot_comp["model_number"], market_number=tot_comp["market_number"],
+                        reasoning=jr.render_reasoning(market="totals", player="", selection=tot_side, line=oline,
+                                                      model_prob=pred.p_under if eu > 0 else 1 - pred.p_under,
+                                                      fair_prob=f_under if eu > 0 else 1 - f_under, components=tot_comp,
+                                                      opponent="", status="", n_games=None)))
         out.append(dict(event_id=ev.event_id, market="totals", outcome="Over", line=oline, model_prob=1 - pred.p_under, fair_prob=1 - f_under, edge=-eu, call="see Under row"))
         if f_hml is not None:
             em = pred.p_home_ml - f_hml
@@ -226,6 +303,15 @@ def refresh_nfl(con, now):
 
 
 # ---------------------------------------------------------------- NFL props
+
+def _td_prior(touches, pos=""):
+    """Prior TD rate per game given weekly touches. Bench players stay near zero;
+    only a full workload earns the starter's 0.35."""
+    if pos == "QB":
+        return 0.04 + 0.16 * min(1.0, max(0.0, (touches - 2.0) / 6.0))      # rushing TDs only
+    return 0.03 + 0.32 * min(1.0, max(0.0, (touches - 3.0) / 10.0)) ** 1.2
+
+
 def _player_rates(pw, team_week, season, week):
     """Per-player recent rates (last 6 games, recency-weighted) and game-to-game spread."""
     pw = pw[(pw.season_type == "REG") & (pw.week < week)].copy()
@@ -236,6 +322,13 @@ def _player_rates(pw, team_week, season, week):
     pw[stats] = pw[stats].fillna(0)
     pw["usage"] = pw.attempts + pw.carries + pw.targets
     pw = pw[pw.usage > 0]
+    def _eff_of(df):
+        t, c, a = max(df.targets.sum(), 1), max(df.carries.sum(), 1), max(df.attempts.sum(), 1)
+        return {"ypt": df.receiving_yards.sum() / t, "catch": df.receptions.sum() / t,
+                "ypc": df.rushing_yards.sum() / c, "ypa": df.passing_yards.sum() / a}
+    _lg_eff = {"_all": _eff_of(pw)}
+    for _pos, _g in pw.groupby("position"):
+        _lg_eff[_pos] = _eff_of(_g)
     for (pid, name, team, pos), d in pw.groupby(["player_id", "player_display_name", "team", "position"]):
         # drop games where he barely played (injury exit, benching): under 40% of his usual touches
         d = d[d.usage >= 0.4 * d.usage.median()]
@@ -244,7 +337,37 @@ def _player_rates(pw, team_week, season, week):
             continue
         w = np.array([0.8 ** (len(d) - 1 - i) for i in range(len(d))]); w /= w.sum()   # gentle recency, not last-game-heavy
         mean = {s: float((d[s].values * w).sum()) for s in stats}
-        mean["td"] = (mean["td"] * len(d) + 0.35 * 4) / (len(d) + 4)   # shrink TD rate: 6 games is nothing
+        # ---- decomposition (#3): project VOLUME and EFFICIENCY separately, then recombine.
+        # A whole-stat average cannot respond to a role change or a tough matchup on
+        # efficiency; this can, and both halves are logged so a miss can be attributed.
+        vol_t, vol_c, vol_a = mean["targets"], mean["carries"], mean["attempts"]
+        tot_t, tot_c, tot_a = float(d.targets.sum()), float(d.carries.sum()), float(d.attempts.sum())
+        K = 30.0   # opportunities of league-average efficiency to shrink toward
+        lg = _lg_eff.get(pos, _lg_eff.get("_all"))
+        eff = {
+            "ypt": (float(d.receiving_yards.sum()) + lg["ypt"] * K) / (tot_t + K),
+            "catch": (float(d.receptions.sum()) + lg["catch"] * K) / (tot_t + K),
+            "ypc": (float(d.rushing_yards.sum()) + lg["ypc"] * K) / (tot_c + K),
+            "ypa": (float(d.passing_yards.sum()) + lg["ypa"] * K) / (tot_a + K),
+        }
+        decomp = {"receiving_yards": vol_t * eff["ypt"], "receptions": vol_t * eff["catch"],
+                  "rushing_yards": vol_c * eff["ypc"], "passing_yards": vol_a * eff["ypa"]}
+        raw_mean = dict(mean)
+        for k_, v_ in decomp.items():
+            mean[k_] = 0.5 * raw_mean[k_] + 0.5 * v_   # blend until either half is validated
+        mean["_decomp"] = {k_: round(v_, 2) for k_, v_ in decomp.items()}
+        mean["_eff"] = {k_: round(v_, 3) for k_, v_ in eff.items()}
+        mean["_vol"] = {"targets": round(vol_t, 2), "carries": round(vol_c, 2), "attempts": round(vol_a, 2)}
+        mean["_raw"] = {k_: round(raw_mean[k_], 2) for k_ in decomp}
+        # Shrink the TD rate toward a prior that depends on the player's ROLE, not a
+        # flat starter's 0.35. The flat prior handed every bench player 0.2 TD/game
+        # on a three-game sample (0 + 0.35*4)/(3+4) and the TD board filled with
+        # longshots. Touches = carries + targets; QBs use carries only.
+        touches = mean["carries"] + (0.0 if pos == "QB" else mean["targets"])
+        mean["touches"] = touches
+        prior = _td_prior(touches, pos)
+        mean["td_prior"] = prior
+        mean["td"] = (mean["td"] * len(d) + prior * 4) / (len(d) + 4)
         sd = {s: float(d[s].std(ddof=0)) if len(d) > 1 else float("nan") for s in stats}
         out[(name, team)] = {"pos": pos, "n": len(d), "mean": mean, "sd": sd, "last_week": int(d.week.max())}
     return out
@@ -304,11 +427,20 @@ def refresh_nfl_props(con, now):
         over = d[d.outcome.isin(["Over", "Yes"])]; under = d[d.outcome.isin(["Under", "No"])]
         po = over.price.median() if len(over) else None; pu = under.price.median() if len(under) else None
         if kind == "poisson":                       # anytime TD: Yes price only
+            touches = r["mean"].get("touches", 0.0)
+            # role gate: a player who does not touch the ball cannot be a TD edge,
+            # whatever the Poisson on a tiny sample says
+            if touches < 5.0 or r["n"] < 4:
+                continue
             p_yes = 1 - math.exp(-mu)
             fair = 1 / po if po else None
             if fair and pu:
                 fair = fair_two_way(po, pu)
             if not fair:
+                continue
+            # market-plausibility gate: below ~12% the market considers him an
+            # incidental scorer, and small-sample Poisson noise dominates the edge
+            if fair < 0.12:
                 continue
             edge = p_yes - fair
             o_name, p_model = "Yes", p_yes
@@ -334,12 +466,27 @@ def refresh_nfl_props(con, now):
         note = f"proj {mu:.1f} (sd {sd_use if kind != 'poisson' else 0:.1f}) from last {r['n']} games x opp factor {f:.2f}; raw model {raw:.1%}, anchored {PROPS_ANCHOR:.0%}" + (" — Questionable" if status == "Q" else "")
         # the projection decomposed, so a miss can be attributed to volume or to
         # efficiency instead of being recorded as one undifferentiated loss
-        comp = {"mu": round(float(mu), 3),
-                "sd": round(float(sd_use), 3) if kind != "poisson" else None,
-                "opp_factor": round(float(f), 3), "games": int(r["n"]),
-                "raw_prob": round(float(raw), 4), "anchor": PROPS_ANCHOR,
-                "stat": stat, "model_number": round(float(mu), 3),
-                "market_number": None if line is None else float(line)}
+        if kind == "poisson":
+            # Poisson rate has sd sqrt(mu/n) on the mean; the market-implied rate is
+            # -ln(1-fair). This gives TD picks a real error band to size against.
+            td_sd = math.sqrt(max(mu, 0.02) / max(r["n"], 1))
+            comp = {"mu": round(float(mu), 3), "sd": round(float(td_sd), 3),
+                    "opp_factor": round(float(f), 3), "games": int(r["n"]),
+                    "raw_prob": round(float(raw), 4), "anchor": PROPS_ANCHOR,
+                    "stat": stat, "touches": round(float(r["mean"].get("touches", 0.0)), 1),
+                    "td_prior": round(float(r["mean"].get("td_prior", 0.0)), 3),
+                    "model_number": round(float(mu), 3),
+                    "market_number": round(float(-math.log(max(1e-6, 1 - fair))), 3)}
+        else:
+            comp = {"mu": round(float(mu), 3),
+                    "sd": round(float(sd_use), 3),
+                    "opp_factor": round(float(f), 3), "games": int(r["n"]),
+                    "raw_prob": round(float(raw), 4), "anchor": PROPS_ANCHOR,
+                    "stat": stat, "touches": round(float(r["mean"].get("touches", 0.0)), 1),
+                    "model_number": round(float(mu), 3),
+                    "market_number": None if line is None else float(line),
+                    "volume": r["mean"].get("_vol", {}), "efficiency": r["mean"].get("_eff", {}),
+                    "decomp_proj": r["mean"].get("_decomp", {}).get(stat), "whole_stat_proj": r["mean"].get("_raw", {}).get(stat)}
         off_line = line is not None and kind != "poisson" and line > 0 and not (0.6 <= mu / line <= 1.6)
         if status == "OUT":
             tag = "Sit"
@@ -351,11 +498,19 @@ def refresh_nfl_props(con, now):
             tag = "Sit"
             note += " — edge too large to trust"
         else:
-            tag = call_for(edge, 0.03, 0.05, cap_lean=True)   # props: capped at Lean until validated by live CLV
+            # sized against the projection's own dispersion, not a flat edge threshold
+            _ratio = jr.edge_ratio(float(comp["model_number"]) - float(comp["market_number"]), comp.get("sd") or 1.0) \
+                     if comp.get("market_number") is not None else None
+            tag, _stk, _why = jr.size_from_ratio(_ratio, edge, cap_lean=True)
+            note += f"; ratio {_ratio:.2f}" if _ratio is not None else ""
         side = o_name if edge > 0 else ("Under" if o_name == "Over" else "No")
+        reasoning = jr.render_reasoning(market=market, player=player, selection=side, line=line,
+                                        model_prob=p_model, fair_prob=fair, components=comp,
+                                        opponent=opp, status=status, n_games=r["n"])
         out.append(dict(event_id=eid, market=market, outcome=o_name, player=player, line=line, model_prob=p_model, fair_prob=fair, edge=edge,
                         call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note,
-                        components=comp, model_number=comp["model_number"], market_number=comp["market_number"]))
+                        components=comp, model_number=comp["model_number"], market_number=comp["market_number"],
+                        reasoning=reasoning))
     write_probs(con, out, now)
     return out
 
@@ -526,14 +681,29 @@ def refresh_nhl(con, now):
         note = f"xG {lam_h:.2f}-{lam_a:.2f}; {h} G: {gh_txt}; {a} G: {ga_txt}" + ("; B2B " + ",".join(t for t, b in ((h, hb2b), (a, ab2b)) if b) if (hb2b or ab2b) else "")
         if hmlp and amlp:
             f = fair_two_way(hmlp, amlp); e = s["p_home_ml"] - f
+            _mc = {"xg_home": round(float(lam_h), 3), "xg_away": round(float(lam_a), 3), "raw_prob": round(float(s["p_home_ml"]), 4)}
+            _side = ev.home if e > 0 else ev.away
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.home, model_prob=s["p_home_ml"], fair_prob=f, edge=e,
-                            call=f"{call_for(e, 0.03, 0.05, cap_lean=True)} {ev.home if e > 0 else ev.away}" if abs(e) >= 0.03 else "Sit", note=note))
+                            call=f"{call_for(e, 0.03, 0.05, cap_lean=True)} {_side}" if abs(e) >= 0.03 else "Sit", note=note,
+                            components=_mc,
+                            reasoning=(f"Expected goals {lam_h:.2f}-{lam_a:.2f} from 5v5 and special-teams xG rates shrunk toward league average, "
+                                       f"with the confirmed goalies' save quality. That makes {_side} {(s['p_home_ml'] if e > 0 else 1 - s['p_home_ml']):.0%} "
+                                       f"to win versus {(f if e > 0 else 1 - f):.0%} at fair. Moneyline edges have no backtest and no graded history; "
+                                       f"treat as colour. Falsifier: the other side leads by two after the first period.")))
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.away, model_prob=1 - s["p_home_ml"], fair_prob=1 - f, edge=-e, call="see home row"))
         if oprice and uprice:
             f = fair_two_way(uprice, oprice); e = s["p_under"] - f
             tag = "Sit (goalie unconfirmed)" if unconf else (f"{call_for(e, 0.03, 0.05, cap_lean=True)} {'Under' if e > 0 else 'Over'}" if abs(e) >= 0.03 else "Sit")
+            _nc = {"mu": round(float(s["exp_total"]), 3), "sd": round(float(math.sqrt(max(lam_h + lam_a, 0.5))), 3),
+                   "model_number": round(float(s["exp_total"]), 3), "market_number": float(total),
+                   "xg_home": round(float(lam_h), 3), "xg_away": round(float(lam_a), 3), "goalie_unconfirmed": bool(unconf)}
             out.append(dict(event_id=ev.event_id, market="totals", outcome="Under", line=uline, model_prob=s["p_under"], fair_prob=f, edge=e, call=tag,
-                            note=f"exp total {s['exp_total']:.2f} vs {total}; one-goal {s['one_goal_share']:.0%}, OT {s['p_ot_so']:.0%}. {note}"))
+                            note=f"exp total {s['exp_total']:.2f} vs {total}; one-goal {s['one_goal_share']:.0%}, OT {s['p_ot_so']:.0%}. {note}",
+                            components=_nc, model_number=_nc["model_number"], market_number=_nc["market_number"],
+                            reasoning=jr.render_reasoning(market="totals", player="", selection="Under" if e > 0 else "Over", line=total,
+                                                          model_prob=s["p_under"] if e > 0 else 1 - s["p_under"],
+                                                          fair_prob=f if e > 0 else 1 - f, components=_nc, opponent="", status="", n_games=None)
+                                      + (" Goalie unconfirmed at the time of the run, which alone makes this a Sit." if unconf else "")))
             out.append(dict(event_id=ev.event_id, market="totals", outcome="Over", line=oline, model_prob=1 - s["p_under"], fair_prob=1 - f, edge=-e, call="see Under row"))
         if hplp and aplp and hpl is not None:
             f = fair_two_way(hplp, aplp)
@@ -782,6 +952,18 @@ def price_edges(con, now):
                 if (L is None) != (r["line"] is None) or (L is not None and abs(float(L) - float(r["line"])) > 1e-9):
                     continue
                 evv = float(r["price"]) * fair[r["outcome"]] - 1
+                if evv >= PRICE_EDGE_MIN and player:
+                    # roster cross-check (#5): The Odds API sometimes returns a player's prop
+                    # under the wrong event. If his last known team is neither side, drop it.
+                    try:
+                        import jerry_feeds as _jf
+                        ok = _jf.label_ok(con, ev["sport"], player, ev["home"], ev["away"])
+                    except Exception:
+                        ok = None
+                    if ok is False:
+                        con.execute("insert or replace into meta(k,v) values(?,?)",
+                                    (f"label_reject_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
+                        continue
                 if evv >= PRICE_EDGE_MIN:
                     row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
                                price=r["price"], fair=round(fair[r["outcome"]], 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
