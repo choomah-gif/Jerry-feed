@@ -24,6 +24,8 @@ Props and UFC: tap W/L/P. The home page embeds a plain-text summary so Claude ca
 import csv
 import glob
 import json
+import jerry_reason as jr
+import jerry_grade as jg
 import math
 import os
 import re
@@ -177,8 +179,17 @@ def init_db():
     create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
         book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book));
     """)
-    if "paper" not in {r[1] for r in con.execute("pragma table_info(bets)")}:
+    _betcols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    if "paper" not in _betcols:
         con.execute("alter table bets add column paper int default 0")
+    # reasoning stored as fields, so a loss can be attributed instead of just counted
+    for _c, _t in (("comp_json", "text"), ("ratio", "real"), ("model_number", "real"),
+                   ("market_number", "real"), ("evidence_kind", "text"),
+                   ("corr_group", "text"), ("falsifier", "text"),
+                   ("falsifier_fired", "int"), ("steelman", "text"),
+                   ("stake_pre_corr", "real"), ("logged_call", "text")):
+        if _c not in _betcols:
+            con.execute(f"alter table bets add column {_c} {_t}")
     con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
     con.commit()
     con.close()
@@ -199,6 +210,25 @@ def http_get(path, params):
     with urllib.request.urlopen(urllib.request.Request(f"{API}{path}?{q}"), timeout=40) as r:
         return json.loads(r.read().decode()), {k.lower(): v for k, v in r.headers.items()}
 
+
+
+def _clv_for(b, c):
+    """Closing line value in probability points, translated back to the line bet.
+
+    The previous rule recorded CLV only when the closing line exactly matched the
+    bet line, which discarded every bet whose number moved — the bets that carry
+    the most information. Props were hit hardest: 157 closed rows, none usable.
+    """
+    if not c or not c.get("price"):
+        return None
+    comp = {}
+    try:
+        comp = json.loads(b["comp_json"] or "{}") if "comp_json" in b.keys() else {}
+    except Exception:
+        comp = {}
+    return jr.clv_pp(b["line"], b["price"], c["line"], c["price"],
+                     b["market"], b["selection"],
+                     sd=comp.get("sd"), mu=comp.get("mu"))
 
 class Desk:
     """All scheduling state. tick(now) is the whole brain; tests drive it with a fake clock."""
@@ -740,7 +770,7 @@ class Desk:
             if t == line:
                 return "P"
             return "W" if (t > line) == (selection == "Over") else "L"
-        return None
+        return None   # player props are settled by jerry_grade, not from team scores
 
     def closing(self, con, b):
         """Closing number for the bet: Pinnacle close at the same line if possible, else any close, else last tick."""
@@ -761,12 +791,13 @@ class Desk:
             if b["close_price"] is None:
                 c = self.closing(con, b)
                 if c and c["price"]:
-                    clv = round((1 / c["price"] - 1 / b["price"]) * 100, 2) if (c["line"] == b["line"] or b["market"] == "h2h") else None
+                    clv = _clv_for(b, c)
                     con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=? where id=?",
                                 (c["book"], c["line"], c["price"], clv, b["id"]))
         if not pend:
             return
         sports = {b["sport"] for b in pend if b["sport"] in SPORTS and b["market"] in ("h2h", "spreads", "totals")}
+        self._grade_props(con, pend, now)
         scores = {}
         for sp in sports:
             if not self._due(con, f"scores_{sp}", 30, now) or not self.can_spend(con, 2, now, floor=0):
@@ -787,12 +818,34 @@ class Desk:
             if res:
                 self.finish(con, b, res, now, hs, as_)
 
+
+    def _grade_props(self, con, pend, now):
+        """Settle player props from a player-stats feed. Scratches void, exact lines push."""
+        nfl = [b for b in pend if b["sport"] == "NFL" and (b["market"] or "").startswith("player_")]
+        if not nfl:
+            return
+        try:
+            season, week = self._nfl_season_week(now)
+            rep = jg.grade_nfl_props(con, season, week, iso(now))
+            if rep.get("quarantined"):
+                meta_set(con, "grade_quarantine_n", str(rep["quarantined"]))
+        except Exception as e:   # noqa: BLE001 - grading must never take the desk down
+            meta_set(con, "grade_props_error", f"{iso(now)} {e}")
+
+    @staticmethod
+    def _nfl_season_week(now):
+        """NFL week from the date: season starts the Thursday after Labor Day."""
+        y = now.year if now.month >= 3 else now.year - 1
+        sept = datetime(y, 9, 1, tzinfo=UTC)
+        labor = sept + timedelta(days=(7 - sept.weekday()) % 7)      # first Monday
+        kickoff = labor + timedelta(days=3)                          # Thursday
+        wk = max(1, min(22, ((now - kickoff).days // 7) + 1))
+        return y, wk
+
     def finish(self, con, b, res, now, hs=None, as_=None):
         pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0}[res]
         c = self.closing(con, b)
-        clv = None
-        if c and c["price"] and (c["line"] == b["line"] or b["market"] == "h2h"):
-            clv = round((1 / c["price"] - 1 / b["price"]) * 100, 2)   # +pp = you got a better price than close
+        clv = _clv_for(b, c) if c else None   # +pp = the market moved toward you
         con.execute("""update bets set result=?, pnl=?, home_score=?, away_score=?, close_book=?, close_line=?,
                        close_price=?, clv_pp=?, graded_ts=? where id=?""",
                     (res, round(pnl, 4), hs, as_, c["book"] if c else None, c["line"] if c else None,
@@ -862,7 +915,7 @@ class Desk:
             return "props" if m.startswith("player_") else {"h2h": "moneyline", "spreads": "spread", "totals": "total"}.get(m, m)
         def block(rs):
             clv = [r["clv_pp"] for r in rs if r["clv_pp"] is not None]
-            done = [r for r in rs if r["result"] in ("W", "L", "P")]
+            done = [r for r in rs if r["result"] in ("W", "L", "P")]   # V = void, excluded
             st = sum(r["stake"] for r in done); pnl = sum(r["pnl"] or 0 for r in done)
             return {"n": len(rs), "closed": len(clv), "clv_pp_avg": round(sum(clv) / len(clv), 2) if clv else None,
                     "beat_close_pct": round(sum(c > 0 for c in clv) / len(clv), 3) if clv else None,
@@ -876,6 +929,31 @@ class Desk:
                "recent": rows[-40:]}
         return out
 
+
+    def _grading_status_line(self):
+        """Prop grading health, in the summary so it can be read without SQL."""
+        con = db()
+        try:
+            q = con.execute("select count(*) from grade_quarantine").fetchone()[0]
+        except sqlite3.Error:
+            q = 0
+        try:
+            pend = con.execute("""select count(*) from bets where result='pending'
+                                  and market like 'player_%'""").fetchone()[0]
+            done = con.execute("""select count(*) from bets where result in ('W','L','P','V')
+                                  and market like 'player_%'""").fetchone()[0]
+            void = con.execute("select count(*) from bets where result='V'").fetchone()[0]
+        except sqlite3.Error:
+            pend = done = void = 0
+        err = con.execute("select v from meta where k='grade_props_error'").fetchone()
+        con.close()
+        bits = [f"PROPS GRADED: {done} settled ({void} void), {pend} pending, {q} quarantined"]
+        if q:
+            bits.append("(unresolved player names — see /api/quarantine)")
+        if err:
+            bits.append(f"| last grading error: {err[0][:120]}")
+        return " ".join(bits)
+
     def summary_text(self):
         """Plain-text digest embedded in the home page so a web fetch (no JavaScript) can read everything."""
         st = self.status(); rp = self.report()
@@ -884,6 +962,7 @@ class Desk:
                  f"reset in {st['days_to_reset']}d | backfill days {st['backfill_days']}",
                  f"errors: {st['errors'] or 'none'}", "",
                  f"BETS: {rp['bets_total']} total, {rp['pending']} pending, {rp['graded']} graded",
+                 self._grading_status_line(),
                  f"overall: {json.dumps(rp['all'])}",
                  f"by sport: {json.dumps(rp['by_sport'])}",
                  f"by bet type: {json.dumps(rp['by_type'])}",
@@ -1227,6 +1306,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(json.dumps(DESK.report()))
         if u.path == "/api/paper":
             return self.send(json.dumps(DESK.paper_report()))
+        if u.path == "/api/quarantine":
+            con = db()
+            try:
+                rows = [dict(r) for r in con.execute(
+                    "select * from grade_quarantine order by seen_ts desc limit 200")]
+            except sqlite3.Error:
+                rows = []
+            con.close()
+            return self.send(json.dumps({"quarantined": rows}))
         if u.path == "/api/edges":
             return self.send(json.dumps(DESK.edges(float(q.get("min", 0.015)), int(q.get("limit", 60)))))
         if u.path == "/api/model":
