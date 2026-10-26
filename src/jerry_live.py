@@ -511,6 +511,11 @@ def refresh_nfl_props(con, now):
                         call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note,
                         components=comp, model_number=comp["model_number"], market_number=comp["market_number"],
                         reasoning=reasoning))
+    # Clear this sport's prop rows for upcoming games before writing. write_probs only
+    # upserts, so a row the new gates now reject (a backup's TD, a prop that became a
+    # Sit) would otherwise linger forever carrying the old call.
+    con.execute("""delete from model_probs where market like 'player_%' and event_id in
+                   (select event_id from events where sport='NFL' and commence>?)""", (now.isoformat(timespec="seconds"),))
     write_probs(con, out, now)
     return out
 
