@@ -74,11 +74,20 @@ def nhl_season(now):
     return now.year if now.month >= 9 else now.year - 1
 
 
+import jerry_reason as jr
+
+
 def _norm(s):
     return re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " ")).strip()
 
 
 def fair_two_way(pa, pb):
+    """Power de-vig. Proportional de-vig concentrates its error on longshots and
+    manufactures value on every long price — which is how a 4.60 anytime-TD quote
+    scored +7.9% EV. Reduces to proportional on a balanced two-way market."""
+    f = jr.fair_two_way_power(pa, pb)
+    if f is not None:
+        return f
     ia, ib = 1 / pa, 1 / pb
     return ia / (ia + ib)
 
@@ -323,6 +332,14 @@ def refresh_nfl_props(con, now):
         edge = p_model - fair
         status = "OUT" if _norm(name) in out_players else "Q" if _norm(name) in quest else ""
         note = f"proj {mu:.1f} (sd {sd_use if kind != 'poisson' else 0:.1f}) from last {r['n']} games x opp factor {f:.2f}; raw model {raw:.1%}, anchored {PROPS_ANCHOR:.0%}" + (" — Questionable" if status == "Q" else "")
+        # the projection decomposed, so a miss can be attributed to volume or to
+        # efficiency instead of being recorded as one undifferentiated loss
+        comp = {"mu": round(float(mu), 3),
+                "sd": round(float(sd_use), 3) if kind != "poisson" else None,
+                "opp_factor": round(float(f), 3), "games": int(r["n"]),
+                "raw_prob": round(float(raw), 4), "anchor": PROPS_ANCHOR,
+                "stat": stat, "model_number": round(float(mu), 3),
+                "market_number": None if line is None else float(line)}
         off_line = line is not None and kind != "poisson" and line > 0 and not (0.6 <= mu / line <= 1.6)
         if status == "OUT":
             tag = "Sit"
@@ -337,7 +354,8 @@ def refresh_nfl_props(con, now):
             tag = call_for(edge, 0.03, 0.05, cap_lean=True)   # props: capped at Lean until validated by live CLV
         side = o_name if edge > 0 else ("Under" if o_name == "Over" else "No")
         out.append(dict(event_id=eid, market=market, outcome=o_name, player=player, line=line, model_prob=p_model, fair_prob=fair, edge=edge,
-                        call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note))
+                        call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note,
+                        components=comp, model_number=comp["model_number"], market_number=comp["market_number"]))
     write_probs(con, out, now)
     return out
 
@@ -384,6 +402,26 @@ def schedule_flags(con, team_name, commence):
     b2b = (d0 - timedelta(days=1)).date() in days
     three_in_four = len(days) >= 2
     return b2b, three_in_four
+
+
+def fitted_anchor(con, sport, market, default=0.35, min_n=40):
+    """Weight on the model vs the market, derived from which one has been closer.
+
+    A hardcoded 0.35 asserts the model deserves a third of the say before anything
+    has been measured. When the model's error exceeds the market's, the correct
+    weight is zero, and this returns it.
+    """
+    try:
+        import jerry_reason as _jr
+        mae_model = _jr.measure_model_error(con, sport, market, min_n=min_n)
+    except Exception:
+        return default
+    if not mae_model:
+        return default
+    base = _jr.DEFAULT_MODEL_MAE.get(market) or mae_model
+    if mae_model >= base:
+        return 0.0                      # model is no better than the market: no weight
+    return max(0.0, min(default, 1.0 - (mae_model / base)))
 
 
 NHL_ANCHOR = 0.35
@@ -669,8 +707,11 @@ def paper_log(con, rows, now):
     ensure_paper_schema(con)
     n = 0
     for r in rows:
-        if not _is_call(r.get("call")):
-            continue
+        # Sits are logged as well, at zero stake. Without them the ledger contains
+        # only large edges and cannot answer whether edge size predicts anything —
+        # the exact question raised when the three largest edges were the three
+        # largest misses.
+        is_bet = _is_call(r.get("call"))
         sel, line, p = _selection(r)
         player = r.get("player", "") or ""
         if con.execute("select 1 from bets where paper=1 and event_id=? and market=? and selection=? and player=? and note not like 'price edge%'",
@@ -682,11 +723,27 @@ def paper_log(con, rows, now):
         q = _quote_for(con, r["event_id"], r["market"], sel, player, line)
         if not q:
             continue
+        import json as _json
+        comp = r.get("components") or {}
+        mnum, knum = r.get("model_number"), r.get("market_number")
+        ratio = None
+        if mnum is not None and knum is not None:
+            mae = jr.measure_model_error(con, ev["sport"], r["market"]) or \
+                  jr.DEFAULT_MODEL_MAE.get(r["market"])
+            ratio = jr.edge_ratio(float(mnum) - float(knum), mae)
+        stake = 0.0 if not is_bet else (jr.size_from_ratio(ratio, r.get("edge") or 0.0,
+                                        cap_lean=r["market"].startswith("player_"))[1] or 1.0)
         con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price, book, stake,
-                       model_prob, note, paper) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)""",
+                       model_prob, note, paper, comp_json, ratio, model_number, market_number,
+                       evidence_kind, corr_group, falsifier, steelman, stake_pre_corr, logged_call)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?,?,?)""",
                     (now.isoformat(timespec="seconds"), ev["sport"], r["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"],
-                     r["market"], sel, player, q["line"] if q["line"] is not None else line, q["price"], q["book"], 1.0,
-                     None if p is None else round(float(p), 4), f"{r['call']} | {r.get('note') or ''}"[:300]))
+                     r["market"], sel, player, q["line"] if q["line"] is not None else line, q["price"], q["book"], stake,
+                     None if p is None else round(float(p), 4), f"{r['call']} | {r.get('note') or ''}"[:300],
+                     _json.dumps(comp), ratio, mnum, knum, "model",
+                     jr.correlation_group(ev["sport"], r["event_id"], r["market"], sel, player),
+                     jr.falsifier(r["market"], sel, line, mnum, player),
+                     jr.steelman(r["market"], mnum, knum, sel), stake, r.get("call")))
         n += 1
     return n
 
@@ -744,6 +801,8 @@ def price_edges(con, now):
                     (now.isoformat(timespec="seconds"), row["sport"], row["event_id"], f"{row['away']} @ {row['home']}", row["commence"],
                      row["market"], row["outcome"], row["player"], row["line"], row["price"], row["book"], 1.0, row["fair"],
                      f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}"))
+        con.execute("update bets set evidence_kind='price', corr_group=? where id=last_insert_rowid()",
+                    (jr.correlation_group(row["sport"], row["event_id"], row["market"], row["outcome"], row["player"]),))
         n += 1
     return out, n
 
