@@ -230,6 +230,11 @@ def _clv_for(b, c):
                      b["market"], b["selection"],
                      sd=comp.get("sd"), mu=comp.get("mu"))
 
+# sports with a player-level results feed wired in; everything else cannot be
+# graded yet and is reported as such rather than counted as a backlog
+GRADEABLE_PROP_SPORTS = {"NFL"}
+
+
 class Desk:
     """All scheduling state. tick(now) is the whole brain; tests drive it with a fake clock."""
 
@@ -827,6 +832,15 @@ class Desk:
         try:
             season, week = self._nfl_season_week(now)
             rep = jg.grade_nfl_props(con, season, week, iso(now))
+            # a quarantine row is a live failure only while its bet is still
+            # pending; once the bet grades the row is history and must go, or the
+            # count never falls and real failures stay hidden behind stale ones
+            try:
+                con.execute("""delete from grade_quarantine where bet_id in
+                               (select id from bets where result!='pending')""")
+                con.commit()
+            except sqlite3.Error:
+                pass
             if rep.get("quarantined"):
                 meta_set(con, "grade_quarantine_n", str(rep["quarantined"]))
         except Exception as e:   # noqa: BLE001 - grading must never take the desk down
@@ -938,18 +952,26 @@ class Desk:
         except sqlite3.Error:
             q = 0
         try:
-            pend = con.execute("""select count(*) from bets where result='pending'
-                                  and market like 'player_%'""").fetchone()[0]
             done = con.execute("""select count(*) from bets where result in ('W','L','P','V')
                                   and market like 'player_%'""").fetchone()[0]
             void = con.execute("select count(*) from bets where result='V'").fetchone()[0]
+            # props only grade for sports with a player results feed; counting the
+            # rest as "pending" makes a known gap look like a stuck queue forever
+            rows = con.execute("""select sport, count(*) n from bets where result='pending'
+                                  and market like 'player_%' group by sport""").fetchall()
+            pend = sum(r["n"] for r in rows if r["sport"] in GRADEABLE_PROP_SPORTS)
+            nofeed = {r["sport"]: r["n"] for r in rows if r["sport"] not in GRADEABLE_PROP_SPORTS}
         except sqlite3.Error:
-            pend = done = void = 0
+            done = void = pend = 0
+            nofeed = {}
         err = con.execute("select v from meta where k='grade_props_error'").fetchone()
         con.close()
-        bits = [f"PROPS GRADED: {done} settled ({void} void), {pend} pending, {q} quarantined"]
+        bits = [f"PROPS GRADED: {done} settled ({void} void), {pend} pending"]
+        if nofeed:
+            detail = ", ".join(f"{k} {v}" for k, v in sorted(nofeed.items()))
+            bits.append(f"| {sum(nofeed.values())} awaiting a results feed ({detail}) — not gradeable yet")
         if q:
-            bits.append("(unresolved player names — see /api/quarantine)")
+            bits.append(f"| {q} quarantined (unresolved names — see /api/quarantine)")
         if err:
             bits.append(f"| last grading error: {err[0][:120]}")
         return " ".join(bits)
