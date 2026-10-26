@@ -934,6 +934,7 @@ def grade_nfl_props(con, season, week, now_iso, limit=500):
 
     graded = voided = quar = 0
     for b in pend:
+      try:
         col, _style = NFL_PROP_COLUMN.get(b["market"], (None, None))
         if not col:
             res.quarantine(b["id"], "NFL", b["player"], b["market"],
@@ -944,9 +945,14 @@ def grade_nfl_props(con, season, week, now_iso, limit=500):
             res.quarantine(b["id"], "NFL", b["player"], b["market"],
                            "player name did not resolve", now_iso); quar += 1
             continue
-        row = rows[feed]
-        value = _anytime_td(row) if col == "_anytime_td" else row.get(col)
-        r = settle_prop(b["market"], b["selection"], b["line"], value, played=_played(row))
+        row = rows.get(feed)
+        if row is None:
+            # the alias cache resolves names across weeks, but a player with no
+            # stat line this week simply did not play: void, never a loss.
+            r, value = "V", None
+        else:
+            value = _anytime_td(row) if col == "_anytime_td" else row.get(col)
+            r = settle_prop(b["market"], b["selection"], b["line"], value, played=_played(row))
         if r is None:
             res.quarantine(b["id"], "NFL", b["player"], b["market"],
                            "stat missing from feed", now_iso); quar += 1
@@ -958,6 +964,9 @@ def grade_nfl_props(con, season, week, now_iso, limit=500):
                      f" | settled {value} vs {b['line']}", b["id"]))
         graded += 1
         voided += (r == "V")
+      except Exception as _e:   # noqa: BLE001 - never let one row stop the pass
+        res.quarantine(b["id"], "NFL", b["player"], b["market"],
+                       f"grading error: {str(_e)[:120]}", now_iso); quar += 1
     con.commit()
     return {"graded": graded, "voided": voided, "quarantined": quar,
             "week": week, "season": season}
@@ -1169,11 +1178,34 @@ def push_source():
             done.append(f)
     return f"source published: {done}"
 
+
+def _quarantine_block():
+    """Append the unresolved player names to the pushed summary.
+
+    Quarantined rows are unsettled, not wrong — but they are invisible unless the
+    names are published, and invisible is how the ledger got stuck the first time.
+    """
+    try:
+        db = os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db")
+        con = sqlite3.connect(db, timeout=30); con.row_factory = sqlite3.Row
+        rows = [dict(r) for r in con.execute(
+            """select player, market, reason, count(*) n from grade_quarantine
+                group by player, market, reason order by n desc limit 60""")]
+        con.close()
+    except Exception as e:   # noqa: BLE001
+        return f"\n\nQUARANTINE: unavailable ({e})\n"
+    if not rows:
+        return "\n\nQUARANTINE: none\n"
+    out = ["", "", f"QUARANTINE ({len(rows)} unresolved player/market pairs; these bets are unsettled, not lost):"]
+    for r in rows:
+        out.append(f"  {r['player']} | {r['market']} | {r['reason']}" + (f" x{r['n']}" if r["n"] > 1 else ""))
+    return "\n".join(out) + "\n"
+
 def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text()
+    txt = _summary_text() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
