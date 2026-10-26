@@ -186,11 +186,16 @@ def init_db():
     _mpcols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
     if "reasoning" not in _mpcols:
         con.execute("alter table model_probs add column reasoning text")
+    if "flag" not in _mpcols:
+        con.execute("alter table model_probs add column flag text")
+    if "flag" not in {r[1] for r in con.execute("pragma table_info(value_edges)")}:
+        con.execute("alter table value_edges add column flag text")
     for _c, _t in (("comp_json", "text"), ("ratio", "real"), ("model_number", "real"),
                    ("market_number", "real"), ("evidence_kind", "text"),
                    ("corr_group", "text"), ("falsifier", "text"),
                    ("falsifier_fired", "int"), ("steelman", "text"),
-                   ("stake_pre_corr", "real"), ("logged_call", "text")):
+                   ("stake_pre_corr", "real"), ("logged_call", "text"), ("sharp_flag", "text"),
+                   ("dk_bets_pct", "real"), ("dk_handle_pct", "real")):
         if _c not in _betcols:
             con.execute(f"alter table bets add column {_c} {_t}")
     con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
@@ -745,7 +750,7 @@ class Desk:
     def edges(self, min_abs=0.015, limit=60):
         con = db()
         rows = [dict(r) for r in con.execute("""select m.*, e.sport, e.home, e.away, e.commence from model_probs m join events e using(event_id)
-                 where e.commence>? and m.call not like 'see %' and m.call!='Sit' and abs(coalesce(m.edge,0))>=?
+                 where e.commence>? and m.call not like 'see %' and m.call not like 'Sit%' and abs(coalesce(m.edge,0))>=?
                  order by abs(m.edge) desc limit ?""", (iso(now_utc()), min_abs, limit))]
         con.close(); return rows
 
@@ -821,6 +826,12 @@ class Desk:
         if not pend:
             return
         sports = {b["sport"] for b in pend if b["sport"] in SPORTS and b["market"] in ("h2h", "spreads", "totals")}
+        try:
+            jr._ensure_numbers(con)
+            sports |= {r[0] for r in con.execute("""select distinct sport from jerry_numbers where commence<? and
+                       event_id not in (select event_id from final_scores)""", (iso(now),)) if r[0] in SPORTS}
+        except sqlite3.Error:
+            pass
         self._grade_props(con, pend, now)
         scores = {}
         for sp in sports:
@@ -833,6 +844,13 @@ class Desk:
                 if g.get("completed") and g.get("scores"):
                     sc = {x["name"]: float(x["score"]) for x in g["scores"]}
                     scores[g["id"]] = (sc.get(g.get("home_team")), sc.get(g.get("away_team")))
+                    try:
+                        jr._ensure_numbers(con)
+                        hs_, as__ = scores[g["id"]]
+                        if hs_ is not None and as__ is not None:
+                            con.execute("insert or replace into final_scores values(?,?,?,?,?)", (g["id"], sp, hs_, as__, iso(now)))
+                    except sqlite3.Error:
+                        pass
         for b in pend:
             ev = con.execute("select home, away from events where event_id=?", (b["event_id"],)).fetchone()
             if b["event_id"] not in scores or not ev:
@@ -1007,10 +1025,70 @@ class Desk:
             bits.append(f"| last grading error: {err[0][:120]}")
         return " ".join(bits)
 
+
+    def _spin_lines(self):
+        """Jerry's own number for every upcoming game, the market's, the gap, and the
+        verdict — plus picks the sharp gate blocked, and how Jerry's spins have graded."""
+        con = db(); out = []
+        try:
+            jr._ensure_numbers(con)
+            rows = con.execute("""select * from jerry_numbers where commence>? order by commence limit 60""",
+                               (iso(now_utc()),)).fetchall()
+            out += ["", "KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; "
+                        "[flag] shows the sharp/public side, warnings show failed blind-spot checks):"]
+            for r in rows:
+                sp_ = jr.spin(con, r)
+                j = f"{r['away']} {r['away_pts']:.1f} @ {r['home']} {r['home_pts']:.1f}"
+                m = (f"market {sp_['market'][1]:.1f}-{sp_['market'][0]:.1f}" if sp_["market"]
+                     else (f"market total {r['mkt_total']}" if r["mkt_total"] is not None else "market n/a"))
+                gaps = []
+                if sp_["gap_margin"] is not None:
+                    gaps.append(f"margin {sp_['gap_margin']:+.1f} ({sp_['r_margin']:.2f})")
+                if sp_["gap_total"] is not None:
+                    gaps.append(f"total {sp_['gap_total']:+.1f} ({sp_['r_total']:.2f})")
+                if r["p_home"] is not None and r["mkt_p_home"] is not None:
+                    gaps.append(f"home win {r['p_home']:.0%} vs {r['mkt_p_home']:.0%}")
+                out.append(f"{r['sport']} {str(r['commence'])[:16]}Z | KRONOS {j} | {m} | gap {', '.join(gaps) or 'n/a'}")
+                out.append(f"      {sp_['why']} | {r['detail'][:160]}")
+            # flag scorecard: does being on the sharp side actually pay? measured on paper bets
+            fr = con.execute("""select coalesce(sharp_flag,'NO READ') f, count(*) n,
+                                       sum(case when clv_pp is not null then 1 else 0 end) nc,
+                                       sum(case when clv_pp>0 then 1 else 0 end) bc, avg(clv_pp) clv,
+                                       sum(case when result='W' then 1 else 0 end) w, sum(case when result='L' then 1 else 0 end) l,
+                                       sum(case when result in ('W','L','P') then pnl else 0 end) u,
+                                       sum(case when result in ('W','L','P') then stake else 0 end) st
+                                from bets where paper=1 and sharp_flag is not null group by f order by n desc""").fetchall()
+            if fr:
+                out += ["", "FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):"]
+                for f in fr:
+                    bc = f"{f['bc'] / f['nc']:.0%}" if f["nc"] else "n/a"
+                    roi = f"{f['u'] / f['st']:+.1%}" if f["st"] else "n/a"
+                    clv = f"{f['clv']:+.2f}pp" if f["clv"] is not None else "n/a"
+                    out.append(f"[{f['f']}] {f['n']} bets | beat close {bc} | CLV {clv} | {f['w']}-{f['l']} | ROI {roi}")
+            try:
+                sm = {k: v for k, v in con.execute("select k, v from meta where k in ('splits_articles_source','splits_discovery','splits_feed_url')")}
+                nsp = con.execute("select count(*) from splits").fetchone()[0]
+                out += ["", f"DK SPLITS: {nsp} rows on file | articles: {sm.get('splits_articles_source', 'not run')} | "
+                            f"live feed: {sm.get('splits_feed_url', 'not found yet')}",
+                        f"   discovery: {sm.get('splits_discovery', 'not run')[:400]}"]
+            except sqlite3.Error:
+                pass
+            g = jr.grade_spins(con)
+            if g:
+                out += ["", "SPIN SCORECARD (mean absolute error on completed games; lower is better):"]
+                for sp, v in sorted(g.items()):
+                    out.append(f"{sp}: {v['games']} games | margin KRONOS {v['margin_mae_jerry']} vs market {v['margin_mae_market']} "
+                               f"| total KRONOS {v['total_mae_jerry']} vs market {v['total_mae_market']}")
+        except Exception as e:   # noqa: BLE001
+            out.append(f"(spin section unavailable: {str(e)[:120]})")
+        finally:
+            con.close()
+        return out
+
     def summary_text(self):
         """Plain-text digest embedded in the home page so a web fetch (no JavaScript) can read everything."""
         st = self.status(); rp = self.report()
-        lines = ["JERRY DESK SUMMARY  (generated " + iso(now_utc()) + ")",
+        lines = ["KRONOS DESK SUMMARY  (generated " + iso(now_utc()) + ")",
                  f"credits left {st['remaining']} | budget/day {st['allowance_per_day']} | spent today {st['spent_today']} | "
                  f"reset in {st['days_to_reset']}d | backfill days {st['backfill_days']}",
                  f"errors: {st['errors'] or 'none'}", "",
@@ -1035,13 +1113,15 @@ class Desk:
         c3 = db()
         for v in c3.execute("""select v.*, e.sport, e.home, e.away, e.commence from value_edges v join events e using(event_id)
                                where e.commence>? order by v.ev desc limit 40""", (iso(now_utc()),)):
+            fl = v["flag"] if "flag" in v.keys() and v["flag"] else "NO READ"
             lines.append(f"{v['sport']} {v['commence'][:16]}Z {v['away']} @ {v['home']} | {v['market']} {v['player'] or ''} {v['outcome']} "
-                         f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%}")
+                         f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%} | [{fl}]")
         c3.close()
-        lines += ["", "MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):"]
+        lines += ["", "MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):"]
         for r in self.edges():
             lines.append(f"{r['sport']} {r['commence'][:16]}Z {r['away']} @ {r['home']} | {r['market']} {r['player'] or ''} {r['outcome']} "
-                         f"{'' if r['line'] is None else r['line']} | model {r['model_prob']:.1%} fair {r['fair_prob']:.1%} edge {r['edge']*100:+.1f} | {r['call']} | {r['note'] or ''}")
+                         f"{'' if r['line'] is None else r['line']} | model {r['model_prob']:.1%} fair {r['fair_prob']:.1%} edge {r['edge']*100:+.1f} | {r['call']} "
+                         f"[{r.get('flag') or 'NO READ'}] | {r['note'] or ''}")
             rz = r["reasoning"] if "reasoning" in r.keys() else None
             if rz:
                 lines.append(f"      why: {rz}")
@@ -1051,6 +1131,7 @@ class Desk:
         except Exception:
             pass
         lines.append(f"(models last refreshed: {mlast})")
+        lines += self._spin_lines()
         lines += ["", "RECENT SIGNALS (Steam/Sharp/Move):"]
         for a in self.feed(40):
             lines.append(f"{a['ts']} {a['kind']} {a['sport']} {a.get('away') or ''} @ {a.get('home') or ''} | {a['market']} "
@@ -1088,7 +1169,7 @@ def bet_type(r):
 
 # ---------------------------------------------------------------- web
 PAGE = """<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jerry desk</title>
+<title>KRONOS desk</title>
 <style>
 body{margin:0;font:15px Georgia,serif;background:#f4f1ea;color:#1c1a17}
 header{padding:16px 16px 4px}h1{font-weight:500;font-size:32px;margin:0}.sub{color:#6d675e;font-size:13px;letter-spacing:.05em}
@@ -1122,7 +1203,7 @@ details.props summary{cursor:pointer;color:#2a5db0;font-size:14px}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #e2dcd0;font-size:14px;vertical-align:top}
 form input,form select{font:14px Georgia,serif;margin:2px 0}
 </style>
-<header><div class="sub">THE SPORTS DESK</div><h1>Jerry</h1></header>
+<header><div class="sub">THE SPORTS DESK</div><h1>KRONOS</h1></header>
 <div class="bar" id="bar">loading…</div>
 <nav id="nav"></nav>
 <main><section>
@@ -1178,7 +1259,7 @@ function card(r){const ml=r.h2h||{},sp=r.spreads||{},to=r.totals||{};
   body+="</div>"}
  else{body="<div>"+Object.entries(ml).sort((a,b)=>a[1].price-b[1].price).slice(0,20).map(([n,x])=>`<div class="prow"><span>${n}</span><span>${px(x)}</span></div>`).join("")+"</div>"}
  const title=r.away?`${short(r.away)} @ ${short(r.home)}`:r.home;
- const props=sport=="NFL"&&r.away?`<details class="props" ontoggle="props(this,'${r.event_id}')"><summary>Props${nprops?" · "+nprops+" Jerry call"+(nprops>1?"s":""):""}</summary><div class=mute>loading…</div></details>`:"";
+ const props=sport=="NFL"&&r.away?`<details class="props" ontoggle="props(this,'${r.event_id}')"><summary>Props${nprops?" · "+nprops+" KRONOS call"+(nprops>1?"s":""):""}</summary><div class=mute>loading…</div></details>`:"";
  const BK={draftkings:"DraftKings",fanduel:"FanDuel",fanatics:"Fanatics",betmgm:"BetMGM",espnbet:"ESPN Bet",betrivers:"BetRivers",williamhill_us:"Caesars"};
  const vals=(r.value||[]).slice(0,4).map(v=>`<div class="value"><b>${BK[v.book]||v.book}</b> ${v.player?v.player+" ":""}${v.market.startsWith("player_")?(MK[v.market]||v.market)+" ":""}${v.market=="spreads"||v.market=="totals"||v.market.startsWith("player_")?short(v.outcome)+" "+(v.line??""):short(v.outcome)} ${am(v.price)} <span class=mute>vs fair ${am(1/v.fair)} · EV ${sgn(v.ev)}</span></div>`).join("");
  return `<div class="card ${calls.length||vals?"hot":""}"><div class="top"><span class="when">${t(r.start)}${r.card?" · "+r.card:""}</span><span>${mv}</span></div>
@@ -1199,7 +1280,7 @@ async function load(){nav();
  BOARD=rows.sort((a,b)=>a.start<b.start?-1:1);EDGES=e.filter(x=>x.sport==sport);
  const ncalls=BOARD.reduce((n,r)=>n+Object.values(r.model||{}).filter(v=>isCall(v.call)).length,0);
  const np=EDGES.filter(x=>x.player).length;
- document.getElementById("slate").innerHTML=BOARD.length?`${BOARD.length} ${sport=="UFC"?"fights":"games"} · ${ncalls} Jerry call${ncalls==1?"":"s"} on sides/totals${np?" · "+np+" on props":""}`:"";
+ document.getElementById("slate").innerHTML=BOARD.length?`${BOARD.length} ${sport=="UFC"?"fights":"games"} · ${ncalls} KRONOS call${ncalls==1?"":"s"} on sides/totals${np?" · "+np+" on props":""}`:"";
  const open=[...document.querySelectorAll("details.props[open]")].map(d=>d.getAttribute("ontoggle"));
  document.getElementById("board").innerHTML=BOARD.length?BOARD.map(card).join("")+"<p class=mute>Prices are Pinnacle (else sharpest). Green = got more expensive since open, red = cheaper. “was” = opening number.</p>":"<p class=mute>Nothing on the board for "+sport+".</p>";
  document.querySelectorAll("details.props").forEach(d=>{if(open.includes(d.getAttribute("ontoggle")))d.open=true});
@@ -1275,7 +1356,7 @@ def picks_page(rp, desk):
 h1{{font-weight:500;font-size:40px;margin:0}}.sub{{color:#6d675e}}table{{width:100%;border-collapse:collapse;margin:8px 0 24px}}
 td,th{{text-align:left;padding:8px;border-bottom:1px solid #e2dcd0;font-size:15px}}.w{{color:#1d5a3a}}.l{{color:#8a3b12}}
 .big{{font-size:22px;margin:12px 0 18px}}</style>
-<main><div class=sub>THE SPORTS DESK</div><h1>Jerry's picks</h1><div class=big>{rec}</div>
+<main><div class=sub>THE SPORTS DESK</div><h1>KRONOS picks</h1><div class=big>{rec}</div>
 <h3>Open picks</h3><table>{head}{''.join(tr(b) for b in open_) or '<tr><td colspan=6 class=sub>No open picks.</td></tr>'}</table>
 <h3>Results</h3><table>{head}{''.join(tr(b) for b in done) or '<tr><td colspan=6 class=sub>Nothing graded yet.</td></tr>'}</table>
 <p class=sub>Every pick is logged before the event starts and graded automatically or by result. Units are risk amounts. For entertainment; bet responsibly.</p></main>"""
@@ -1329,7 +1410,7 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
         self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="Jerry"')
+        self.send_header("WWW-Authenticate", 'Basic realm="KRONOS"')
         self.end_headers()
         return False
 
@@ -1423,7 +1504,7 @@ def main():
         webbrowser.open(f"http://127.0.0.1:{port}")
     if cloud and not os.environ.get("DESK_PASSWORD"):
         print("WARNING: no DESK_PASSWORD — anyone with the link can log or grade bets. Viewing is always public.")
-    print(f"Jerry desk on {host}:{port}, data in {STORE} — the only program that should use the Odds API key.", flush=True)
+    print(f"KRONOS desk on {host}:{port}, data in {STORE} — the only program that should use the Odds API key.", flush=True)
     server.serve_forever()
 
 
