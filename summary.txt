@@ -1,9 +1,9 @@
-JERRY DESK SUMMARY  (generated 2026-10-26T18:16:50+00:00)
-credits left 1991 | budget/day 304 | spent today 142 | reset in 5.24d | backfill days {'NHL': 2}
+JERRY DESK SUMMARY  (generated 2026-10-26T18:21:52+00:00)
+credits left 1991 | budget/day 304 | spent today 142 | reset in 5.23d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 191 settled (12 void), 36 pending, 23 quarantined (unresolved player names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 198 settled (15 void), 38 pending | 39 awaiting a results feed (NBA 32, NHL 7) — not gradeable yet | 38 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,13 +12,13 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 314 rows
-all: {"n": 314, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 212, "record": "89-123-0", "units": -22.67, "roi": -0.1069}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 362 rows
+all: {"n": 362, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 216, "record": "93-123-0", "units": -21.2, "roi": -0.0993}
   NBA moneyline (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NBA props (price edge): {"n": 27, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NBA props (price edge): {"n": 32, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NFL moneyline (model): {"n": 19, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
-  NFL props (model): {"n": 157, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 145, "record": "61-84-0", "units": -18.71, "roi": -0.129}
+  NFL props (model): {"n": 200, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 149, "record": "65-84-0", "units": -17.24, "roi": -0.1177}
   NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 3.2, "beat_close_pct": 1.0, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453}
   NFL spread (model): {"n": 26, "closed": 11, "clv_pp_avg": 0.19, "beat_close_pct": 0.545, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 4.05, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0}
@@ -26,36 +26,57 @@ all: {"n": 314, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "gra
   NHL props (price edge): {"n": 7, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_points Aaron Nesmith Under 10.5 | fanduel 1.94 vs fair 54.1% | EV +4.9%
 NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_threes Bilal Coulibaly Under 1.5 | draftkings 1.48 vs fair 70.7% | EV +4.7%
+NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_rebounds Dillon Brooks Over 3.5 | draftkings 2.1 vs fair 49.7% | EV +4.4%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_points Cooper Flagg Over 21.5 | fanduel 1.77 vs fair 58.5% | EV +3.6%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_threes Jaden McDaniels Under 1.5 | draftkings 1.6 vs fair 64.6% | EV +3.4%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_rebounds LaMelo Ball Under 4.5 | fanduel 2.04 vs fair 50.3% | EV +2.6%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_rebounds Rudy Gobert Under 11.5 | draftkings 1.95 vs fair 52.5% | EV +2.4%
 NHL 2026-10-26T23:10Z Los Angeles Kings @ New York Rangers | player_points Sean Durzi Under 0.5 | draftkings 1.49 vs fair 68.6% | EV +2.2%
 NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | player_assists Derrick White Under 5.5 | draftkings 1.79 vs fair 57.0% | EV +2.0%
+NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_threes Dillon Brooks Over 1.5 | fanduel 1.71 vs fair 59.6% | EV +1.9%
 NHL 2026-10-26T23:10Z Los Angeles Kings @ New York Rangers | player_shots_on_goal Alex Laferriere Over 2.5 | draftkings 2.05 vs fair 49.7% | EV +1.9%
 NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_threes Naz Reid Under 2.5 | draftkings 2.06 vs fair 49.4% | EV +1.8%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_rebounds Jonathan Kuminga Under 4.5 | draftkings 2.19 vs fair 46.5% | EV +1.8%
 NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_rebounds Trae Young Under 2.5 | draftkings 1.76 vs fair 57.8% | EV +1.8%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_assists Tyrese Haliburton Under 9.5 | draftkings 2.0 vs fair 50.9% | EV +1.8%
+NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_points Jalen Green Under 14.5 | draftkings 1.95 vs fair 52.1% | EV +1.6%
 
 MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5 | model 43.2% fair 51.2% edge -8.0 | Lean Dallas Cowboys | model margin -5.8 (home) vs line -4.5; P(|margin|=3) 5%, =7 6%. PHI: Michael Carter II (CB) Out, DeVonta Smith (WR) Out, Dontayvion Wicks (WR) Out, Nolan Smith (LB) Out; DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out | Questionable: Saquon Barkley (PHI), Grant Calcaterra (PHI), Eli Stowers (PHI)
 NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | totals  Under 46.5 | model 43.7% fair 49.9% edge -6.2 | Play Over | model total 48.6 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Ryan Flournoy Over 3.5 | model 52.3% fair 46.4% edge +5.9 | Lean Over 3.5 | proj 4.3 (sd 2.3) from last 6 games x opp factor 1.00; raw model 63.3%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_rush_yds Tyler Goodson Over 13.5 | model 45.0% fair 50.6% edge -5.6 | Lean Under 13.5 | proj 9.9 (sd 9.0) from last 3 games x opp factor 1.03; raw model 34.6%, anchored 35%
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | spreads  Miami Dolphins 7.5 | model 46.7% fair 52.0% edge -5.3 | Lean New England Patriots | model margin -8.3 (home) vs line -7.5; P(|margin|=3) 5%, =7 4%. MIA: Reese Taylor (CB) Out, Rob Beal Jr. (DE) Doubtful; NE: Carlton Davis III (CB) Out, Alijah Vera-Tucker (G) Out, Ben Brown (C) Out, Karon Prunty (CB) Out, Channing Canada (CB) Out
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | totals  Under 45.0 | model 44.8% fair 50.0% edge -5.2 | Play Over | model total 46.7 vs 45.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | totals  Under 46.5 | model 44.9% fair 50.1% edge -5.2 | Play Over | model total 48.2 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds George Pickens Over 64.5 | model 55.2% fair 50.0% edge +5.2 | Lean Over 64.5 | proj 79.6 (sd 39.8) from last 5 games x opp factor 1.02; raw model 64.8%, anchored 35%
 NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | totals  Under 39.5 | model 47.9% fair 53.0% edge -5.1 | Lean Over | model total 40.2 vs 39.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_rush_yds Javonte Williams Over 63.5 | model 44.9% fair 50.0% edge -5.1 | Lean Under 63.5 | proj 53.5 (sd 26.8) from last 6 games x opp factor 1.03; raw model 35.4%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Javonte Williams Over 2.5 | model 49.8% fair 45.0% edge +4.8 | Lean Over 2.5 | proj 2.9 (sd 1.9) from last 6 games x opp factor 1.00; raw model 58.7%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Tyler Goodson Yes  | model 9.7% fair 5.0% edge +4.7 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | spreads  Los Angeles Rams -7.5 | model 51.2% fair 46.8% edge +4.4 | Lean Los Angeles Rams | model margin +7.8 (home) vs line +7.5; P(|margin|=3) 5%, =7 5%. LA: Nate Landman (LB) Out | Questionable: Puka Nacua (LA)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Brevyn Spann-Ford Over 1.5 | model 44.3% fair 39.9% edge +4.4 | Lean Over 1.5 | proj 1.6 (sd 1.5) from last 5 games x opp factor 1.00; raw model 52.5%, anchored 35%
 NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.9% edge +4.3 | Lean Detroit Lions | 
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_pass_yds Dak Prescott Over 265.5 | model 54.3% fair 50.1% edge +4.3 | Lean Over 265.5 | proj 287.9 (sd 72.0) from last 6 games x opp factor 1.02; raw model 62.2%, anchored 35%
 NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | totals  Under 40.5 | model 47.0% fair 51.0% edge -4.0 | Lean Over | model total 41.5 vs 40.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Brevyn Spann-Ford Over 11.5 | model 54.4% fair 50.5% edge +3.9 | Lean Over 11.5 | proj 15.4 (sd 13.1) from last 5 games x opp factor 1.02; raw model 61.6%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Dallas Goedert Over 49.5 | model 54.3% fair 50.4% edge +3.9 | Lean Over 49.5 | proj 57.9 (sd 29.0) from last 3 games x opp factor 1.00; raw model 61.5%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Luke Schoonmaker Yes  | model 11.5% fair 7.7% edge +3.8 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Johnny Mundt Yes  | model 10.0% fair 6.2% edge +3.7 | Lean Yes | proj 0.2 (sd 0.0) from last 4 games x opp factor 1.06; raw model 17.0%, anchored 35%
 NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.7% edge +3.7 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | totals  Under 44.5 | model 53.9% fair 50.1% edge +3.7 | Lean Under | model total 43.2 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Javonte Williams Over 12.5 | model 53.9% fair 50.2% edge +3.7 | Lean Over 12.5 | proj 15.8 (sd 12.0) from last 6 games x opp factor 1.02; raw model 60.8%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions CeeDee Lamb Over 6.5 | model 57.3% fair 53.6% edge +3.7 | Lean Over 6.5 | proj 8.2 (sd 4.6) from last 6 games x opp factor 1.00; raw model 64.1%, anchored 35%
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 72.9% edge -3.6 | Lean Arizona Cardinals | 
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | spreads  Dallas Cowboys -6.25 | model 46.7% fair 50.3% edge -3.6 | Lean Arizona Cardinals | model margin +5.6 (home) vs line +6.2; P(|margin|=3) 6%, =7 5%. DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out; ARI: Andrew Wingard (S) Out, Jon Gaines II (G) Out, Walter Nolen (DT) Out, Jeremiyah Love (RB) Out | Questionable: Carson Beck (ARI)
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | spreads  Tampa Bay Buccaneers -2.0 | model 46.7% fair 50.3% edge -3.6 | Lean Atlanta Falcons | model margin +1.7 (home) vs line +2.0; P(|margin|=3) 6%, =7 5%. TB: Antoine Winfield Jr. (S) Out, Luke Goedeke (T) Out, Emeka Egbuka (WR) Out; ATL: Divine Deablo (LB) Out, Brian Robinson (RB) Out, Michael Jerrell (T) Out, Billy Bowman Jr. (CB) Out, Beaux Collins (WR) Out, Cameron Williams (T) Out | Questionable: Baker Mayfield (TB), Olamide Zaccheaus (ATL)
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | totals  Under 44.0 | model 48.9% fair 52.5% edge -3.6 | Lean Over | model total 44.4 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Tennessee Titans @ Cincinnati Bengals | totals  Under 47.0 | model 46.6% fair 50.0% edge -3.4 | Lean Over | model total 48.1 vs 47.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | h2h  New York Jets  | model 53.4% fair 50.0% edge +3.4 | Lean New York Jets | 
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Jonathan Mingo Yes  | model 12.4% fair 9.1% edge +3.3 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Darius Cooper Over 39.5 | model 46.7% fair 50.0% edge -3.3 | Lean Under 39.5 | proj 34.1 (sd 22.7) from last 4 games x opp factor 1.00; raw model 40.6%, anchored 35%
 NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | spreads  Pittsburgh Steelers -4.0 | model 51.2% fair 48.1% edge +3.1 | Lean Pittsburgh Steelers | model margin +4.5 (home) vs line +4.0; P(|margin|=3) 7%, =7 6%. PIT: Brandin Echols (CB) Out, Ben Skowronek (WR) Out; CLE: Teven Jenkins (G) Out, Kalia Davis (DT) Out, Mike Hall Jr. (DT) Out, Dillon Gabriel (QB) Out | Questionable: Rico Dowdle (PIT)
 NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | spreads  Buffalo Bills -3.5 | model 51.2% fair 48.3% edge +3.0 | Lean Buffalo Bills | model margin +3.5 (home) vs line +3.5; P(|margin|=3) 7%, =7 6%. BAL: Lamar Jackson (QB) Out, Jaylinn Hawkins (S) Out, Tavius Robinson (LB) Out, T.J. Tampa (CB) Doubtful
 NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | totals  Under 53.5 | model 46.7% fair 49.1% edge -2.4 | Lean Over | model total 54.6 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
@@ -70,7 +91,7 @@ NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | totals  Under 44.5 | m
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 57.1% fair 55.4% edge +1.6 | Lean Tampa Bay Buccaneers | 
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | spreads  New York Jets -1.0 | model 46.7% fair 48.3% edge -1.6 | Lean Las Vegas Raiders | model margin +0.6 (home) vs line +1.0; P(|margin|=3) 6%, =7 5%. NYJ: Joseph Ossai (DE) Out, Max Mitchell (T) Out, Francisco Mauigoa (LB) Out; LV: Carter Runyon (TE) Out, Dont'e Thornton Jr. (WR) Out | Questionable: Kene Nwangwu (NYJ), Breece Hall (NYJ), Mike Washington Jr. (LV)
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.5 | Lean Los Angeles Chargers | 
-(models last refreshed: 2026-10-26T18:05:43+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 11, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 2, "season": 2026}]})
+(models last refreshed: 2026-10-26T18:20:47+00:00 {"NFL": 90, "NFL_PROPS": 43, "NHL": 0, "UFC": 0, "PRICE": 16, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 38, "season": 2026}]})
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-26T18:10:11+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 1.5->0.5 81.0->6.75 (williamhill_us)
@@ -289,26 +310,42 @@ MLB 2026-10-27T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=82812d5c946d4e05
    ML: 
    moves: {'Move': 4}
 
-QUARANTINE (22 unresolved player/market pairs; these bets are unsettled, not lost):
-  Tetairoa McMillan | player_anytime_td | player name did not resolve x2
+QUARANTINE (38 unresolved player/market pairs; these bets are unsettled, not lost):
   AJ Dillon | player_rush_yds | player name did not resolve
-  Austin Hooper | player_anytime_td | player name did not resolve
-  Baker Mayfield | player_anytime_td | player name did not resolve
-  Baker Mayfield | player_rush_yds | player name did not resolve
+  Brevyn Spann-Ford | player_anytime_td | player name did not resolve
+  Brevyn Spann-Ford | player_reception_yds | player name did not resolve
+  Brevyn Spann-Ford | player_receptions | player name did not resolve
+  CeeDee Lamb | player_anytime_td | player name did not resolve
+  CeeDee Lamb | player_reception_yds | player name did not resolve
+  CeeDee Lamb | player_receptions | player name did not resolve
   Chris Godwin | player_receptions | player name did not resolve
-  Chuba Hubbard | player_receptions | player name did not resolve
-  Darren Waller | player_reception_yds | player name did not resolve
-  Devin Singletary | player_anytime_td | player name did not resolve
-  Emmett Johnson | player_rush_yds | player name did not resolve
-  John Metchie III | player_anytime_td | player name did not resolve
-  Jordan Addison | player_receptions | player name did not resolve
-  Kenneth Walker III | player_anytime_td | player name did not resolve
-  Konata Mumpfield | player_reception_yds | player name did not resolve
-  Kyle Juszczyk | player_reception_yds | player name did not resolve
-  Patrick Mahomes | player_pass_yds | player name did not resolve
-  Rico Dowdle | player_receptions | player name did not resolve
-  Ted Hurst III | player_reception_yds | player name did not resolve
-  Ted Hurst III | player_receptions | player name did not resolve
-  Tommy Tremble | player_anytime_td | player name did not resolve
-  Travis Homer | player_anytime_td | player name did not resolve
-  Xavier Worthy | player_anytime_td | player name did not resolve
+  Dak Prescott | player_anytime_td | player name did not resolve
+  Dak Prescott | player_pass_yds | player name did not resolve
+  Dak Prescott | player_rush_yds | player name did not resolve
+  Dallas Goedert | player_anytime_td | player name did not resolve
+  Dallas Goedert | player_reception_yds | player name did not resolve
+  Dallas Goedert | player_receptions | player name did not resolve
+  Dontayvion Wicks | player_anytime_td | player name did not resolve
+  George Pickens | player_anytime_td | player name did not resolve
+  George Pickens | player_reception_yds | player name did not resolve
+  George Pickens | player_receptions | player name did not resolve
+  Hunter Luepke | player_anytime_td | player name did not resolve
+  Jake Ferguson | player_anytime_td | player name did not resolve
+  Jake Ferguson | player_reception_yds | player name did not resolve
+  Jake Ferguson | player_receptions | player name did not resolve
+  Johnny Mundt | player_anytime_td | player name did not resolve
+  Jonathan Mingo | player_anytime_td | player name did not resolve
+  KaVontae Turpin | player_anytime_td | player name did not resolve
+  Luke Schoonmaker | player_anytime_td | player name did not resolve
+  Makai Lemon | player_anytime_td | player name did not resolve
+  Makai Lemon | player_reception_yds | player name did not resolve
+  Makai Lemon | player_receptions | player name did not resolve
+  Ryan Flournoy | player_anytime_td | player name did not resolve
+  Ryan Flournoy | player_reception_yds | player name did not resolve
+  Ryan Flournoy | player_receptions | player name did not resolve
+  Saquon Barkley | player_anytime_td | player name did not resolve
+  Saquon Barkley | player_reception_yds | player name did not resolve
+  Saquon Barkley | player_receptions | player name did not resolve
+  Saquon Barkley | player_rush_yds | player name did not resolve
+  Tyler Goodson | player_anytime_td | player name did not resolve
+  Tyler Goodson | player_rush_yds | player name did not resolve
