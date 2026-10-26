@@ -153,13 +153,16 @@ def refresh_mlb(db_path):
         sp_txt = f"SP {_sp('away')} @ {_sp('home')}"
         base = f"model runs {away} {mu_a:.2f} / {home} {mu_h:.2f}; {sp_txt}; vs {book}; MLB model unvalidated, capped at Lean"
         rows = []
+        _jr = sys.modules.get("jerry_reason")
         for market in ("h2h", "spreads", "totals"):
             outs = [(o, v) for (m, o), v in q.items() if m == market]
             if len(outs) != 2: continue
+            # power de-vig (falls back to proportional if the module is missing)
+            _pf = _jr.power_devig([v[1] for _, v in outs]) if _jr else None
             inv = sum(1 / v[1] for _, v in outs)
             calc = []
-            for o, (line, price) in outs:
-                fair = (1 / price) / inv
+            for idx, (o, (line, price)) in enumerate(outs):
+                fair = _pf[idx] if _pf else (1 / price) / inv
                 if market == "h2h":
                     mp = p_home if o == home else 1 - p_home
                 elif market == "spreads":
@@ -172,18 +175,46 @@ def refresh_mlb(db_path):
                 calc.append((o, line, mp, fair, mp - fair))
             best = max(calc, key=lambda r: r[4])
             for o, line, mp, fair, edge in calc:
+                reasoning = None
                 if o == best[0]:
-                    call = f"Lean {o}" if edge >= 0.02 else "Sit"
+                    # totals get a real error band (Poisson sd of the run total); sides stay at the old edge rule
+                    if market == "totals" and _jr and line is not None:
+                        _band = math.sqrt(max(mu_h + mu_a, 1.0))
+                        _ratio = _jr.edge_ratio((mu_h + mu_a) - float(line), _band)
+                        _tag, _stk, _ = _jr.size_from_ratio(_ratio, edge, cap_lean=True)
+                        call = f"{_tag} {o}" if _tag != "Sit" else "Sit"
+                        _comp = {"mu": round(mu_h + mu_a, 3), "sd": round(_band, 3), "model_number": round(mu_h + mu_a, 3),
+                                 "market_number": float(line), "runs_home": round(mu_h, 3), "runs_away": round(mu_a, 3)}
+                        reasoning = _jr.render_reasoning(market="totals", player="", selection=o, line=float(line),
+                                                         model_prob=float(mp), fair_prob=float(fair), components=_comp,
+                                                         opponent="", status="", n_games=None)
+                        reasoning += f" Starters: {sp_txt}. The MLB model is unvalidated with no graded history."
+                    else:
+                        call = f"Lean {o}" if edge >= 0.02 else "Sit"
+                        if _jr:
+                            reasoning = (f"Negative-binomial runs model: {away} {mu_a:.2f}, {home} {mu_h:.2f} from season run rates, "
+                                         f"starter FIP ({sp_txt}) and home edge. Makes {o} {mp:.0%} versus {fair:.0%} at fair. "
+                                         f"No backtest and no graded history — colour at most. "
+                                         f"Falsifier: the other side scores first and leads after five innings.")
                 else:
                     call = "see other row"
                 note = base + (f"; total {mu_h+mu_a:.1f} vs {line}" if market == "totals" else "")
-                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat()))
-        con.executemany("insert or replace into model_probs values(?,?,?,?,?,?,?,?,?,?,?)", rows)
+                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat(), reasoning))
+        # name the columns: the desk now carries a 12th column (reasoning) and a positional insert would fail
+        try:
+            cols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
+            if "reasoning" not in cols:
+                con.execute("alter table model_probs add column reasoning text")
+        except sqlite3.Error:
+            pass
+        con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
+                           values(?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
         con.commit(); n += len(rows)
     con.close()
     return n
 
 import os
+import math
 
 # ---------- modules the desk and the live models now import.
 # Embedded here rather than shipped as separate files so the Dockerfile's COPY
@@ -656,6 +687,126 @@ def build_pick(con, *, sport, event_id, market, selection, player="", line=None,
 
 def picks_to_json(picks):
     return json.dumps(picks, default=str, indent=2)
+
+# ----------------------------------------------------------- reasoning text
+
+_STAT_WORD = {
+    "player_pass_yds": "passing yards", "player_rush_yds": "rushing yards",
+    "player_reception_yds": "receiving yards", "player_receptions": "receptions",
+    "player_anytime_td": "an anytime touchdown", "player_pass_tds": "passing touchdowns",
+}
+
+
+def render_reasoning(*, market, player, selection, line, model_prob, fair_prob,
+                     components, opponent="", status="", n_games=None):
+    """One paragraph, generated from the fields, explaining why the pick exists.
+
+    This is the prose layer of the reasoning rules: it says what the model
+    computed, how large the disagreement is against the model's own dispersion,
+    what the market can see that the model cannot, and what would falsify it.
+    It contains no causal story about why the model is right, and it never uses
+    a superlative, because neither is evidence.
+    """
+    c = dict(components or {})
+    sel = (selection or "").strip()
+    mu, sd = c.get("mu", c.get("model_number")), c.get("sd")
+    mkt = c.get("market_number", line)
+    try:
+        disagreement = float(mu) - float(mkt)
+    except (TypeError, ValueError):
+        disagreement = None
+    band = sd if (sd and sd > 0) else DEFAULT_MODEL_MAE.get(market)
+    ratio = edge_ratio(disagreement, band) if (disagreement is not None and band) else None
+    pe = (model_prob - fair_prob) if (model_prob is not None and fair_prob is not None) else None
+    who = player or sel
+    games = n_games or c.get("games")
+    opp_f = c.get("opp_factor")
+    out = []
+
+    # 1. what was computed
+    if market.startswith("player_anytime_td"):
+        touches = c.get("touches"); prior = c.get("td_prior")
+        out.append(f"{who} projects {float(mu):.2f} touchdowns per game over his last {games} "
+                   f"games on about {touches:.0f} touches a week" + (f", shrunk toward a role prior of {prior:.2f}" if prior is not None else "")
+                   + f". That is {float(model_prob):.0%} to score versus a de-vigged market of {float(fair_prob):.0%}.")
+    elif market.startswith("player_"):
+        word = _STAT_WORD.get(market, market.replace("player_", "").replace("_", " "))
+        out.append(f"{who} projects {float(mu):.1f} {word} against a line of {mkt} — a recency-weighted average of his "
+                   f"last {games} games" + (f" scaled by a {opp_f:.2f} opponent factor" if opp_f and abs(opp_f - 1) > 0.015 else "")
+                   + f". The model makes the {sel} {float(model_prob):.0%} after anchoring, versus {float(fair_prob):.0%} at fair.")
+        vol, eff, dp, wp = c.get("volume") or {}, c.get("efficiency") or {}, c.get("decomp_proj"), c.get("whole_stat_proj")
+        stat = c.get("stat", "")
+        if dp is not None and wp is not None:
+            if stat in ("receiving_yards", "receptions"):
+                vtxt = f"{vol.get('targets', 0):.1f} targets"; etxt = (f"{eff.get('ypt', 0):.1f} yards per target" if stat == "receiving_yards"
+                                                                        else f"a {eff.get('catch', 0):.0%} catch rate")
+            elif stat == "rushing_yards":
+                vtxt = f"{vol.get('carries', 0):.1f} carries"; etxt = f"{eff.get('ypc', 0):.1f} yards per carry"
+            elif stat == "passing_yards":
+                vtxt = f"{vol.get('attempts', 0):.1f} attempts"; etxt = f"{eff.get('ypa', 0):.1f} yards per attempt"
+            else:
+                vtxt = etxt = ""
+            if vtxt:
+                out.append(f"Decomposed: {vtxt} at {etxt} (shrunk toward the position average) gives {float(dp):.1f}; "
+                           f"the whole-stat average gives {float(wp):.1f}; the projection is the blend.")
+                if abs(float(dp) - float(wp)) > 0.25 * max(abs(float(wp)), 1.0):
+                    out.append("The two halves disagree by a wide margin, which usually means recent volume and recent "
+                               "efficiency are telling different stories — a reason to trust this projection less, not more.")
+    elif market == "totals":
+        src = ("expected goals" if "xg_home" in c else "run rates and starter FIP" if "runs_home" in c
+               else "team ratings and pace" if "games_h" in c else "both teams' season EPA per play shrunk toward average, with rest")
+        out.append(f"The model's total is {float(mu):.1f} against a market of {mkt}, from {src}. "
+                   f"It makes the {sel} {float(model_prob):.0%} versus {float(fair_prob):.0%} at fair.")
+        it, idet = c.get("injury_total_adj"), c.get("injury_detail")
+        if it:
+            out.append(f"Includes an injury adjustment of {float(it):+.1f} to the total ({idet}).")
+    elif market == "spreads":
+        out.append(f"The model's margin is {float(mu):+.1f} against a line of {float(mkt):+.1f}, from EPA per play and rest. "
+                   f"It makes {who} covering {float(model_prob):.0%} versus {float(fair_prob):.0%} at fair.")
+        ia, idet = c.get("injury_margin_adj"), c.get("injury_detail")
+        if ia:
+            out.append(f"That margin already includes an injury adjustment of {float(ia):+.1f} points ({idet}) — a transparent "
+                       f"prior, not a fitted coefficient, applied because the regression itself has no injury input.")
+    else:
+        out.append(f"Model {float(model_prob):.0%} versus fair {float(fair_prob):.0%}.")
+
+    # 2. how big that actually is
+    if ratio is not None:
+        if ratio < RATIO_SIT:
+            out.append(f"The disagreement is {ratio:.2f} of the projection's own error band, which is inside normal noise — "
+                       f"the model and the market are effectively tied, and this is a Sit regardless of the {pe*100:+.1f}-point probability edge."
+                       if pe is not None else
+                       f"The disagreement is {ratio:.2f} of the projection's own error band — inside normal noise, so a Sit.")
+        elif ratio < RATIO_LEAN:
+            out.append(f"The disagreement is {ratio:.2f} error bands: real but small, which caps this at a quarter-unit Lean.")
+        elif ratio < RATIO_PLAY:
+            out.append(f"The disagreement is {ratio:.2f} error bands — larger than the model's typical miss, a half-unit Lean.")
+        else:
+            out.append(f"The disagreement is {ratio:.2f} error bands, past the point where the model's usual error explains it.")
+
+    # 3. what the market can see that the model cannot
+    blind = BLIND_SPOTS.get(market, [])
+    if blind:
+        out.append("The number on the other side was set by a book that can see " + ", ".join(blind[:3]) +
+                   " — none of which this model ingests" + (f", and {who} is listed Questionable" if status == "Q" else "") + ".")
+    if market == "totals" and mkt is not None:
+        try:
+            m = float(mkt)
+            if m >= 52:
+                out.append("This total already sits near the top of the league's range, so the model is claiming the market under-reacted on a number it has already pushed to an extreme.")
+            elif m <= 40:
+                out.append("This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way.")
+        except (TypeError, ValueError):
+            pass
+
+    # 4. what would prove it wrong
+    out.append("Falsifier: " + falsifier(market, sel, line, mu, player))
+    text = " ".join(out)
+    bad = check_language(text)
+    if bad:   # should never happen from a template, but the rule is enforced on output
+        for w in bad:
+            text = text.replace(w, "notable")
+    return text
 '''
 
 _GRADE_SRC = r'''"""
@@ -929,6 +1080,11 @@ def grade_nfl_props(con, season, week, now_iso, limit=500):
         return {"graded": 0, "error": f"player stats unavailable: {e}"}
 
     name_col = "player_display_name" if "player_display_name" in df.columns else "player_name"
+    try:
+        import jerry_feeds as _jf
+        _jf.nfl_player_team_from_frame(con, df, now_iso)
+    except Exception:
+        pass
     rows = {r[name_col]: r for r in df.to_dict("records")}
     candidates = list(rows.keys())
 
@@ -983,10 +1139,561 @@ def _register(name, src):
         raise
     return m
 
+_FEEDS_SRC = r'''"""
+jerry_feeds.py — result feeds for NBA and NHL.
+
+Three jobs from the same box scores:
+  1. Grade NBA/NHL player props (points, rebounds, assists, threes; points, SOG, goals).
+  2. Keep a player -> team roster cache, used to reject props The Odds API has
+     attached to the wrong game (the "game label" problem).
+  3. Store completed games (score, possessions) for the NBA model.
+
+Sources are public, keyless endpoints:
+  NBA  ESPN   site.api.espn.com  (scoreboard + summary)
+  NHL  NHL    api-web.nhle.com   (score by date + gamecenter boxscore)
+
+These were written against the documented response shapes but could not be
+exercised live from the build environment. Every parse is defensive; anything
+unexpected quarantines the bet rather than guessing.
+"""
+from __future__ import annotations
+
+import json
+import math
+import re
+import sqlite3
+import urllib.request
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
+UA = {"User-Agent": "Mozilla/5.0 (Jerry desk; prop grading)"}
+
+ESPN_NBA = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
+NHL_API = "https://api-web.nhle.com/v1"
+
+# market -> stat key in the normalised box line
+NBA_PROP_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m"}
+NHL_PROP_STAT = {"player_points": "points", "player_shots_on_goal": "sog", "player_goals": "goals"}
+
+# NHL API uses abbreviations; The Odds API uses full names.
+NHL_ABBR = {
+    "ANA": "Anaheim Ducks", "BOS": "Boston Bruins", "BUF": "Buffalo Sabres", "CGY": "Calgary Flames",
+    "CAR": "Carolina Hurricanes", "CHI": "Chicago Blackhawks", "COL": "Colorado Avalanche",
+    "CBJ": "Columbus Blue Jackets", "DAL": "Dallas Stars", "DET": "Detroit Red Wings", "EDM": "Edmonton Oilers",
+    "FLA": "Florida Panthers", "LAK": "Los Angeles Kings", "MIN": "Minnesota Wild", "MTL": "Montreal Canadiens",
+    "NSH": "Nashville Predators", "NJD": "New Jersey Devils", "NYI": "New York Islanders", "NYR": "New York Rangers",
+    "OTT": "Ottawa Senators", "PHI": "Philadelphia Flyers", "PIT": "Pittsburgh Penguins", "SJS": "San Jose Sharks",
+    "SEA": "Seattle Kraken", "STL": "St Louis Blues", "TBL": "Tampa Bay Lightning", "TOR": "Toronto Maple Leafs",
+    "UTA": "Utah Mammoth", "VAN": "Vancouver Canucks", "VGK": "Vegas Golden Knights", "WSH": "Washington Capitals",
+    "WPG": "Winnipeg Jets",
+}
+
+
+def _get_json(url, timeout=25):
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def _norm(s):
+    return re.sub(r"[^a-z ]", "", str(s).lower().replace(".", " ").replace("-", " ")).strip()
+
+
+def _team_key(name):
+    """Last word of a team name, lower — 'Los Angeles Lakers' -> 'lakers'. Enough to match feeds."""
+    n = _norm(name).replace("st louis", "st. louis")
+    return n.split()[-1] if n.split() else n
+
+
+def _ensure(con):
+    con.execute("""create table if not exists player_team(sport text, player_norm text, team text, seen_ts text,
+                   primary key(sport, player_norm))""")
+    con.execute("""create table if not exists game_results(sport text, game_date text, home text, away text,
+                   home_score int, away_score int, poss real, source_id text, seen_ts text,
+                   primary key(sport, source_id))""")
+    con.execute("""create table if not exists box_lines(sport text, game_date text, source_id text, team text,
+                   player text, player_norm text, stats text, primary key(sport, source_id, player_norm))""")
+
+
+# ----------------------------------------------------------------- NBA (ESPN)
+
+def espn_nba_games(day):
+    """Completed NBA games for a date (YYYY-MM-DD). Returns [{id, home, away, hs, as}]."""
+    d = day.replace("-", "")
+    data = _get_json(f"{ESPN_NBA}/scoreboard?dates={d}")
+    out = []
+    for ev in data.get("events", []):
+        comp = (ev.get("competitions") or [{}])[0]
+        if not comp.get("status", {}).get("type", {}).get("completed"):
+            continue
+        teams = {c.get("homeAway"): c for c in comp.get("competitors", [])}
+        h, a = teams.get("home"), teams.get("away")
+        if not h or not a:
+            continue
+        try:
+            out.append({"id": str(ev["id"]), "home": h["team"]["displayName"], "away": a["team"]["displayName"],
+                        "hs": int(float(h["score"])), "as": int(float(a["score"]))})
+        except (KeyError, ValueError, TypeError):
+            continue
+    return out
+
+
+def espn_nba_box(game_id):
+    """Player lines for one game. Returns {team_name: [{player, pts, reb, ast, fg3m, min, played}]} and a possessions estimate."""
+    data = _get_json(f"{ESPN_NBA}/summary?event={game_id}")
+    box = data.get("boxscore", {})
+    out = {}
+    team_tot = {}
+    for t in box.get("players", []):
+        team = t.get("team", {}).get("displayName", "")
+        lines = []
+        for grp in t.get("statistics", []):
+            labels = [str(x).upper() for x in grp.get("labels", [])]
+            idx = {lab: i for i, lab in enumerate(labels)}
+            for ath in grp.get("athletes", []):
+                name = ath.get("athlete", {}).get("displayName", "")
+                st = ath.get("stats", [])
+                def g(lab):
+                    i = idx.get(lab)
+                    if i is None or i >= len(st):
+                        return None
+                    v = str(st[i])
+                    if "-" in v and lab in ("FG", "3PT", "FT"):
+                        return v
+                    try:
+                        return float(v)
+                    except ValueError:
+                        return None
+                fg3 = g("3PT"); fg3m = None
+                if isinstance(fg3, str) and "-" in fg3:
+                    try:
+                        fg3m = float(fg3.split("-")[0])
+                    except ValueError:
+                        fg3m = None
+                mins = g("MIN")
+                dnp = bool(ath.get("didNotPlay")) or (mins is None and not st)
+                lines.append({"player": name, "pts": g("PTS"), "reb": g("REB"), "ast": g("AST"), "fg3m": fg3m,
+                              "min": mins, "played": (not dnp) and (mins or 0) > 0})
+        out[team] = lines
+    # possessions ~ FGA - OREB + TOV + 0.44*FTA, from team totals when ESPN provides them
+    try:
+        for t in box.get("teams", []):
+            team = t.get("team", {}).get("displayName", "")
+            stats = {s.get("name") or s.get("label"): s.get("displayValue") for s in t.get("statistics", [])}
+            def num(k):
+                v = stats.get(k)
+                if v is None:
+                    return None
+                v = str(v)
+                if "-" in v:
+                    return float(v.split("-")[1])   # attempts from "made-attempted"
+                return float(v)
+            fga = num("fieldGoalsMade-fieldGoalsAttempted") or num("FG")
+            fta = num("freeThrowsMade-freeThrowsAttempted") or num("FT")
+            oreb = num("offensiveRebounds") or num("OREB")
+            tov = num("turnovers") or num("TO")
+            if None not in (fga, fta, oreb, tov):
+                team_tot[team] = fga - oreb + tov + 0.44 * fta
+    except Exception:
+        team_tot = {}
+    poss = (sum(team_tot.values()) / 2.0) if len(team_tot) == 2 else None
+    return out, poss
+
+
+# ----------------------------------------------------------------- NHL (NHL API)
+
+def nhl_games(day):
+    """Completed NHL games for a date. Returns [{id, home, away, hs, as}]."""
+    data = _get_json(f"{NHL_API}/score/{day}")
+    out = []
+    for g in data.get("games", []):
+        if str(g.get("gameState", "")).upper() not in ("OFF", "FINAL"):
+            continue
+        ht, at = g.get("homeTeam", {}), g.get("awayTeam", {})
+        try:
+            out.append({"id": str(g["id"]), "home": NHL_ABBR.get(ht.get("abbrev"), ht.get("abbrev", "")),
+                        "away": NHL_ABBR.get(at.get("abbrev"), at.get("abbrev", "")),
+                        "hs": int(ht.get("score", 0)), "as": int(at.get("score", 0))})
+        except (KeyError, ValueError, TypeError):
+            continue
+    return out
+
+
+def nhl_box(game_id):
+    """Skater lines for one game. Returns {team_name: [{player, goals, assists, points, sog, played}]}."""
+    data = _get_json(f"{NHL_API}/gamecenter/{game_id}/boxscore")
+    out = {}
+    pbs = data.get("playerByGameStats", {})
+    for side in ("homeTeam", "awayTeam"):
+        abbr = data.get(side, {}).get("abbrev", "")
+        team = NHL_ABBR.get(abbr, abbr)
+        lines = []
+        for grp in ("forwards", "defense"):
+            for p in pbs.get(side, {}).get(grp, []):
+                nm = p.get("name", {})
+                name = nm.get("default", "") if isinstance(nm, dict) else str(nm)
+                toi = str(p.get("toi", "0:00"))
+                try:
+                    mins = int(toi.split(":")[0]) + int(toi.split(":")[1]) / 60.0
+                except (ValueError, IndexError):
+                    mins = 0.0
+                lines.append({"player": name, "goals": p.get("goals"), "assists": p.get("assists"),
+                              "points": p.get("points"), "sog": p.get("sog", p.get("shots")), "played": mins > 0})
+        out[team] = lines
+    return out
+
+
+# ------------------------------------------------------------ ingest + grade
+
+def ingest_day(con, sport, day, now_iso):
+    """Pull every completed game for a date, store results, box lines and roster entries."""
+    _ensure(con)
+    games = espn_nba_games(day) if sport == "NBA" else nhl_games(day)
+    n = 0
+    for g in games:
+        if con.execute("select 1 from game_results where sport=? and source_id=?", (sport, g["id"])).fetchone():
+            continue
+        try:
+            if sport == "NBA":
+                box, poss = espn_nba_box(g["id"])
+            else:
+                box, poss = nhl_box(g["id"]), None
+        except Exception as e:                       # noqa: BLE001
+            con.execute("insert or replace into meta(k,v) values(?,?)", (f"feed_error_{sport}", f"{now_iso} {g['id']} {str(e)[:120]}"))
+            continue
+        con.execute("insert or replace into game_results values(?,?,?,?,?,?,?,?,?)",
+                    (sport, day, g["home"], g["away"], g["hs"], g["as"], poss, g["id"], now_iso))
+        for team, lines in box.items():
+            for ln in lines:
+                pn = _norm(ln["player"])
+                if not pn:
+                    continue
+                con.execute("insert or replace into box_lines values(?,?,?,?,?,?,?)",
+                            (sport, day, g["id"], team, ln["player"], pn, json.dumps(ln)))
+                con.execute("insert or replace into player_team values(?,?,?,?)", (sport, pn, team, now_iso))
+        n += 1
+    con.commit()
+    return n
+
+
+def _initial_last(s):
+    parts = _norm(s).split()
+    return f"{parts[0][0]} {parts[-1]}" if len(parts) >= 2 else _norm(s)
+
+
+def grade_props(con, sport, now_iso, lookback_days=3, limit=400):
+    """Settle pending NBA/NHL props from stored box lines. Void on DNP, push on exact line."""
+    _ensure(con)
+    import jerry_grade as jg
+    res = jg.NameResolver(con)
+    statmap = NBA_PROP_STAT if sport == "NBA" else NHL_PROP_STAT
+    pend = [dict(r) for r in con.execute(
+        """select * from bets where result='pending' and sport=? and market like 'player_%'
+             and commence < ? order by id limit ?""", (sport, now_iso, limit))]
+    graded = voided = quar = 0
+    for b in pend:
+        try:
+            stat = statmap.get(b["market"])
+            if not stat:
+                res.quarantine(b["id"], sport, b["player"], b["market"], "market not gradeable", now_iso); quar += 1
+                continue
+            day = (b["commence"] or "")[:10]
+            # the game's box lines: match on the two teams in the bet's game string, same date (+/-1 for UTC rollover)
+            try:
+                away, home = [x.strip() for x in (b["game"] or "").split("@")]
+            except ValueError:
+                res.quarantine(b["id"], sport, b["player"], b["market"], "bad game string", now_iso); quar += 1
+                continue
+            rows = con.execute("""select bl.* from box_lines bl join game_results gr using(sport, source_id)
+                                  where bl.sport=? and gr.game_date between ? and ?""",
+                               (sport, day, (datetime.fromisoformat(day) + timedelta(days=1)).strftime("%Y-%m-%d"))).fetchall()
+            hk, ak = _team_key(home), _team_key(away)
+            rows = [r for r in rows if _team_key(r["team"]) in (hk, ak)]
+            if not rows:
+                continue                                   # game not ingested yet; stays pending
+            cands = {r["player"]: r for r in rows}
+            feed = res.resolve(sport, b["player"], list(cands.keys()), now_iso)
+            if not feed:
+                res.quarantine(b["id"], sport, b["player"], b["market"], "player not in either team's box", now_iso); quar += 1
+                continue
+            ln = json.loads(cands[feed]["stats"])
+            val = ln.get(stat)
+            r = jg.settle_prop(b["market"] if sport == "NFL" else "player_line", b["selection"], b["line"], val,
+                               played=bool(ln.get("played")))
+            if r is None:
+                res.quarantine(b["id"], sport, b["player"], b["market"], "stat missing in box", now_iso); quar += 1
+                continue
+            pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0, "V": 0.0}[r]
+            con.execute("""update bets set result=?, pnl=?, graded_ts=?, note=coalesce(note,'')||? where id=?""",
+                        (r, round(pnl, 4), now_iso, f" | settled {val} vs {b['line']}", b["id"]))
+            graded += 1; voided += (r == "V")
+        except Exception as e:                           # noqa: BLE001
+            res.quarantine(b["id"], sport, b["player"], b["market"], f"grading error: {str(e)[:100]}", now_iso); quar += 1
+    con.commit()
+    return {"graded": graded, "voided": voided, "quarantined": quar}
+
+
+# ---------------------------------------------------- roster cross-check (#5)
+
+def player_team(con, sport, player):
+    _ensure(con)
+    r = con.execute("select team from player_team where sport=? and player_norm=?", (sport, _norm(player))).fetchone()
+    if r:
+        return r[0]
+    il = _initial_last(player)
+    for row in con.execute("select player_norm, team from player_team where sport=?", (sport,)):
+        if _initial_last(row[0]) == il:
+            return row[1]
+    return None
+
+
+def label_ok(con, sport, player, home, away):
+    """True if the player's last known team is one of the two in the event, or unknown.
+
+    Unknown returns True — never block a bet on missing data — but the caller
+    should mark it as unverified. A known mismatch returns False.
+    """
+    t = player_team(con, sport, player)
+    if not t:
+        return None
+    return _team_key(t) in (_team_key(home), _team_key(away))
+
+
+def nfl_player_team_from_frame(con, df, now_iso):
+    """Populate the roster cache for NFL from the nflverse weekly frame already loaded for grading."""
+    _ensure(con)
+    name_col = "player_display_name" if "player_display_name" in df.columns else "player_name"
+    if "recent_team" in df.columns:
+        tcol = "recent_team"
+    elif "team" in df.columns:
+        tcol = "team"
+    else:
+        return 0
+    latest = df.sort_values("week").groupby(name_col).tail(1)
+    n = 0
+    for _, r in latest.iterrows():
+        con.execute("insert or replace into player_team values(?,?,?,?)", ("NFL", _norm(r[name_col]), str(r[tcol]), now_iso))
+        n += 1
+    con.commit()
+    return n
+
+
+def run(con, now, sports=("NBA", "NHL"), days_back=2):
+    """Ingest the last few days and grade. Returns a report dict."""
+    rep = {}
+    for sp in sports:
+        try:
+            got = 0
+            for k in range(days_back, -1, -1):
+                day = (now - timedelta(days=k)).strftime("%Y-%m-%d")
+                got += ingest_day(con, sp, day, now.isoformat(timespec="seconds"))
+            g = grade_props(con, sp, now.isoformat(timespec="seconds"))
+            rep[sp] = {"games_ingested": got, **g}
+        except Exception as e:                           # noqa: BLE001
+            rep[sp] = {"error": str(e)[:160]}
+            try:
+                con.execute("insert or replace into meta(k,v) values(?,?)", (f"feed_error_{sp}", f"{now.isoformat(timespec='seconds')} {str(e)[:150]}"))
+                con.commit()
+            except sqlite3.Error:
+                pass
+    return rep
+'''
+
+_NBA_SRC = r'''"""
+jerry_nba.py — a first NBA model.
+
+Ratings are fitted from completed games in `game_results` (filled by jerry_feeds):
+a ridge regression of margin on home/away team indicators plus a home-court
+term, and a separate pace rating from points totals. Both are shrunk hard toward
+league average, because in October there are eight games of data per team.
+
+This model is deliberately conservative. It writes rows with reasoning for every
+tracked game, but emits a non-Sit call only once both teams have MIN_GAMES
+played and the disagreement clears the error band. There is no backtest and no
+graded history; it begins life as colour.
+"""
+from __future__ import annotations
+
+import json
+import math
+import sqlite3
+from datetime import datetime, timedelta, timezone
+
+import numpy as np
+
+UTC = timezone.utc
+
+MIN_GAMES = 8          # per team before any non-Sit call
+HOME_PRIOR = 2.5       # points of home court, prior
+RIDGE = 6.0            # shrinkage on team ratings (games-worth of league average)
+MARGIN_SD = 12.5       # NBA margin dispersion
+TOTAL_SD = 18.0
+MAE_SPREAD = 10.0      # model error band priors until measured
+MAE_TOTAL = 14.0
+LEAGUE_PPG_PRIOR = 114.0
+
+
+def _norm_team(s):
+    import re
+    n = re.sub(r"[^a-z ]", "", str(s).lower()).strip()
+    return n.split()[-1] if n.split() else n
+
+
+def fit(con, season_start=None):
+    """Return ratings dict {team_key: {off, def, net, games}} plus league/home numbers."""
+    rows = con.execute("select home, away, home_score, away_score, game_date from game_results where sport='NBA'").fetchall()
+    if season_start:
+        rows = [r for r in rows if r["game_date"] >= season_start]
+    if not rows:
+        return None
+    teams = sorted({_norm_team(r["home"]) for r in rows} | {_norm_team(r["away"]) for r in rows})
+    ix = {t: i for i, t in enumerate(teams)}
+    n, k = len(rows), len(teams)
+    X = np.zeros((n, k + 1)); y = np.zeros(n); tot = np.zeros(n)
+    for i, r in enumerate(rows):
+        X[i, ix[_norm_team(r["home"])]] = 1.0
+        X[i, ix[_norm_team(r["away"])]] = -1.0
+        X[i, k] = 1.0
+        y[i] = r["home_score"] - r["away_score"]
+        tot[i] = r["home_score"] + r["away_score"]
+    # ridge with a prior on home court; team ratings shrink to zero
+    lam = np.full(k + 1, RIDGE); lam[k] = 0.5
+    prior = np.zeros(k + 1); prior[k] = HOME_PRIOR
+    A = X.T @ X + np.diag(lam)
+    b = X.T @ y + lam * prior
+    beta = np.linalg.solve(A, b)
+    # pace / scoring rating: team's average total vs league, shrunk
+    lg_total = float(tot.mean())
+    games = {t: 0 for t in teams}; ptot = {t: 0.0 for t in teams}
+    for i, r in enumerate(rows):
+        for t in (_norm_team(r["home"]), _norm_team(r["away"])):
+            games[t] += 1; ptot[t] += tot[i]
+    out = {}
+    for t in teams:
+        g = games[t]
+        avg_tot = (ptot[t] + lg_total * RIDGE) / (g + RIDGE)
+        out[t] = {"net": float(beta[ix[t]]), "total_tilt": float(avg_tot - lg_total), "games": g}
+    return {"teams": out, "home": float(beta[k]), "lg_total": lg_total, "n_games": n}
+
+
+def predict(fit_, home, away):
+    th, ta = fit_["teams"].get(_norm_team(home)), fit_["teams"].get(_norm_team(away))
+    if not th or not ta:
+        return None
+    margin = th["net"] - ta["net"] + fit_["home"]
+    total = fit_["lg_total"] + 0.5 * (th["total_tilt"] + ta["total_tilt"])
+    return {"margin": margin, "total": total, "games_h": th["games"], "games_a": ta["games"]}
+
+
+def _ncdf(x):
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def refresh(db_path, now=None):
+    """Write NBA model rows (spreads, totals, h2h) with reasoning for games in the next 36h."""
+    import jerry_reason as jr
+    now = now or datetime.now(UTC)
+    con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
+    try:
+        cols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
+        if "reasoning" not in cols:
+            con.execute("alter table model_probs add column reasoning text")
+        season_start = f"{now.year if now.month >= 9 else now.year - 1}-10-01"
+        f = fit(con, season_start)
+        if not f:
+            return 0
+        evs = con.execute("""select event_id, home, away, commence from events where sport='NBA'
+                             and commence>? and commence<?""",
+                          (now.isoformat(timespec="seconds"), (now + timedelta(hours=36)).isoformat(timespec="seconds"))).fetchall()
+        n = 0
+        for ev in evs:
+            p = predict(f, ev["home"], ev["away"])
+            if not p:
+                continue
+            q = {}
+            for r in con.execute("""select market, outcome, line, price from last_quote
+                                    where event_id=? and player='' and book='pinnacle'""", (ev["event_id"],)):
+                q.setdefault(r["market"], {})[r["outcome"]] = (r["line"], r["price"])
+            if not q:
+                continue
+            gated = min(p["games_h"], p["games_a"]) < MIN_GAMES
+            rows = []
+            # ---- spread
+            sp = q.get("spreads", {})
+            if ev["home"] in sp and ev["away"] in sp:
+                hl, hp = sp[ev["home"]]; al, ap = sp[ev["away"]]
+                fair = jr.power_devig([hp, ap]) or [1 / hp, 1 / ap]
+                p_home = _ncdf((p["margin"] + float(hl)) / MARGIN_SD)
+                e = p_home - fair[0]
+                ratio = jr.edge_ratio(p["margin"] - (-float(hl)), MAE_SPREAD)
+                tag, _s, _w = jr.size_from_ratio(ratio, e, cap_lean=True)
+                side = ev["home"] if e > 0 else ev["away"]
+                call = "Sit" if (gated or tag == "Sit") else f"{tag} {side}"
+                comp = {"model_number": round(p["margin"], 2), "market_number": round(-float(hl), 2),
+                        "games_h": p["games_h"], "games_a": p["games_a"], "raw_prob": round(p_home, 4)}
+                why = jr.render_reasoning(market="spreads", player="", selection=side, line=hl if e > 0 else al,
+                                          model_prob=p_home if e > 0 else 1 - p_home, fair_prob=fair[0] if e > 0 else fair[1],
+                                          components=comp, opponent="", status="", n_games=None)
+                if gated:
+                    why += (f" Gated: only {min(p['games_h'], p['games_a'])} games on record for the thinner team; "
+                            f"the model does not make calls below {MIN_GAMES}.")
+                why += " NBA model has no backtest and no graded history."
+                rows.append((ev["event_id"], "spreads", ev["home"], "", hl, p_home, fair[0], e, call,
+                             f"NBA ratings margin {p['margin']:+.1f} vs line {-float(hl):+.1f}; ratio {ratio:.2f}; games {p['games_h']}/{p['games_a']}",
+                             now.isoformat(timespec="seconds"), why))
+                rows.append((ev["event_id"], "spreads", ev["away"], "", al, 1 - p_home, fair[1], -e, "see home row", "", now.isoformat(timespec="seconds"), None))
+            # ---- total
+            to = q.get("totals", {})
+            if "Over" in to and "Under" in to:
+                ol, op = to["Over"]; ul, up = to["Under"]
+                fair = jr.power_devig([up, op]) or [1 / up, 1 / op]
+                p_under = _ncdf((float(ol) - p["total"]) / TOTAL_SD)
+                e = p_under - fair[0]
+                ratio = jr.edge_ratio(p["total"] - float(ol), MAE_TOTAL)
+                tag, _s, _w = jr.size_from_ratio(ratio, e, cap_lean=True)
+                side = "Under" if e > 0 else "Over"
+                call = "Sit" if (gated or tag == "Sit") else f"{tag} {side}"
+                comp = {"model_number": round(p["total"], 2), "market_number": float(ol), "raw_prob": round(p_under, 4),
+                        "games_h": p["games_h"], "games_a": p["games_a"]}
+                why = jr.render_reasoning(market="totals", player="", selection=side, line=ol,
+                                          model_prob=p_under if e > 0 else 1 - p_under, fair_prob=fair[0] if e > 0 else fair[1],
+                                          components=comp, opponent="", status="", n_games=None)
+                if gated:
+                    why += f" Gated below {MIN_GAMES} games per team."
+                why += " NBA model has no backtest and no graded history."
+                rows.append((ev["event_id"], "totals", "Under", "", ul, p_under, fair[0], e, call,
+                             f"NBA model total {p['total']:.1f} vs {ol}; ratio {ratio:.2f}", now.isoformat(timespec="seconds"), why))
+                rows.append((ev["event_id"], "totals", "Over", "", ol, 1 - p_under, fair[1], -e, "see Under row", "", now.isoformat(timespec="seconds"), None))
+            # ---- moneyline (colour only)
+            ml = q.get("h2h", {})
+            if ev["home"] in ml and ev["away"] in ml:
+                _, hp = ml[ev["home"]]; _, ap = ml[ev["away"]]
+                fair = jr.power_devig([hp, ap]) or [1 / hp, 1 / ap]
+                p_home = _ncdf(p["margin"] / MARGIN_SD)
+                e = p_home - fair[0]
+                side = ev["home"] if e > 0 else ev["away"]
+                call = "Sit" if (gated or abs(e) < 0.04) else f"Lean {side}"
+                why = (f"Ratings margin {p['margin']:+.1f} implies {side} {max(p_home, 1 - p_home):.0%} to win versus "
+                       f"{max(fair):.0%} at fair. Moneyline is colour only — no backtest, no graded history, and "
+                       f"{min(p['games_h'], p['games_a'])} games of data on the thinner side.")
+                rows.append((ev["event_id"], "h2h", ev["home"], "", None, p_home, fair[0], e, call,
+                             f"NBA ratings margin {p['margin']:+.1f}", now.isoformat(timespec="seconds"), why))
+                rows.append((ev["event_id"], "h2h", ev["away"], "", None, 1 - p_home, fair[1], -e, "see home row", "", now.isoformat(timespec="seconds"), None))
+            con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
+                               values(?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
+            n += len(rows)
+        con.commit()
+        return n
+    finally:
+        con.close()
+'''
+
 try:
     jerry_reason = _register("jerry_reason", _REASON_SRC)
     jerry_grade = _register("jerry_grade", _GRADE_SRC)
-    print("[boot] reasoning + grading modules registered", flush=True)
+    jerry_feeds = _register("jerry_feeds", _FEEDS_SRC)
+    jerry_nba = _register("jerry_nba", _NBA_SRC)
+    print("[boot] reasoning + grading + feeds + nba modules registered", flush=True)
 except Exception:
     traceback.print_exc()
     print("[boot] WARNING reasoning/grading modules failed to load", flush=True)
@@ -1131,6 +1838,23 @@ def refresh_all(db_path, sports=None):
         res["GRADE"] = backfill_props(db_path)
     except Exception as e:   # noqa: BLE001 - grading must never stop a refresh
         res["GRADE"] = f"error: {e}"
+        traceback.print_exc()
+    # NBA/NHL box scores: grade their props, fill the roster cache, store results
+    try:
+        import jerry_feeds as _jf
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        try:
+            res["FEEDS"] = _jf.run(_c, datetime.now(UTC))
+        finally:
+            _c.close()
+    except Exception as e:   # noqa: BLE001
+        res["FEEDS"] = f"error: {e}"
+    # NBA model, from the results the feed just stored
+    try:
+        import jerry_nba as _jn
+        res["NBA"] = _jn.refresh(db_path)
+    except Exception as e:   # noqa: BLE001
+        res["NBA"] = f"error: {e}"
         traceback.print_exc()
     return res
 if L:
