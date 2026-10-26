@@ -126,14 +126,29 @@ def pinnacle_line(df, event_id, market, outcome):
 
 
 def write_probs(con, rows, now):
+    try:
+        ensure_paper_schema(con)
+    except Exception:
+        pass
     for r in rows:
-        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
-                       values(?,?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
+        # fade the public: no model call survives if sharp money is on the other side,
+        # or if it is the public side with no sharp support
+        c = r.get("call") or ""
+        if c.startswith(("Lean", "Play")):
+            try:
+                r["call"], r["reasoning"], _sig = jr.sharp_gate(con, r["event_id"], r["market"], c,
+                                                                 r.get("player", "") or "", r.get("reasoning") or "")
+                r["flag"] = _sig.get("label") if _sig else None
+                r["_sig"] = _sig
+            except Exception:
+                pass
+        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
                        line=excluded.line, model_prob=excluded.model_prob, fair_prob=excluded.fair_prob, edge=excluded.edge,
-                       call=excluded.call, note=excluded.note, ts=excluded.ts, reasoning=excluded.reasoning""",
+                       call=excluded.call, note=excluded.note, ts=excluded.ts, reasoning=excluded.reasoning, flag=excluded.flag""",
                     (r["event_id"], r["market"], r["outcome"], r.get("player", ""), r.get("line"), r["model_prob"],
                      r.get("fair_prob"), r.get("edge"), r["call"], r.get("note", ""), now.isoformat(timespec="seconds"),
-                     r.get("reasoning")))
+                     r.get("reasoning"), r.get("flag")))
 
 
 # ---------------------------------------------------------------- NFL sides / totals
@@ -162,22 +177,37 @@ STARTER_OUT_CAP = 2.0
 QB_OUT_TOTAL = 2.0        # a backup QB also lowers the total
 
 def _starting_qbs(pw, season, week, lookback=3):
-    """Team -> QB with the most pass attempts over the last few weeks. Data we already load."""
+    """Team -> (QB with the most pass attempts over the last few weeks, played_last_game).
+
+    A starter shut down for the season leaves the weekly injury report entirely, so
+    the injury list alone misses him. If he has no attempts in his team's most recent
+    game, he is treated as out.
+    """
     d = pw[(pw.season == season) & (pw.week < week) & (pw.week >= week - lookback) & (pw.position == "QB")]
     if d.empty:
         return {}
     att = d.groupby(["team", "player_display_name"])["attempts"].sum().reset_index()
-    return {t: g.sort_values("attempts", ascending=False).iloc[0].player_display_name for t, g in att.groupby("team")}
+    out = {}
+    for t, g in att.groupby("team"):
+        qb = g.sort_values("attempts", ascending=False).iloc[0].player_display_name
+        team_last = d[d.team == t].week.max()
+        played = ((d.team == t) & (d.week == team_last) & (d.player_display_name == qb) & (d.attempts > 5)).any()
+        out[t] = (qb, bool(played))
+    return out
 
-def injury_adjustment(inj, team, qb_name):
-    """(margin_pts, total_pts, detail) — positive margin_pts means this team is WEAKER by that much."""
-    d = inj[inj.team == team] if inj is not None and not inj.empty else inj
-    if d is None or d.empty:
-        return 0.0, 0.0, ""
-    out = d[d.report_status.isin(["Out", "Doubtful"])]
+def injury_adjustment(inj, team, qb):
+    """(margin_pts, total_pts, detail) — positive margin_pts means this team is WEAKER by that much.
+    qb is (name, played_last_game) from _starting_qbs, or None."""
+    qb_name, qb_played = (qb if isinstance(qb, tuple) else (qb, True)) if qb else (None, True)
+    d = inj[inj.team == team] if inj is not None and not inj.empty else None
+    out = d[d.report_status.isin(["Out", "Doubtful"])] if d is not None and not d.empty else None
     pts = tot = 0.0; bits = []
-    if qb_name and (out.full_name == qb_name).any():
-        pts += QB_OUT_PTS; tot += QB_OUT_TOTAL; bits.append(f"starting QB {qb_name} out ({QB_OUT_PTS:+.1f})")
+    listed_out = qb_name is not None and out is not None and (out.full_name == qb_name).any()
+    if qb_name and (listed_out or not qb_played):
+        pts += QB_OUT_PTS; tot += QB_OUT_TOTAL
+        bits.append(f"starting QB {qb_name} {'out' if listed_out else 'did not play last game'} ({QB_OUT_PTS:+.1f})")
+    if out is None:
+        return pts, tot, "; ".join(bits)
     starters = out[out.position.isin(["RB", "WR", "TE", "T", "G", "C", "OL"])]
     k = min(len(starters), int(STARTER_OUT_CAP / STARTER_OUT_PTS))
     if k:
@@ -249,6 +279,15 @@ def refresh_nfl(con, now):
             pred["p_under"] = float(norm.cdf((float(oline) - pred.pred_total) / 13.0))
             if "p_home_ml" in pred.index:
                 pred["p_home_ml"] = float(norm.cdf(pred.pred_margin / 13.5))
+        try:
+            _qbh, _qba = qbs.get(h), qbs.get(a)
+            jr.record_numbers(con, event_id=ev.event_id, sport="NFL", home=ev.home, away=ev.away, commence=ev.commence,
+                              margin=float(pred.pred_margin), total=float(pred.pred_total),
+                              mkt_margin=-float(hline), mkt_total=float(oline),
+                              checks={"qb_status_known": bool(_qbh) and bool(_qba)},
+                              detail=f"EPA ridge + rest; injury adj {inj_margin:+.1f} margin {inj_total:+.1f} total; {inj_detail}")
+        except Exception:
+            pass
         # fair probs from Pinnacle two-way prices
         f_hcov = fair_two_way(hprice, aprice) if hprice and aprice else 0.5
         f_under = fair_two_way(uprice, oprice) if uprice and oprice else 0.5
@@ -691,10 +730,7 @@ def refresh_nhl(con, now):
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.home, model_prob=s["p_home_ml"], fair_prob=f, edge=e,
                             call=f"{call_for(e, 0.03, 0.05, cap_lean=True)} {_side}" if abs(e) >= 0.03 else "Sit", note=note,
                             components=_mc,
-                            reasoning=(f"Expected goals {lam_h:.2f}-{lam_a:.2f} from 5v5 and special-teams xG rates shrunk toward league average, "
-                                       f"with the confirmed goalies' save quality. That makes {_side} {(s['p_home_ml'] if e > 0 else 1 - s['p_home_ml']):.0%} "
-                                       f"to win versus {(f if e > 0 else 1 - f):.0%} at fair. Moneyline edges have no backtest and no graded history; "
-                                       f"treat as colour. Falsifier: the other side leads by two after the first period.")))
+                            reasoning=None))
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.away, model_prob=1 - s["p_home_ml"], fair_prob=1 - f, edge=-e, call="see home row"))
         if oprice and uprice:
             f = fair_two_way(uprice, oprice); e = s["p_under"] - f
@@ -736,13 +772,37 @@ def refresh_nhl(con, now):
                 r["call"] = "Sit (sanity check failed)"
             elif abs(e) > 0.06:
                 r["call"] = "Sit (edge too large to trust)"
-            elif r["market"] == "totals" and unconf:
+            elif unconf:
                 r["call"] = "Sit (goalie unconfirmed)"
             elif abs(e) >= 0.03:
                 r["call"] = f"{call_for(e, 0.03, 0.05, cap_lean=True)} {side}"
             else:
                 r["call"] = "Sit"
             r["note"] = (r.get("note") or "") + f"; raw model {raw:.1%}, anchored {NHL_ANCHOR:.0%} to market, slate scale {k:.2f}"
+            # reasoning is written here, after anchoring, so it quotes the number the call uses
+            gtxt = "goalies unconfirmed — both run at team average" if unconf else f"goalies {gh_txt} / {ga_txt}"
+            if r["market"] == "h2h":
+                pm = r["model_prob"] if e > 0 else 1 - r["model_prob"]; pf = r["fair_prob"] if e > 0 else 1 - r["fair_prob"]
+                r["reasoning"] = (f"Expected goals {lam_h:.2f}-{lam_a:.2f} (home first) from 5v5 and special-teams xG shrunk toward "
+                                  f"league average; {gtxt}. Raw model {raw:.0%} home, anchored {NHL_ANCHOR:.0%} toward the market: "
+                                  f"{side} {pm:.0%} versus {pf:.0%} at fair. Moneylines have no backtest; colour only. "
+                                  f"Falsifier: the other side leads by two after the first period.")
+            elif r["market"] == "totals":
+                _nc = {"mu": round(float(lam_h + lam_a), 3), "sd": round(float(math.sqrt(max(lam_h + lam_a, 0.5))), 3),
+                       "model_number": round(float(lam_h + lam_a), 3), "market_number": float(total), "xg_home": round(float(lam_h), 3)}
+                pm = r["model_prob"] if e > 0 else 1 - r["model_prob"]; pf = r["fair_prob"] if e > 0 else 1 - r["fair_prob"]
+                r["reasoning"] = jr.render_reasoning(market="totals", player="", selection=side, line=total, model_prob=pm,
+                                                     fair_prob=pf, components=_nc, sport="NHL") + f" Goaltending: {gtxt}."
+        try:
+            ph = next((x["model_prob"] for x in out[n0:] if x["market"] == "h2h" and x["outcome"] == ev.home), None)
+            fh = next((x["fair_prob"] for x in out[n0:] if x["market"] == "h2h" and x["outcome"] == ev.home), None)
+            jr.record_numbers(con, event_id=ev.event_id, sport="NHL", home=ev.home, away=ev.away, commence=ev.commence,
+                              margin=float(lam_h - lam_a), total=float(lam_h + lam_a), p_home=ph,
+                              mkt_margin=None, mkt_total=float(total) if oline is not None else None, mkt_p_home=fh,
+                              checks={"goalies_confirmed": not unconf, "sanity": not bad},
+                              detail=f"xG {lam_h:.2f}-{lam_a:.2f}; {gh_txt} / {ga_txt}")
+        except Exception:
+            pass
     write_probs(con, out, now)
     return out
 
@@ -824,7 +884,7 @@ def alert_new_plays(con, rows):
                     f"model {r['model_prob']:.0%} vs fair {r['fair_prob']:.0%} (edge {r['edge']*100:+.1f})\n{r.get('note','')}")
         con.execute("insert or ignore into slots values(?,?)", (k, datetime.now(UTC).isoformat()))
     if msgs:
-        telegram("JERRY — new Play edges\n\n" + "\n\n".join(msgs[:8]))
+        telegram("KRONOS — new Play edges\n\n" + "\n\n".join(msgs[:8]))
 
 
 # ---------------------------------------------------------------- entry point
@@ -846,6 +906,15 @@ def ensure_paper_schema(con):
     con.execute("""create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
                    book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book))""")
     con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
+    # flags travel with every edge and every paper bet so their value can be measured
+    for tbl, col, typ in (("value_edges", "flag", "text"), ("bets", "sharp_flag", "text"),
+                          ("bets", "dk_bets_pct", "real"), ("bets", "dk_handle_pct", "real"),
+                          ("model_probs", "flag", "text"), ("model_probs", "reasoning", "text")):
+        try:
+            if col not in {r[1] for r in con.execute(f"pragma table_info({tbl})")}:
+                con.execute(f"alter table {tbl} add column {col} {typ}")
+        except Exception:
+            pass
 
 
 def _quote_for(con, event_id, market, outcome, player, line, books=PAPER_BOOKS):
@@ -910,15 +979,16 @@ def paper_log(con, rows, now):
                                         cap_lean=r["market"].startswith("player_"))[1] or 1.0)
         con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price, book, stake,
                        model_prob, note, paper, comp_json, ratio, model_number, market_number,
-                       evidence_kind, corr_group, falsifier, steelman, stake_pre_corr, logged_call)
-                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?,?,?)""",
+                       evidence_kind, corr_group, falsifier, steelman, stake_pre_corr, logged_call, sharp_flag, dk_bets_pct, dk_handle_pct)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (now.isoformat(timespec="seconds"), ev["sport"], r["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"],
                      r["market"], sel, player, q["line"] if q["line"] is not None else line, q["price"], q["book"], stake,
                      None if p is None else round(float(p), 4), f"{r['call']} | {r.get('note') or ''}"[:300],
                      _json.dumps(comp), ratio, mnum, knum, "model",
                      jr.correlation_group(ev["sport"], r["event_id"], r["market"], sel, player),
                      jr.falsifier(r["market"], sel, line, mnum, player),
-                     jr.steelman(r["market"], mnum, knum, sel), stake, r.get("call")))
+                     jr.steelman(r["market"], mnum, knum, sel), stake, r.get("call"),
+                     r.get("flag"), (r.get("_sig") or {}).get("dk_bets"), (r.get("_sig") or {}).get("dk_handle")))
         n += 1
     return n
 
@@ -973,10 +1043,18 @@ def price_edges(con, now):
                     row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
                                price=r["price"], fair=round(fair[r["outcome"]], 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
                                commence=ev["commence"])
+                    try:
+                        _sig = jr.sharp_signal(con, ev["event_id"], market, r["outcome"], player)
+                    except Exception:
+                        _sig = None
+                    row["flag"] = _sig.get("label") if _sig else "NO READ"
+                    row["flag_text"] = _sig.get("text") if _sig else ""
+                    row["_sig"] = _sig
                     out.append(row)
-                    con.execute("insert or replace into value_edges values(?,?,?,?,?,?,?,?,?,?)",
+                    con.execute("""insert or replace into value_edges(event_id,market,outcome,player,line,book,price,fair,ev,ts,flag)
+                                   values(?,?,?,?,?,?,?,?,?,?,?)""",
                                 (row["event_id"], market, r["outcome"], player, r["line"], r["book"], r["price"], row["fair"], row["ev"],
-                                 now.isoformat(timespec="seconds")))
+                                 now.isoformat(timespec="seconds"), row["flag"]))
     # paper-trade them too (one per outcome, first book seen)
     n = 0
     for row in out:
@@ -988,8 +1066,11 @@ def price_edges(con, now):
                     (now.isoformat(timespec="seconds"), row["sport"], row["event_id"], f"{row['away']} @ {row['home']}", row["commence"],
                      row["market"], row["outcome"], row["player"], row["line"], row["price"], row["book"], 1.0, row["fair"],
                      f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}"))
-        con.execute("update bets set evidence_kind='price', corr_group=? where id=last_insert_rowid()",
-                    (jr.correlation_group(row["sport"], row["event_id"], row["market"], row["outcome"], row["player"]),))
+        _s = row.get("_sig") or {}
+        con.execute("""update bets set evidence_kind='price', corr_group=?, sharp_flag=?, dk_bets_pct=?, dk_handle_pct=?
+                       where id=last_insert_rowid()""",
+                    (jr.correlation_group(row["sport"], row["event_id"], row["market"], row["outcome"], row["player"]),
+                     row.get("flag"), _s.get("dk_bets"), _s.get("dk_handle")))
         n += 1
     return out, n
 
@@ -1036,7 +1117,7 @@ def health_check(db_path, results):
         key = str(abs(hash(" | ".join(sorted(probs)))))
         last = con.execute("select v from meta where k='health_sent'").fetchone()
         if not last or last[0].split(" ", 1)[0] != key or now - datetime.fromisoformat(last[0].split(" ", 1)[1]).replace(tzinfo=UTC) > timedelta(hours=6):
-            telegram("JERRY HEALTH CHECK\n" + "\n".join(f"- {p}" for p in probs))
+            telegram("KRONOS HEALTH CHECK\n" + "\n".join(f"- {p}" for p in probs))
             con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v", ("health_sent", f"{key} {t0}"))
     con.commit(); con.close()
     log(f"health: {'ok' if not probs else probs}")
