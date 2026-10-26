@@ -183,8 +183,805 @@ def refresh_mlb(db_path):
     con.close()
     return n
 
-# ---------- hook into the desk and start it
 import os
+
+# ---------- modules the desk and the live models now import.
+# Embedded here rather than shipped as separate files so the Dockerfile's COPY
+# line never has to change: they are registered in sys.modules before jerry_live
+# or jerry_desk are loaded, so "import jerry_reason" resolves to this code.
+import types as _types
+
+_REASON_SRC = r'''"""
+jerry_reason.py — the decision and reasoning layer.
+
+Everything here is about turning a raw model number into a sized, auditable pick.
+Nothing in this file predicts anything; it decides what a prediction is worth and
+records why, in fields rather than prose, so the reasoning can be graded later.
+
+Four jobs:
+  1. De-vig properly (power method) instead of proportionally.
+  2. Size an edge against the model's own error band, not against zero.
+  3. Measure CLV in probability space so line moves stop being discarded.
+  4. Attach evidence class, correlation group, falsifier and steelman to every pick.
+"""
+from __future__ import annotations
+
+import json
+import math
+import sqlite3
+from collections import defaultdict
+
+SQRT_2PI = math.sqrt(2 * math.pi)
+
+# ---------------------------------------------------------------- de-vigging
+
+def power_devig(prices, tol=1e-9, max_iter=80):
+    """De-vig a set of decimal prices by the power method.
+
+    Proportional de-vig (p_i / sum p) assumes the bookmaker's margin is spread
+    evenly across outcomes. It is not: margin is concentrated on longshots. That
+    bias makes every long price look like value, which is exactly how a 4.60
+    anytime-TD quote gets scored +7.9% EV when it is roughly fair.
+
+    The power method solves for k in sum(p_i ** k) == 1, which takes more margin
+    out of the longshots than the favourites. Reduces to proportional when the
+    book is balanced, so it is safe to use everywhere.
+    """
+    raw = [1.0 / p for p in prices if p and p > 1.0]
+    if len(raw) < 2:
+        return None
+    if abs(sum(raw) - 1.0) < tol:
+        return list(raw)
+    lo, hi = 0.2, 3.0
+    for _ in range(max_iter):
+        k = (lo + hi) / 2
+        s = sum(r ** k for r in raw)
+        if abs(s - 1.0) < tol:
+            break
+        if s > 1.0:
+            lo = k
+        else:
+            hi = k
+    k = (lo + hi) / 2
+    out = [r ** k for r in raw]
+    tot = sum(out)
+    return [o / tot for o in out]
+
+
+def fair_two_way_power(price_a, price_b):
+    """Fair probability of the first outcome, power-de-vigged. Drop-in for fair_two_way."""
+    f = power_devig([price_a, price_b])
+    if not f:
+        return None
+    return f[0]
+
+
+def strip_single_side_vig(price, half_vig=0.022):
+    """Approximate fair probability when only one side of a market is visible."""
+    if not price or price <= 1.0:
+        return None
+    return (1.0 / price) / (1.0 + half_vig)
+
+
+# ------------------------------------------------------- CLV in probability space
+
+# Probability change per one unit of line movement, used when the model's own sd
+# is unavailable. Derived from typical NFL distributions.
+LINE_SLOPE = {"totals": 0.016, "spreads": 0.028, "h2h": 0.0}
+
+# Which way a unit of line movement pushes the probability of each side winning.
+#   +1 : a HIGHER line makes this selection MORE likely (spread handicaps, Under)
+#   -1 : a HIGHER line makes this selection LESS likely (Over, Yes)
+def _line_sign(market, selection):
+    sel = (selection or "").strip().lower()
+    if market == "spreads":
+        return +1
+    if sel in ("under", "no"):
+        return +1
+    if sel in ("over", "yes"):
+        return -1
+    return 0
+
+
+def slope_for(market, sd=None, mu=None, line=None):
+    """d(probability)/d(line). Uses the model's own sd when we stored one."""
+    if sd and sd > 0:
+        # density of the projection at the line: the local exchange rate between
+        # points of line and points of probability
+        if mu is not None and line is not None:
+            z = (float(line) - float(mu)) / sd
+            return math.exp(-0.5 * z * z) / (sd * SQRT_2PI)
+        return 1.0 / (sd * SQRT_2PI)
+    if market.startswith("player_"):
+        return 0.045
+    return LINE_SLOPE.get(market, 0.02)
+
+
+def clv_pp(bet_line, bet_price, close_line, close_price, market, selection,
+           sd=None, mu=None, close_fair=None):
+    """Closing line value in probability points, valid across line movement.
+
+    The old rule only recorded CLV when close_line == bet_line, which threw away
+    every bet whose number moved — i.e. precisely the bets carrying information.
+    Here the closing price is translated back to the line actually bet, so a bet
+    taken at -3.5 and closing at -4.5 scores the move it earned.
+
+    Positive = the market moved toward you.
+    """
+    if not bet_price or bet_price <= 1.0:
+        return None
+    p_bet = strip_single_side_vig(bet_price)
+    p_close = close_fair if close_fair is not None else strip_single_side_vig(close_price)
+    if p_bet is None or p_close is None:
+        return None
+    if bet_line is not None and close_line is not None:
+        d = float(close_line) - float(bet_line)
+        if abs(d) > 1e-9:
+            sign = _line_sign(market, selection)
+            if sign == 0:
+                return None          # cannot translate: unknown market geometry
+            p_close = p_close + sign * slope_for(market, sd, mu, bet_line) * d
+            p_close = min(max(p_close, 0.001), 0.999)
+    return round((p_close - p_bet) * 100, 2)
+
+
+# ------------------------------------------------- sizing against the error band
+
+# Fallback dispersion of the model's own prediction, in the units of the market,
+# used until the ledger has enough graded rows to measure it directly.
+DEFAULT_MODEL_MAE = {"totals": 9.1, "spreads": 9.5, "h2h": 0.0}
+
+
+def measure_model_error(con, sport, market, min_n=25):
+    """Mean absolute error of the model's own number vs the realised result.
+
+    Returns None until there is enough history, so callers fall back to the
+    defaults rather than trusting a two-row estimate.
+    """
+    try:
+        rows = con.execute(
+            """select b.line, b.home_score, b.away_score, b.comp_json
+                 from bets b
+                where b.paper=1 and b.sport=? and b.market=?
+                  and b.result in ('W','L','P')
+                  and b.home_score is not null and b.away_score is not null""",
+            (sport, market)).fetchall()
+    except sqlite3.Error:
+        return None
+    errs = []
+    for r in rows:
+        try:
+            comp = json.loads(r["comp_json"] or "{}")
+        except Exception:
+            comp = {}
+        proj = comp.get("model_number")
+        if proj is None:
+            continue
+        if market == "totals":
+            actual = float(r["home_score"]) + float(r["away_score"])
+        elif market == "spreads":
+            actual = float(r["home_score"]) - float(r["away_score"])
+        else:
+            continue
+        errs.append(abs(float(proj) - actual))
+    if len(errs) < min_n:
+        return None
+    return sum(errs) / len(errs)
+
+
+def edge_ratio(disagreement, model_mae):
+    """How large the model's disagreement is relative to how wrong the model usually is.
+
+    A 2.9 point total disagreement against a 9.1 point MAE is 0.32 — noise. This
+    single number is what should drive sizing; raw edge in probability points
+    hides the model's own dispersion and makes noise look like signal.
+    """
+    if not model_mae or model_mae <= 0:
+        return None
+    return abs(float(disagreement)) / float(model_mae)
+
+
+# Ratio thresholds. Deliberately strict: below 0.75 the model and the market are
+# not meaningfully apart, whatever the probability edge says.
+RATIO_SIT, RATIO_LEAN, RATIO_PLAY = 0.75, 1.00, 1.50
+
+
+def size_from_ratio(ratio, prob_edge, cap_lean=False):
+    """Returns (tag, stake_units, why). Stake is the honest output, tag is the label."""
+    if ratio is None:
+        # no error band available: fall back to probability edge, capped at Lean
+        tag = "Lean" if abs(prob_edge) >= 0.03 else "Sit"
+        return (tag, 0.5 if tag == "Lean" else 0.0,
+                "no measured error band for this market — capped at Lean")
+    if ratio < RATIO_SIT:
+        return ("Sit", 0.0,
+                f"disagreement is {ratio:.2f} of the model's own average error — "
+                f"model and market are effectively tied")
+    if ratio < RATIO_LEAN:
+        return ("Lean", 0.25,
+                f"disagreement is {ratio:.2f} error bands — real but small")
+    if ratio < RATIO_PLAY or cap_lean:
+        return ("Lean", 0.5,
+                f"disagreement is {ratio:.2f} error bands")
+    return ("Play", 1.0,
+            f"disagreement is {ratio:.2f} error bands — past the point where the "
+            f"model's typical error explains it")
+
+
+# ---------------------------------------------------------- evidence classes
+
+EVIDENCE = {
+    "price":  "soft-book price vs sharp fair — no prediction required",
+    "model":  "model disagreement with the market — requires the model to be right",
+    "hybrid": "model and price edge agree independently",
+}
+
+
+def evidence_record(con, sport, market_family, kind):
+    """Live track record for this evidence class, so a pick carries its own warning."""
+    try:
+        rows = con.execute(
+            "select clv_pp, result, pnl, stake from bets where paper=1 and sport=?",
+            (sport,)).fetchall()
+    except sqlite3.Error:
+        return None
+    clv = [r["clv_pp"] for r in rows if r["clv_pp"] is not None]
+    done = [r for r in rows if r["result"] in ("W", "L", "P")]
+    if not clv and not done:
+        return None
+    beat = sum(1 for c in clv if c > 0) / len(clv) if clv else None
+    units = sum((r["pnl"] or 0) for r in done)
+    return {
+        "n": len(rows),
+        "beat_close_pct": round(beat, 3) if beat is not None else None,
+        "clv_pp_avg": round(sum(clv) / len(clv), 2) if clv else None,
+        "graded": len(done),
+        "units": round(units, 2),
+        "kind": kind,
+        "what_it_means": EVIDENCE.get(kind, ""),
+    }
+
+
+# ---------------------------------------------------- correlation and exposure
+
+def correlation_group(sport, event_id, market, selection, player=""):
+    """Legs that win and lose together share a group key.
+
+    A receiver's yardage Over and his game's Over are one bet wearing two hats.
+    Flat per-leg staking treats them as independent and silently doubles exposure.
+    """
+    sel = (selection or "").strip().lower()
+    direction = "up" if sel in ("over", "yes") else "down" if sel in ("under", "no") else sel
+    if market.startswith("player_") or market == "totals":
+        return f"{sport}:{event_id}:scoring:{direction}"
+    return f"{sport}:{event_id}:{market}"
+
+
+MAX_UNITS_PER_GAME = 1.5
+CORRELATION_HAIRCUT = 0.6     # applied to every leg after the first in a group
+
+
+def apply_correlation_caps(picks):
+    """Scale stakes down so correlated legs cannot quietly become one oversized bet.
+
+    Mutates and returns the picks, each gaining `stake_final` and `corr_note`.
+    """
+    by_group = defaultdict(list)
+    for p in picks:
+        by_group[p["corr_group"]].append(p)
+    for group, legs in by_group.items():
+        legs.sort(key=lambda x: -(x.get("ratio") or 0))
+        for i, leg in enumerate(legs):
+            if i == 0:
+                leg["stake_final"] = leg["stake"]
+                leg["corr_note"] = ""
+            else:
+                leg["stake_final"] = round(leg["stake"] * CORRELATION_HAIRCUT, 3)
+                leg["corr_note"] = (f"correlated with {legs[0]['label']} — "
+                                    f"stake cut {int((1-CORRELATION_HAIRCUT)*100)}%")
+    by_game = defaultdict(list)
+    for p in picks:
+        by_game[(p["sport"], p["event_id"])].append(p)
+    for (sport, eid), legs in by_game.items():
+        total = sum(l.get("stake_final", l["stake"]) for l in legs)
+        if total > MAX_UNITS_PER_GAME and total > 0:
+            scale = MAX_UNITS_PER_GAME / total
+            for l in legs:
+                l["stake_final"] = round(l.get("stake_final", l["stake"]) * scale, 3)
+                l["corr_note"] = (l.get("corr_note") or "") + \
+                    f" | game exposure capped at {MAX_UNITS_PER_GAME}u"
+    return picks
+
+
+# ----------------------------------------------- what the model cannot see
+
+BLIND_SPOTS = {
+    "totals": ["starting-QB change", "weather and wind", "pace and pass-rate shifts",
+               "red-zone personnel", "coaching tendency with a lead"],
+    "spreads": ["starting-QB change", "offensive-line injuries", "motivation and rest",
+                "weather"],
+    "player_receptions": ["target redistribution after an injury", "snap share",
+                          "route participation", "shadow coverage"],
+    "player_reception_yds": ["target redistribution after an injury", "air-yards role",
+                             "shadow coverage", "game script"],
+    "player_rush_yds": ["game script and lead protection", "goal-line committee",
+                        "offensive-line injuries"],
+    "player_pass_yds": ["game script", "pass rate over expectation", "pressure rate"],
+    "player_anytime_td": ["red-zone role", "goal-line committee", "depth-chart position"],
+}
+
+
+def steelman(market, model_number, market_number, selection, extra=None):
+    """Why the market may be right. Written before the pick is taken, not after.
+
+    The market number is set by people who can see everything in BLIND_SPOTS and
+    the model cannot. Stating that explicitly is the only reliable guard against
+    writing a confident story around a number the model produced by itself.
+    """
+    blind = BLIND_SPOTS.get(market, ["information the model does not ingest"])
+    bits = [f"The market is at {market_number}; the model is at {model_number}."]
+    bits.append("A sharp book setting that number can see " + ", ".join(blind[:3]) +
+                " — none of which is an input to this model.")
+    if market == "totals" and market_number is not None:
+        try:
+            mn = float(market_number)
+            if mn >= 52:
+                bits.append("This total is already near the top of the league's range, "
+                            "so the model is claiming the market under-reacted on a "
+                            "number it has already pushed to an extreme.")
+            if mn <= 40:
+                bits.append("This total is already near the bottom of the range, so the "
+                            "model is claiming further room in a direction the market "
+                            "has already taken a long way.")
+        except (TypeError, ValueError):
+            pass
+    if extra:
+        bits.append(extra)
+    return " ".join(bits)
+
+
+# --------------------------------------------------------------- falsifiers
+
+def falsifier(market, selection, line, model_number=None, player=""):
+    """One observable that, if seen, means this pick was wrong for the reason given.
+
+    Recorded at pick time and graded afterwards. This is what separates 'right for
+    the right reason' from 'right by luck', and it makes the reasoning layer itself
+    measurable rather than decorative.
+    """
+    sel = (selection or "").strip().lower()
+    if market == "totals":
+        if sel == "over":
+            return ("Either team leads by 14+ at halftime, or combined first-half "
+                    "points are under 40% of the line.")
+        return ("Combined first-half points exceed 55% of the line, or both teams "
+                "score on their opening two drives.")
+    if market == "spreads":
+        return (f"The {selection} side trails by more than {abs(float(line or 0)) + 7:.0f} "
+                f"at any point, or loses the turnover margin by 2+.")
+    if market.startswith("player_"):
+        who = player or "the player"
+        if sel in ("over", "yes"):
+            return (f"{who} is under 50% of his usual snap share, or has fewer than "
+                    f"3 touches/targets by halftime.")
+        return (f"{who} exceeds his usual snap share and clears the line before the "
+                f"fourth quarter.")
+    return "The stated mechanism does not appear in the box score."
+
+
+def grade_falsifier(fired, result):
+    """Classify the pick after the fact: was it right for the stated reason?"""
+    if result not in ("W", "L", "P"):
+        return None
+    if result == "P":
+        return "push"
+    if result == "W":
+        return "right_for_the_reason" if not fired else "right_by_luck"
+    return "wrong_as_predicted" if fired else "wrong_for_another_reason"
+
+
+# ----------------------------------------------------------- language control
+
+# Fixed vocabulary per probability band. Intensifiers are banned outright: a 56%
+# call and a 70% call must not be describable with the same words, and no pick
+# should ever be called the best, biggest or cleanest anything.
+BANNED_WORDS = ("best", "biggest", "cleanest", "huge", "massive", "lock", "smash",
+                "hammer", "free money", "can't lose", "slam", "max")
+
+def language_band(prob):
+    if prob is None:
+        return "unquantified"
+    p = abs(float(prob))
+    if p < 0.52:
+        return "a coin flip"
+    if p < 0.55:
+        return "a slight lean"
+    if p < 0.58:
+        return "a modest edge"
+    if p < 0.62:
+        return "a clear edge"
+    return "a large edge (verify before trusting)"
+
+
+def check_language(text):
+    """Returns the banned words found. Used to gate written output."""
+    low = (text or "").lower()
+    return [w for w in BANNED_WORDS if w in low]
+
+
+# ------------------------------------------------------------ pick assembly
+
+def build_pick(con, *, sport, event_id, market, selection, player="", line=None,
+               price=None, book="", model_prob=None, fair_prob=None,
+               model_number=None, market_number=None, components=None,
+               kind="model", cap_lean=False, label=""):
+    """Assemble one pick as structured fields. Prose is generated from this, never
+    the other way round, so what is written can always be checked against what was
+    computed."""
+    components = dict(components or {})
+    disagreement = None
+    if model_number is not None and market_number is not None:
+        disagreement = float(model_number) - float(market_number)
+
+    mae = measure_model_error(con, sport, market) or DEFAULT_MODEL_MAE.get(market)
+    ratio = edge_ratio(disagreement, mae) if disagreement is not None else None
+    prob_edge = (model_prob - fair_prob) if (model_prob is not None and fair_prob is not None) else 0.0
+
+    if kind == "price":
+        # a price edge needs no model to be right, so it is not sized off the error band
+        tag, stake, why = ("Play", 1.0, "soft-book price beats sharp fair — no prediction required")
+    else:
+        tag, stake, why = size_from_ratio(ratio, prob_edge, cap_lean=cap_lean)
+
+    rec = {
+        "sport": sport, "event_id": event_id, "market": market, "selection": selection,
+        "player": player, "line": line, "price": price, "book": book,
+        "label": label or f"{player or selection} {line if line is not None else ''}".strip(),
+        "model_prob": model_prob, "fair_prob": fair_prob, "prob_edge": round(prob_edge, 4),
+        "model_number": model_number, "market_number": market_number,
+        "disagreement": None if disagreement is None else round(disagreement, 2),
+        "model_mae": mae, "ratio": None if ratio is None else round(ratio, 2),
+        "tag": tag, "stake": stake, "sizing_reason": why,
+        "evidence_kind": kind,
+        "evidence_record": evidence_record(con, sport, market, kind),
+        "corr_group": correlation_group(sport, event_id, market, selection, player),
+        "steelman": steelman(market, model_number, market_number, selection),
+        "falsifier": falsifier(market, selection, line, model_number, player),
+        "blind_spots": BLIND_SPOTS.get(market, []),
+        "confidence_language": language_band(model_prob),
+        "components": components,
+    }
+    return rec
+
+
+def picks_to_json(picks):
+    return json.dumps(picks, default=str, indent=2)
+'''
+
+_GRADE_SRC = r'''"""
+jerry_grade.py — grading for everything the team score cannot settle.
+
+The desk's settle() takes team scores, so every player prop fell through to None
+and stayed pending forever: 216 of 290 paper rows ungraded. This module supplies
+the missing half — a player result feed, a name resolver, and settlement rules.
+
+Design rules:
+  - A player who did not play is a VOID, never a loss.
+  - A stat landing exactly on a whole-number line is a PUSH.
+  - A name that cannot be resolved is QUARANTINED and reported, never silently
+    skipped. Silent skipping is how the ledger got into this state.
+"""
+from __future__ import annotations
+
+import math
+import os
+import re
+import sqlite3
+
+DATA_DIR = os.environ.get("JERRY_DATA_DIR", "/data")
+CACHE = os.path.join(DATA_DIR, "cache")
+
+# nflverse moved/retired some release assets; try each in turn rather than
+# letting a single 404 silently stop the model (which is what happened on
+# 2026-10-26 with schedules/games.csv).
+# CSV first so pandas alone can read these — no pyarrow, no requirements change.
+NFL_PLAYER_STATS_URLS = [
+    "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_{season}.csv.gz",
+    "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_{season}.csv.gz",
+    "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats.csv.gz",
+    "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_{season}.parquet",
+]
+NFL_SCHEDULE_URLS = [
+    "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+]
+
+# market -> (column in the player-stats frame, settlement style)
+NFL_PROP_COLUMN = {
+    "player_pass_yds":        ("passing_yards",   "line"),
+    "player_rush_yds":        ("rushing_yards",   "line"),
+    "player_reception_yds":   ("receiving_yards", "line"),
+    "player_receptions":      ("receptions",      "line"),
+    "player_pass_tds":        ("passing_tds",     "line"),
+    "player_anytime_td":      ("_anytime_td",     "yesno"),
+}
+
+
+def _norm(s):
+    """Match the desk's own normaliser so the two agree on what a name is."""
+    return re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " ")).strip()
+
+
+def _initial_last(s):
+    """'KC Concepcion' -> 'k concepcion'. Books abbreviate; feeds usually do not."""
+    parts = _norm(s).split()
+    if len(parts) < 2:
+        return _norm(s)
+    return f"{parts[0][0]} {parts[-1]}"
+
+
+def _read_any(url):
+    """Read a nflverse asset whatever format it is published in today."""
+    import pandas as pd
+    if url.endswith(".parquet"):
+        return pd.read_parquet(url)
+    return pd.read_csv(url, low_memory=False)
+
+
+def _fetch_first(urls, season, reader=None):
+    last = None
+    for u in urls:
+        try:
+            return (reader or _read_any)(u.format(season=season)), u
+        except Exception as e:               # noqa: BLE001 - any failure means try the next
+            last = e
+            continue
+    raise RuntimeError(f"no nflverse source reachable: {last}")
+
+
+def load_nfl_player_week(season, week):
+    """Weekly player box scores. Returns a DataFrame or raises."""
+    import pandas as pd
+    os.makedirs(CACHE, exist_ok=True)
+    cache = os.path.join(CACHE, f"player_week_{season}.csv.gz")
+    df = None
+    if os.path.exists(cache):
+        try:
+            df = pd.read_csv(cache, low_memory=False)
+        except Exception:
+            df = None
+    if df is None or week not in set(df["week"].tolist() if "week" in df.columns else []):
+        df, _src = _fetch_first(NFL_PLAYER_STATS_URLS, season)
+        try:
+            df.to_csv(cache, index=False, compression="gzip")
+        except Exception:
+            pass
+    df = df[df["season"] == season] if "season" in df.columns else df
+    return df[df["week"] == week] if "week" in df.columns else df
+
+
+class NameResolver:
+    """Resolves a sportsbook player string to a row in the results frame.
+
+    Keeps an alias table in the desk database so a name only has to be resolved
+    once, and quarantines anything it cannot match instead of dropping it.
+    """
+
+    def __init__(self, con):
+        self.con = con
+        con.execute("""create table if not exists player_alias(
+            sport text, book_name text, feed_name text, resolved_ts text,
+            primary key(sport, book_name))""")
+        con.execute("""create table if not exists grade_quarantine(
+            bet_id integer primary key, sport text, player text, market text,
+            reason text, seen_ts text)""")
+
+    def _alias(self, sport, book_name):
+        r = self.con.execute("select feed_name from player_alias where sport=? and book_name=?",
+                             (sport, _norm(book_name))).fetchone()
+        return r[0] if r else None
+
+    def remember(self, sport, book_name, feed_name, now_iso):
+        self.con.execute("insert or replace into player_alias values(?,?,?,?)",
+                         (sport, _norm(book_name), feed_name, now_iso))
+
+    def resolve(self, sport, book_name, candidates, now_iso):
+        """candidates: iterable of feed-side display names. Returns a name or None."""
+        known = self._alias(sport, book_name)
+        if known:
+            return known
+        want, want_il = _norm(book_name), _initial_last(book_name)
+        by_norm, by_il = {}, {}
+        for c in candidates:
+            by_norm.setdefault(_norm(c), c)
+            by_il.setdefault(_initial_last(c), c)
+        hit = by_norm.get(want) or by_il.get(want_il) or by_il.get(want)
+        if hit:
+            self.remember(sport, book_name, hit, now_iso)
+            return hit
+        # last resort: unique surname match
+        surname = want.split()[-1] if want.split() else ""
+        matches = [c for c in candidates if _norm(c).split()[-1:] == [surname]]
+        if len(matches) == 1:
+            self.remember(sport, book_name, matches[0], now_iso)
+            return matches[0]
+        return None
+
+    def quarantine(self, bet_id, sport, player, market, reason, now_iso):
+        self.con.execute("insert or replace into grade_quarantine values(?,?,?,?,?,?)",
+                         (bet_id, sport, player, market, reason, now_iso))
+
+    def quarantined(self):
+        return [dict(r) for r in self.con.execute(
+            "select * from grade_quarantine order by seen_ts desc limit 200")]
+
+
+def settle_prop(market, selection, line, value, played=True):
+    """W / L / P / V for one player prop.
+
+    played=False returns 'V' (void). A scratch is not a losing bet, and grading it
+    as one poisons every downstream hit rate.
+    """
+    if not played:
+        return "V"
+    if value is None:
+        return None
+    sel = (selection or "").strip().lower()
+    style = NFL_PROP_COLUMN.get(market, (None, "line"))[1]
+    if style == "yesno":
+        hit = float(value) > 0
+        if sel in ("yes", "over"):
+            return "W" if hit else "L"
+        if sel in ("no", "under"):
+            return "L" if hit else "W"
+        return None
+    if line is None:
+        return None
+    v, L = float(value), float(line)
+    if abs(v - L) < 1e-9:
+        return "P"                       # exact landing on a whole number
+    if sel in ("over", "yes"):
+        return "W" if v > L else "L"
+    if sel in ("under", "no"):
+        return "W" if v < L else "L"
+    return None
+
+
+def _anytime_td(row):
+    """Books settle anytime-TD on offensive scores only: rushing + receiving.
+
+    A passing TD does not count for the quarterback, a two-point conversion does
+    not count, and return/defensive scores are excluded by most books.
+    """
+    tot = 0.0
+    for c in ("rushing_tds", "receiving_tds"):
+        v = row.get(c)
+        if v is not None and not (isinstance(v, float) and math.isnan(v)):
+            tot += float(v)
+    return tot
+
+
+def _played(row):
+    """Did the player actually take part? Used to void rather than lose."""
+    for c in ("offense_snaps", "attempts", "carries", "targets", "receptions"):
+        v = row.get(c)
+        if v is not None and not (isinstance(v, float) and math.isnan(v)) and float(v) > 0:
+            return True
+    for c in ("passing_yards", "rushing_yards", "receiving_yards"):
+        v = row.get(c)
+        if v is not None and not (isinstance(v, float) and math.isnan(v)) and float(v) != 0:
+            return True
+    return False
+
+
+def grade_nfl_props(con, season, week, now_iso, limit=500):
+    """Grade every pending NFL prop for one week. Returns a report dict."""
+    res = NameResolver(con)
+    pend = [dict(r) for r in con.execute(
+        """select * from bets where result='pending' and sport='NFL'
+             and market like 'player_%' order by id limit ?""", (limit,))]
+    if not pend:
+        return {"graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending"}
+
+    try:
+        df = load_nfl_player_week(season, week)
+    except Exception as e:                     # noqa: BLE001
+        return {"graded": 0, "error": f"player stats unavailable: {e}"}
+
+    name_col = "player_display_name" if "player_display_name" in df.columns else "player_name"
+    rows = {r[name_col]: r for r in df.to_dict("records")}
+    candidates = list(rows.keys())
+
+    graded = voided = quar = 0
+    for b in pend:
+        col, _style = NFL_PROP_COLUMN.get(b["market"], (None, None))
+        if not col:
+            res.quarantine(b["id"], "NFL", b["player"], b["market"],
+                           "market not in NFL_PROP_COLUMN", now_iso); quar += 1
+            continue
+        feed = res.resolve("NFL", b["player"], candidates, now_iso)
+        if not feed:
+            res.quarantine(b["id"], "NFL", b["player"], b["market"],
+                           "player name did not resolve", now_iso); quar += 1
+            continue
+        row = rows[feed]
+        value = _anytime_td(row) if col == "_anytime_td" else row.get(col)
+        r = settle_prop(b["market"], b["selection"], b["line"], value, played=_played(row))
+        if r is None:
+            res.quarantine(b["id"], "NFL", b["player"], b["market"],
+                           "stat missing from feed", now_iso); quar += 1
+            continue
+        pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0, "V": 0.0}[r]
+        con.execute("""update bets set result=?, pnl=?, graded_ts=?,
+                       note=coalesce(note,'')||? where id=?""",
+                    (r, round(pnl, 4), now_iso,
+                     f" | settled {value} vs {b['line']}", b["id"]))
+        graded += 1
+        voided += (r == "V")
+    con.commit()
+    return {"graded": graded, "voided": voided, "quarantined": quar,
+            "week": week, "season": season}
+'''
+
+def _register(name, src):
+    m = _types.ModuleType(name)
+    m.__file__ = f"<{name} embedded in boot.py>"
+    sys.modules[name] = m
+    try:
+        exec(compile(src, m.__file__, "exec"), m.__dict__)
+    except Exception:
+        del sys.modules[name]
+        raise
+    return m
+
+try:
+    jerry_reason = _register("jerry_reason", _REASON_SRC)
+    jerry_grade = _register("jerry_grade", _GRADE_SRC)
+    print("[boot] reasoning + grading modules registered", flush=True)
+except Exception:
+    traceback.print_exc()
+    print("[boot] WARNING reasoning/grading modules failed to load", flush=True)
+
+
+def backfill_props(db_path, weeks=3):
+    """Grade the player props the old grader could never settle.
+
+    Runs once per week-number on start-up, so no manual backfill step is needed.
+    Anything whose name will not resolve is quarantined and counted, never
+    silently dropped.
+    """
+    import jerry_grade as _jg
+    con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
+    out = []
+    try:
+        now = datetime.now(UTC)
+        season, week = _desk_season_week(now)
+        for w in range(max(1, week - weeks + 1), week + 1):
+            key = f"backfill_props_{season}_{w}"
+            seen = con.execute("select v from meta where k=?", (key,)).fetchone()
+            if seen and w != week:          # always re-run the current week
+                continue
+            try:
+                rep = _jg.grade_nfl_props(con, season, w, now.isoformat(timespec="seconds"))
+            except Exception as e:          # noqa: BLE001
+                rep = {"error": str(e)[:160]}
+            out.append({"week": w, **rep})
+            con.execute("insert or replace into meta(k,v) values(?,?)", (key, json.dumps(rep)[:400]))
+        con.commit()
+    finally:
+        con.close()
+    return out
+
+
+def _desk_season_week(now):
+    y = now.year if now.month >= 3 else now.year - 1
+    sept = datetime(y, 9, 1, tzinfo=UTC)
+    labor = sept + timedelta(days=(7 - sept.weekday()) % 7)
+    kickoff = labor + timedelta(days=3)
+    return y, max(1, min(22, ((now - kickoff).days // 7) + 1))
+
+
+# ---------- hook into the desk and start it
 def _import_live():
     """jerry.py creates its cache folder at import time; make any missing data folders first."""
     for _ in range(5):
@@ -224,10 +1021,15 @@ def refresh_all(db_path, sports=None):
             L.health_check(db_path, res)
     except Exception:
         traceback.print_exc()
+    try:
+        res["GRADE"] = backfill_props(db_path)
+    except Exception as e:   # noqa: BLE001 - grading must never stop a refresh
+        res["GRADE"] = f"error: {e}"
+        traceback.print_exc()
     return res
 if L:
     L.refresh_all = refresh_all
-    print("[boot] fixes active: NHL icetime alias, MLB model", flush=True)
+    print("[boot] fixes active: NHL icetime alias, MLB model, reasoning layer, prop grading", flush=True)
 else:
     print("[boot] fixes NOT active, starting desk unchanged", flush=True)
 
@@ -263,7 +1065,7 @@ def push_source():
         return "no FEED_TOKEN set"
     here = os.path.dirname(os.path.abspath(__file__))
     done = []
-    for f in ("jerry.py", "jerry_live.py", "jerry_desk.py", "boot.py"):
+    for f in ("jerry.py", "jerry_live.py", "jerry_desk.py", "boot.py", "JERRY_PROMPT.md"):
         fp = os.path.join(here, f)
         if os.path.exists(fp):
             _put(f"src/{f}", open(fp, encoding="utf-8").read(), token, f"source {f}")
