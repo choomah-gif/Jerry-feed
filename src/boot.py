@@ -2074,15 +2074,93 @@ def _sample_keys(obj, depth=0, out=None):
     return out
 
 
+
+# ------------------------------------------------------------ the table itself
+#
+# The splits page serves its table in the HTML (a search engine's cached copy shows
+# it as plain text). Layout per game, read top to bottom:
+#   Moneyline | Odds | % Handle | % Bets | <side> [odds] <handle>% <bets>% | <side> ...
+#   Run Line / Puck Line / Spread ... | Total ...
+# The page also shows "Betting splits are temporarily unavailable" during outages.
+
+_MKT_HDR = {"moneyline": "h2h", "run line": "spreads", "puck line": "spreads", "spread": "spreads",
+            "point spread": "spreads", "total": "totals"}
+
+
+def _text_lines(page):
+    page = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", page, flags=re.S | re.I)
+    page = re.sub(r"<br\s*/?>|</(div|p|li|tr|td|th|span|h\d|a|strong|b)>", "\n", page, flags=re.I)
+    txt = _html.unescape(re.sub(r"<[^>]+>", " ", page))
+    return [l.strip() for l in txt.split("\n") if l.strip()]
+
+
+def parse_table(page):
+    """Return [{market, rows:[(side, handle, bets)]}] blocks in page order."""
+    lines = _text_lines(page)
+    blocks, cur, pend_side = [], None, None
+    pct = re.compile(r"^(\d{1,3})%$")
+    i = 0
+    while i < len(lines):
+        l = lines[i]; low = l.lower()
+        if low in _MKT_HDR:
+            cur = {"market": _MKT_HDR[low], "rows": []}; blocks.append(cur); pend_side = None
+            i += 1; continue
+        if cur is None or low in ("odds", "% handle", "% bets", "handle %", "bets %"):
+            i += 1; continue
+        m = pct.match(l)
+        if m and pend_side is not None:
+            # next percentage after the side is handle, the one after is bets
+            nxt = lines[i + 1] if i + 1 < len(lines) else ""
+            m2 = pct.match(nxt)
+            if m2:
+                cur["rows"].append((pend_side, float(m.group(1)), float(m2.group(1))))
+                pend_side = None; i += 2; continue
+        if not m and not re.match(r"^[+-−]?\d+(\.\d+)?$", l.replace("−", "-")):
+            pend_side = l           # a side label ("PHI Phillies", "TB Rays -1.5", "Over 9")
+        i += 1
+    return [b for b in blocks if len(b["rows"]) >= 2]
+
+
+def from_table(con, now, url=None):
+    """Read the live splits table and store rows matched to KRONOS events."""
+    url = url or f"{DKN}/draftkings-sportsbook-betting-splits/"
+    page = _get(url)
+    if "temporarily unavailable" in page.lower() and "% handle" not in page.lower():
+        _meta(con, "splits_table", f"{now.isoformat(timespec='seconds')} DraftKings reports the table temporarily unavailable")
+        return 0
+    blocks = parse_table(page)
+    lo, hi = (now - timedelta(hours=4)).isoformat(timespec="seconds"), (now + timedelta(hours=40)).isoformat(timespec="seconds")
+    evs = list(con.execute("select event_id, home, away from events where commence>? and commence<?", (lo, hi)))
+    n = games = 0
+    ev = None
+    for b in blocks:
+        if b["market"] == "h2h":                    # a moneyline block starts a new game
+            names = {_nick(r[0]) for r in b["rows"][:2]}
+            ev = next(((e, h, a) for e, h, a in evs if {_nick(h), _nick(a)} == names), None)
+            games += 1
+        if not ev:
+            continue
+        eid, home, away = ev
+        for side, handle, bets in b["rows"][:2]:
+            outcome, line = _side_to_outcome(side, home, away)
+            if not outcome:
+                continue
+            con.execute("insert or replace into splits values(?,?,?,?,?,?,?,?,?)",
+                        (eid, b["market"], outcome, line, "dk_table", handle, bets, now.isoformat(timespec="seconds"), url))
+            n += 1
+    _meta(con, "splits_table", f"{now.isoformat(timespec='seconds')} {games} games on page, {n} rows matched to tracked events")
+    return n
+
 def run(con, now=None):
     """One refresh: try the live feed (discovery only for now), then the articles."""
     now = now or datetime.now(UTC)
     _ensure(con)
     rep = {}
     try:
-        rep["live_feed"] = discover_live_feed(con, now) or "not found yet"
+        rep["table_rows"] = from_table(con, now)
     except Exception as e:                       # noqa: BLE001
-        rep["live_feed"] = f"error {str(e)[:80]}"
+        rep["table_rows"] = f"error {str(e)[:80]}"
+        _meta(con, "splits_table", f"{now.isoformat(timespec='seconds')} error {str(e)[:150]}")
     try:
         rep["article_rows"] = from_articles(con, now)
     except Exception as e:                       # noqa: BLE001
