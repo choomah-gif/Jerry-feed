@@ -1,9 +1,9 @@
-JERRY DESK SUMMARY  (generated 2026-10-26T22:32:30+00:00)
-credits left 1954 | budget/day 307 | spent today 179 | reset in 5.06d | backfill days {'NHL': 2}
+JERRY DESK SUMMARY  (generated 2026-10-26T22:41:48+00:00)
+credits left 1936 | budget/day 304 | spent today 197 | reset in 5.05d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 198 settled (15 void), 38 pending | 63 awaiting a results feed (NBA 48, NHL 15) — not gradeable yet | 38 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 221 settled (16 void), 87 pending | results on file: NBA 15, NHL 17 | 40 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,23 +12,27 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 386 rows
-all: {"n": 386, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 216, "record": "93-123-0", "units": -21.2, "roi": -0.0993}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 417 rows
+all: {"n": 417, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 238, "record": "105-133-0", "units": -17.84, "roi": -0.0761}
   NBA moneyline (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NBA props (price edge): {"n": 48, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL moneyline (model): {"n": 19, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
+  NBA props (price edge): {"n": 54, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 17, "record": "10-7-0", "units": 2.76, "roi": 0.1624}
+  NFL moneyline (model): {"n": 21, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
-  NFL props (model): {"n": 200, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 149, "record": "65-84-0", "units": -17.24, "roi": -0.1177}
+  NFL props (model): {"n": 203, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177}
   NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 3.2, "beat_close_pct": 1.0, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453}
   NFL spread (model): {"n": 26, "closed": 11, "clv_pp_avg": 0.19, "beat_close_pct": 0.545, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 4.05, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0}
   NFL total (model): {"n": 38, "closed": 8, "clv_pp_avg": 0.1, "beat_close_pct": 0.5, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709}
-  NHL props (price edge): {"n": 15, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NHL moneyline (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NHL props (price edge): {"n": 15, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 4, "record": "2-2-0", "units": 0.6, "roi": 0.15}
+  NHL spread (model): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+  NHL total (model): {"n": 14, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
-NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_points Aaron Nesmith Under 10.5 | fanduel 1.94 vs fair 54.1% | EV +4.9%
+NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_rebounds Isaiah Hartenstein Over 8.5 | fanatics 1.95 vs fair 60.1% | EV +17.2%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_rebounds Jay Huff Under 4.5 | fanduel 2.0 vs fair 52.8% | EV +5.6%
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_rebounds Gui Santos Under 3.5 | draftkings 2.23 vs fair 46.9% | EV +4.6%
-NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_rebounds Dillon Brooks Over 3.5 | draftkings 2.1 vs fair 49.7% | EV +4.4%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_points Cooper Flagg Over 21.5 | draftkings 1.82 vs fair 57.3% | EV +4.3%
 NBA 2026-10-27T01:10Z Memphis Grizzlies @ Utah Jazz | player_assists Isaiah Collier Under 4.5 | draftkings 2.01 vs fair 51.8% | EV +4.1%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_points Davion Mitchell Over 10.5 | fanatics 1.8 vs fair 57.8% | EV +4.1%
@@ -40,118 +44,109 @@ NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_threes Bil
 NHL 2026-10-27T00:40Z Toronto Maple Leafs @ Calgary Flames | player_shots_on_goal Darren Raddysh Under 2.5 | fanduel 1.87 vs fair 55.0% | EV +2.9%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_points Davion Mitchell Over 10.5 | fanduel 1.78 vs fair 57.8% | EV +2.9%
 NHL 2026-10-26T23:10Z Los Angeles Kings @ New York Rangers | player_shots_on_goal Brandt Clarke Over 1.5 | draftkings 1.77 vs fair 58.1% | EV +2.9%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_rebounds Ryan Rollins Under 4.5 | draftkings 1.76 vs fair 58.4% | EV +2.9%
 NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | player_rebounds Neemias Queta Under 7.5 | fanduel 1.83 vs fair 56.2% | EV +2.8%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_threes Bam Adebayo Over 1.5 | fanduel 2.22 vs fair 46.2% | EV +2.5%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_rebounds Andrew Nembhard Under 2.5 | draftkings 2.3 vs fair 44.5% | EV +2.5%
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_threes Christian Braun Under 1.5 | draftkings 1.66 vs fair 61.7% | EV +2.4%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_rebounds Aaron Nesmith Over 3.5 | fanduel 1.88 vs fair 54.5% | EV +2.4%
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_rebounds Draymond Green Under 5.5 | draftkings 1.69 vs fair 60.6% | EV +2.4%
 NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | player_shots_on_goal Ryan Shea Under 1.5 | draftkings 1.62 vs fair 63.2% | EV +2.3%
 NHL 2026-10-27T00:40Z Toronto Maple Leafs @ Calgary Flames | player_shots_on_goal Matvei Gridin Under 2.5 | fanduel 1.64 vs fair 62.4% | EV +2.3%
 NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | player_shots_on_goal Dylan Larkin Over 2.5 | draftkings 1.83 vs fair 55.9% | EV +2.2%
 NHL 2026-10-27T00:40Z Toronto Maple Leafs @ Calgary Flames | player_shots_on_goal Simon Nemec Under 1.5 | draftkings 1.95 vs fair 52.4% | EV +2.1%
-NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_threes Dillon Brooks Over 1.5 | fanduel 1.71 vs fair 59.6% | EV +1.9%
 NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_assists Kyshawn George Over 3.5 | fanduel 2.16 vs fair 47.2% | EV +1.9%
 NBA 2026-10-26T23:10Z Washington Wizards @ Charlotte Hornets | player_rebounds Kyshawn George Under 4.5 | draftkings 1.93 vs fair 52.8% | EV +1.9%
 NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | player_assists Paul George Under 3.5 | draftkings 1.67 vs fair 61.0% | EV +1.8%
 NHL 2026-10-27T00:40Z Toronto Maple Leafs @ Calgary Flames | player_shots_on_goal Matt Coronato Under 2.5 | draftkings 2.0 vs fair 50.9% | EV +1.8%
-NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_assists Tyrese Haliburton Under 9.5 | draftkings 2.0 vs fair 50.9% | EV +1.8%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_points Andrew Nembhard Under 14.5 | draftkings 1.9 vs fair 53.5% | EV +1.7%
+NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_threes Dillon Brooks Over 1.5 | fanduel 1.72 vs fair 59.1% | EV +1.7%
 NBA 2026-10-26T23:40Z Dallas Mavericks @ Miami Heat | player_threes Max Christie Under 2.5 | draftkings 1.58 vs fair 64.3% | EV +1.7%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_assists Donovan Mitchell Over 4.5 | draftkings 2.02 vs fair 50.3% | EV +1.6%
 NBA 2026-10-26T23:10Z Minnesota Timberwolves @ Cleveland Cavaliers | player_rebounds Donovan Mitchell Over 4.5 | fanduel 2.12 vs fair 47.9% | EV +1.6%
-NBA 2026-10-27T00:10Z Phoenix Suns @ Oklahoma City Thunder | player_points Jalen Green Under 14.5 | draftkings 1.95 vs fair 52.1% | EV +1.6%
+NHL 2026-10-28T00:00Z Boston Bruins @ Carolina Hurricanes | spreads  Boston Bruins 1.5 | fanduel 1.69 vs fair 60.1% | EV +1.6%
+NBA 2026-10-27T00:10Z Indiana Pacers @ Milwaukee Bucks | player_rebounds Andrew Nembhard Under 2.5 | fanduel 2.28 vs fair 44.5% | EV +1.6%
 NBA 2026-10-27T01:10Z Memphis Grizzlies @ Utah Jazz | player_points Cedric Coward Under 13.5 | draftkings 1.95 vs fair 52.1% | EV +1.6%
 NHL 2026-10-26T23:10Z Los Angeles Kings @ New York Rangers | player_points Sean Durzi Under 0.5 | draftkings 1.48 vs fair 68.6% | EV +1.5%
 
 MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5 | model 43.2% fair 51.2% edge -8.0 | Lean Dallas Cowboys | model margin -5.8 (home) vs line -4.5; P(|margin|=3) 5%, =7 6%. PHI: Michael Carter II (CB) Out, DeVonta Smith (WR) Out, Dontayvion Wicks (WR) Out, Nolan Smith (LB) Out; DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out | Questionable: Saquon Barkley (PHI), Grant Calcaterra (PHI), Eli Stowers (PHI)
-NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | totals  Under 46.5 | model 43.7% fair 49.9% edge -6.2 | Play Over | model total 48.6 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Ryan Flournoy Over 3.5 | model 52.3% fair 46.4% edge +5.9 | Lean Over 3.5 | proj 4.3 (sd 2.3) from last 6 games x opp factor 1.00; raw model 63.3%, anchored 35%
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_rush_yds Tyler Goodson Over 13.5 | model 45.0% fair 50.6% edge -5.6 | Lean Under 13.5 | proj 9.9 (sd 9.0) from last 3 games x opp factor 1.03; raw model 34.6%, anchored 35%
-NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | spreads  Miami Dolphins 7.5 | model 46.7% fair 52.0% edge -5.3 | Lean New England Patriots | model margin -8.3 (home) vs line -7.5; P(|margin|=3) 5%, =7 4%. MIA: Reese Taylor (CB) Out, Rob Beal Jr. (DE) Doubtful; NE: Carlton Davis III (CB) Out, Alijah Vera-Tucker (G) Out, Ben Brown (C) Out, Karon Prunty (CB) Out, Channing Canada (CB) Out
-NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | totals  Under 45.0 | model 44.8% fair 50.0% edge -5.2 | Play Over | model total 46.7 vs 45.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | totals  Under 46.5 | model 44.9% fair 50.1% edge -5.2 | Play Over | model total 48.2 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds George Pickens Over 64.5 | model 55.2% fair 50.0% edge +5.2 | Lean Over 64.5 | proj 79.6 (sd 39.8) from last 5 games x opp factor 1.02; raw model 64.8%, anchored 35%
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | totals  Under 39.5 | model 47.9% fair 53.0% edge -5.1 | Lean Over | model total 40.2 vs 39.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_rush_yds Javonte Williams Over 63.5 | model 44.9% fair 50.0% edge -5.1 | Lean Under 63.5 | proj 53.5 (sd 26.8) from last 6 games x opp factor 1.03; raw model 35.4%, anchored 35%
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Javonte Williams Over 2.5 | model 49.8% fair 45.0% edge +4.8 | Lean Over 2.5 | proj 2.9 (sd 1.9) from last 6 games x opp factor 1.00; raw model 58.7%, anchored 35%
+NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | spreads  Edmonton Oilers -1.5 | model 34.6% fair 40.8% edge -6.1 | Sit (edge too large to trust) | xG 3.06-3.37; EDM G: goalie unconfirmed (team avg); DET G: goalie unconfirmed (team avg); raw model 23.3%, anchored 35% to market, slate scale 1.10
+NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | h2h  Edmonton Oilers  | model 55.9% fair 61.7% edge -5.9 | Lean Detroit Red Wings | xG 3.06-3.37; EDM G: goalie unconfirmed (team avg); DET G: goalie unconfirmed (team avg); raw model 45.0%, anchored 35% to market, slate scale 1.10
+      why: Expected goals 3.06-3.37 from 5v5 and special-teams xG rates shrunk toward league average, with the confirmed goalies' save quality. That makes Detroit Red Wings 55% to win versus 38% at fair. Moneyline edges have no backtest and no graded history; treat as colour. Falsifier: the other side leads by two after the first period.
+NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | h2h  Miami Dolphins  | model 29.4% fair 23.7% edge +5.6 | Lean Miami Dolphins | 
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Tyler Goodson Yes  | model 9.7% fair 5.0% edge +4.7 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
-NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | spreads  Los Angeles Rams -7.5 | model 51.2% fair 46.8% edge +4.4 | Lean Los Angeles Rams | model margin +7.8 (home) vs line +7.5; P(|margin|=3) 5%, =7 5%. LA: Nate Landman (LB) Out | Questionable: Puka Nacua (LA)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions Brevyn Spann-Ford Over 1.5 | model 44.3% fair 39.9% edge +4.4 | Lean Over 1.5 | proj 1.6 (sd 1.5) from last 5 games x opp factor 1.00; raw model 52.5%, anchored 35%
+NHL 2026-10-28T00:00Z New York Islanders @ Nashville Predators | h2h  Nashville Predators  | model 48.7% fair 53.3% edge -4.6 | Lean New York Islanders | xG 2.62-3.21; NSH G: goalie unconfirmed (team avg); NYI G: goalie unconfirmed (team avg); raw model 40.2%, anchored 35% to market, slate scale 1.10
+      why: Expected goals 2.62-3.21 from 5v5 and special-teams xG rates shrunk toward league average, with the confirmed goalies' save quality. That makes New York Islanders 60% to win versus 47% at fair. Moneyline edges have no backtest and no graded history; treat as colour. Falsifier: the other side leads by two after the first period.
+NHL 2026-10-28T00:00Z Boston Bruins @ Carolina Hurricanes | h2h  Carolina Hurricanes  | model 59.1% fair 63.6% edge -4.5 | Lean Boston Bruins | xG 3.21-3.17; CAR G: goalie unconfirmed (team avg); BOS G: goalie unconfirmed (team avg); raw model 50.7%, anchored 35% to market, slate scale 1.10
+      why: Expected goals 3.21-3.17 from 5v5 and special-teams xG rates shrunk toward league average, with the confirmed goalies' save quality. That makes Boston Bruins 49% to win versus 36% at fair. Moneyline edges have no backtest and no graded history; treat as colour. Falsifier: the other side leads by two after the first period.
 NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.9% edge +4.3 | Lean Detroit Lions | 
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_pass_yds Dak Prescott Over 265.5 | model 54.3% fair 50.1% edge +4.3 | Lean Over 265.5 | proj 287.9 (sd 72.0) from last 6 games x opp factor 1.02; raw model 62.2%, anchored 35%
-NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | totals  Under 40.5 | model 47.0% fair 51.0% edge -4.0 | Lean Over | model total 41.5 vs 40.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Brevyn Spann-Ford Over 11.5 | model 54.4% fair 50.5% edge +3.9 | Lean Over 11.5 | proj 15.4 (sd 13.1) from last 5 games x opp factor 1.02; raw model 61.6%, anchored 35%
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Dallas Goedert Over 49.5 | model 54.3% fair 50.4% edge +3.9 | Lean Over 49.5 | proj 57.9 (sd 29.0) from last 3 games x opp factor 1.00; raw model 61.5%, anchored 35%
+NHL 2026-10-28T00:00Z Boston Bruins @ Carolina Hurricanes | spreads  Carolina Hurricanes -1.5 | model 35.6% fair 39.9% edge -4.3 | Lean Boston Bruins | xG 3.21-3.17; CAR G: goalie unconfirmed (team avg); BOS G: goalie unconfirmed (team avg); raw model 27.7%, anchored 35% to market, slate scale 1.10
+NHL 2026-10-28T00:00Z New York Islanders @ Nashville Predators | spreads  Nashville Predators -1.5 | model 26.2% fair 30.1% edge -4.0 | Lean New York Islanders | xG 2.62-3.21; NSH G: goalie unconfirmed (team avg); NYI G: goalie unconfirmed (team avg); raw model 18.8%, anchored 35% to market, slate scale 1.10
+MLB 2026-10-27T00:10Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays -1.5 | model 36.5% fair 32.6% edge +3.9 | Lean Tampa Bay Rays | model runs Milwaukee Brewers 4.46 / Tampa Bay Rays 4.61; SP Robert Gasser (4.23 FIP) @ Freddy Peralta (4.28 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
+      why: Negative-binomial runs model: Milwaukee Brewers 4.46, Tampa Bay Rays 4.61 from season run rates, starter FIP (SP Robert Gasser (4.23 FIP) @ Freddy Peralta (4.28 FIP)) and home edge. Makes Tampa Bay Rays 36% versus 33% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings.
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Luke Schoonmaker Yes  | model 11.5% fair 7.7% edge +3.8 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Johnny Mundt Yes  | model 10.0% fair 6.2% edge +3.7 | Lean Yes | proj 0.2 (sd 0.0) from last 4 games x opp factor 1.06; raw model 17.0%, anchored 35%
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.7% edge +3.7 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
-NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | totals  Under 44.5 | model 53.9% fair 50.1% edge +3.7 | Lean Under | model total 43.2 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Javonte Williams Over 12.5 | model 53.9% fair 50.2% edge +3.7 | Lean Over 12.5 | proj 15.8 (sd 12.0) from last 6 games x opp factor 1.02; raw model 60.8%, anchored 35%
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_receptions CeeDee Lamb Over 6.5 | model 57.3% fair 53.6% edge +3.7 | Lean Over 6.5 | proj 8.2 (sd 4.6) from last 6 games x opp factor 1.00; raw model 64.1%, anchored 35%
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 72.9% edge -3.6 | Lean Arizona Cardinals | 
-NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | spreads  Dallas Cowboys -6.25 | model 46.7% fair 50.3% edge -3.6 | Lean Arizona Cardinals | model margin +5.6 (home) vs line +6.2; P(|margin|=3) 6%, =7 5%. DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out; ARI: Andrew Wingard (S) Out, Jon Gaines II (G) Out, Walter Nolen (DT) Out, Jeremiyah Love (RB) Out | Questionable: Carson Beck (ARI)
-NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | spreads  Tampa Bay Buccaneers -2.0 | model 46.7% fair 50.3% edge -3.6 | Lean Atlanta Falcons | model margin +1.7 (home) vs line +2.0; P(|margin|=3) 6%, =7 5%. TB: Antoine Winfield Jr. (S) Out, Luke Goedeke (T) Out, Emeka Egbuka (WR) Out; ATL: Divine Deablo (LB) Out, Brian Robinson (RB) Out, Michael Jerrell (T) Out, Billy Bowman Jr. (CB) Out, Beaux Collins (WR) Out, Cameron Williams (T) Out | Questionable: Baker Mayfield (TB), Olamide Zaccheaus (ATL)
-NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | totals  Under 44.0 | model 48.9% fair 52.5% edge -3.6 | Lean Over | model total 44.4 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Tennessee Titans @ Cincinnati Bengals | totals  Under 47.0 | model 46.6% fair 50.0% edge -3.4 | Lean Over | model total 48.1 vs 47.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | h2h  New York Jets  | model 53.4% fair 50.0% edge +3.4 | Lean New York Jets | 
+NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | h2h  Jacksonville Jaguars  | model 74.9% fair 78.2% edge -3.3 | Lean Indianapolis Colts | 
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td Jonathan Mingo Yes  | model 12.4% fair 9.1% edge +3.3 | Lean Yes | proj 0.2 (sd 0.0) from last 3 games x opp factor 1.02; raw model 18.5%, anchored 35%
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_reception_yds Darius Cooper Over 39.5 | model 46.7% fair 50.0% edge -3.3 | Lean Under 39.5 | proj 34.1 (sd 22.7) from last 4 games x opp factor 1.00; raw model 40.6%, anchored 35%
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | spreads  Pittsburgh Steelers -4.0 | model 51.2% fair 48.1% edge +3.1 | Lean Pittsburgh Steelers | model margin +4.5 (home) vs line +4.0; P(|margin|=3) 7%, =7 6%. PIT: Brandin Echols (CB) Out, Ben Skowronek (WR) Out; CLE: Teven Jenkins (G) Out, Kalia Davis (DT) Out, Mike Hall Jr. (DT) Out, Dillon Gabriel (QB) Out | Questionable: Rico Dowdle (PIT)
-NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | spreads  Buffalo Bills -3.5 | model 51.2% fair 48.3% edge +3.0 | Lean Buffalo Bills | model margin +3.5 (home) vs line +3.5; P(|margin|=3) 7%, =7 6%. BAL: Lamar Jackson (QB) Out, Jaylinn Hawkins (S) Out, Tavius Robinson (LB) Out, T.J. Tampa (CB) Doubtful
-NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | totals  Under 53.5 | model 46.7% fair 49.1% edge -2.4 | Lean Over | model total 54.6 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | totals  Under 44.0 | model 54.2% fair 51.9% edge +2.3 | Lean Under | model total 42.6 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | totals  Under 53.5 | model 51.7% fair 49.4% edge +2.3 | Lean Under | model total 52.9 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | h2h  Washington Commanders  | model 66.2% fair 64.3% edge +1.9 | Lean Washington Commanders | 
-NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | totals  Under 41.5 | model 47.5% fair 49.4% edge -1.9 | Lean Over | model total 42.3 vs 41.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | totals  Under 46.0 | model 48.1% fair 50.0% edge -1.9 | Lean Over | model total 46.6 vs 46.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | h2h  New York Jets  | model 53.3% fair 50.0% edge +3.3 | Lean New York Jets | 
+NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | totals  Under 6.5 | model 48.4% fair 45.6% edge +2.9 | Sit (goalie unconfirmed) | exp total 6.43 vs 6.5; one-goal 45%, OT 16%. xG 3.06-3.37; EDM G: goalie unconfirmed (team avg); DET G: goalie unconfirmed (team avg); raw model 53.7%, anchored 35% to market, slate scale 1.10
+      why: The model's total is 6.4 against a market of 6.5, from expected goals. It makes the Under 54% versus 46% at fair. The disagreement is 0.03 of the projection's own error band, which is inside normal noise — the model and the market are effectively tied, and this is a Sit regardless of the +8.2-point probability edge. The number on the other side was set by a book that can see starting-QB change, weather and wind, pace and pass-rate shifts — none of which this model ingests. This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way. Falsifier: Combined first-half points exceed 55% of the line, or both teams score on their opening two drives. Goalie unconfirmed at the time of the run, which alone makes this a Sit.
+NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 58.1% fair 55.4% edge +2.6 | Lean Tampa Bay Buccaneers | 
+NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | h2h  Denver Broncos  | model 49.0% fair 46.7% edge +2.3 | Lean Denver Broncos | 
+NHL 2026-10-28T00:00Z Los Angeles Kings @ Chicago Blackhawks | totals  Under 5.5 | model 43.0% fair 45.3% edge -2.3 | Sit (goalie unconfirmed) | exp total 6.38 vs 5.5; one-goal 46%, OT 16%. xG 3.04-3.33; CHI G: goalie unconfirmed (team avg); LAK G: goalie unconfirmed (team avg); raw model 38.8%, anchored 35% to market, slate scale 1.10
+      why: The model's total is 6.4 against a market of 5.5, from expected goals. It makes the Over 61% versus 55% at fair. The disagreement is 0.35 of the projection's own error band, which is inside normal noise — the model and the market are effectively tied, and this is a Sit regardless of the +6.5-point probability edge. The number on the other side was set by a book that can see starting-QB change, weather and wind, pace and pass-rate shifts — none of which this model ingests. This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way. Falsifier: Either team leads by 14+ at halftime, or combined first-half points are under 40% of the line. Goalie unconfirmed at the time of the run, which alone makes this a Sit.
+NHL 2026-10-28T02:30Z Buffalo Sabres @ San Jose Sharks | totals  Under 6.5 | model 49.1% fair 46.9% edge +2.2 | Sit (goalie unconfirmed) | exp total 6.47 vs 6.5; one-goal 46%, OT 16%. xG 3.19-3.27; SJS G: goalie unconfirmed (team avg); BUF G: goalie unconfirmed (team avg); raw model 53.3%, anchored 35% to market, slate scale 1.10
+      why: The model's total is 6.5 against a market of 6.5, from expected goals. It makes the Under 53% versus 47% at fair. The disagreement is 0.01 of the projection's own error band, which is inside normal noise — the model and the market are effectively tied, and this is a Sit regardless of the +6.4-point probability edge. The number on the other side was set by a book that can see starting-QB change, weather and wind, pace and pass-rate shifts — none of which this model ingests. This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way. Falsifier: Combined first-half points exceed 55% of the line, or both teams score on their opening two drives. Goalie unconfirmed at the time of the run, which alone makes this a Sit.
+NHL 2026-10-28T02:00Z Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5 | model 52.0% fair 49.9% edge +2.1 | Sit (goalie unconfirmed) | exp total 6.30 vs 6.5; one-goal 46%, OT 17%. xG 3.26-3.04; VGK G: goalie unconfirmed (team avg); OTT G: goalie unconfirmed (team avg); raw model 55.9%, anchored 35% to market, slate scale 1.10
+      why: The model's total is 6.3 against a market of 6.5, from expected goals. It makes the Under 56% versus 50% at fair. The disagreement is 0.08 of the projection's own error band, which is inside normal noise — the model and the market are effectively tied, and this is a Sit regardless of the +6.0-point probability edge. The number on the other side was set by a book that can see starting-QB change, weather and wind, pace and pass-rate shifts — none of which this model ingests. This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way. Falsifier: Combined first-half points exceed 55% of the line, or both teams score on their opening two drives. Goalie unconfirmed at the time of the run, which alone makes this a Sit.
 NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh Steelers  | model 66.2% fair 64.4% edge +1.8 | Lean Pittsburgh Steelers | 
-NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | h2h  Denver Broncos  | model 45.0% fair 46.7% edge -1.8 | Lean Kansas City Chiefs | 
-NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | totals  Under 44.5 | model 48.3% fair 50.0% edge -1.7 | Lean Over | model total 45.1 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 57.1% fair 55.4% edge +1.6 | Lean Tampa Bay Buccaneers | 
-NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | spreads  New York Jets -1.0 | model 46.7% fair 48.3% edge -1.6 | Lean Las Vegas Raiders | model margin +0.6 (home) vs line +1.0; P(|margin|=3) 6%, =7 5%. NYJ: Joseph Ossai (DE) Out, Max Mitchell (T) Out, Francisco Mauigoa (LB) Out; LV: Carter Runyon (TE) Out, Dont'e Thornton Jr. (WR) Out | Questionable: Kene Nwangwu (NYJ), Breece Hall (NYJ), Mike Washington Jr. (LV)
+NHL 2026-10-28T00:00Z Montréal Canadiens @ St Louis Blues | totals  Under 6.0 | model 46.3% fair 48.1% edge -1.8 | Sit (goalie unconfirmed) | exp total 6.62 vs 6.0; one-goal 45%, OT 16%. xG 3.28-3.34; STL G: goalie unconfirmed (team avg); MTL G: goalie unconfirmed (team avg); raw model 43.0%, anchored 35% to market, slate scale 1.10
+      why: The model's total is 6.6 against a market of 6.0, from expected goals. It makes the Over 57% versus 52% at fair. The disagreement is 0.24 of the projection's own error band, which is inside normal noise — the model and the market are effectively tied, and this is a Sit regardless of the +5.1-point probability edge. The number on the other side was set by a book that can see starting-QB change, weather and wind, pace and pass-rate shifts — none of which this model ingests. This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way. Falsifier: Either team leads by 14+ at halftime, or combined first-half points are under 40% of the line. Goalie unconfirmed at the time of the run, which alone makes this a Sit.
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.5 | Lean Los Angeles Chargers | 
-(models last refreshed: 2026-10-26T22:21:01+00:00 {"NFL": 90, "NFL_PROPS": 43, "NHL": 0, "UFC": 0, "PRICE": 34, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 38, "season": 2026}]})
+(models last refreshed: 2026-10-26T22:40:49+00:00 {"NFL": 90, "NFL_PROPS": 31, "NHL": 84, "UFC": 0, "PRICE": 38, "MLB": 6, "GRADE": [{"week": 7, "graded": 2, "voided": 1, "quarantined": 39, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 15, "graded": 17, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 17, "graded": 4, "voided": 0, "quarantined": 0}}, "NBA": 48})
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_threes Kyrie Irving Under 2.5->2.5 1.72->1.65 (pinnacle)
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_threes Kyrie Irving Over 2.5->2.5 2.04->2.15 (pinnacle)
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_threes Klay Thompson Under 2.5->2.5 1.98->2.03 (pinnacle)
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_threes Klay Thompson Over 2.5->2.5 1.77->1.73 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_threes Bam Adebayo Under 1.5->1.5 1.63->1.75 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_threes Bam Adebayo Over 1.5->1.5 2.18->2.01 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Kyrie Irving Under 3.5->3.5 1.98->1.87 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Kyrie Irving Over 3.5->3.5 1.77->1.87 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Giannis Antetokounmpo Under 11.5->11.5 1.76->1.7 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Giannis Antetokounmpo Over 11.5->11.5 2.0->2.07 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Kyrie Irving Under 22.5->20.5 1.7->1.83 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Kyrie Irving Over 22.5->20.5 2.08->1.91 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Davion Mitchell Under 10.5->10.5 2.01->2.18 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Davion Mitchell Over 10.5->10.5 1.75->1.64 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Cooper Flagg Under 21.5->21.5 2.21->2.15 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Cooper Flagg Over 21.5->21.5 1.62->1.65 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_assists Davion Mitchell Under 6.5->6.5 2.14->2.23 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_assists Davion Mitchell Over 6.5->6.5 1.66->1.61 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_assists Cooper Flagg Under 5.5->5.5 1.93->1.83 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_assists Cooper Flagg Over 5.5->5.5 1.81->1.92 (pinnacle)
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_assists Bam Adebayo Under 3.5->3.5 1.91->1.95 (pinnacle)
-2026-10-26T22:10:51+00:00 Sharp NBA Dallas Mavericks @ Miami Heat | player_assists Bam Adebayo Over 3.5->3.5 1.83->1.79 (pinnacle)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_threes Pelle Larsson Over 0.5->0.5 1.47->1.51 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_threes Cooper Flagg Under 1.5->1.5 1.6->1.57 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_threes Cooper Flagg Over 1.5->1.5 2.26->2.36 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_threes Davion Mitchell Over 1.5->1.5 2.08->2.14 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_threes Andrew Wiggins Under 1.5->1.5 1.98->1.93 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_rebounds Bam Adebayo Under 9.5->9.5 1.96->1.88 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_rebounds Bam Adebayo Over 9.5->9.5 1.78->1.88 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Cooper Flagg Under 5.5->6.5 2.2->1.7 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Cooper Flagg Over 5.5->6.5 1.62->2.12 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_rebounds Giannis Antetokounmpo Over 11.5->11.5 1.93->1.98 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_rebounds Andrew Wiggins Under 4.5->4.5 1.66->1.7 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_points Pelle Larsson Under 10.5->10.5 1.76->1.8 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_points P.J. Washington Under 14.5->14.5 1.74->1.8 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_points P.J. Washington Over 14.5->14.5 2.02->1.98 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Tim Hardaway Jr. Over 8.5->8.5 1.94->2.0 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Kyrie Irving Under 21.5->19.5 1.77->2.02 (fanduel)
-2026-10-26T22:10:51+00:00 Steam NBA Dallas Mavericks @ Miami Heat | player_points Kyrie Irving Over 21.5->19.5 1.98->1.77 (fanduel)
-2026-10-26T22:10:51+00:00 Move NBA Dallas Mavericks @ Miami Heat | player_points Bobby Portis Over 11.5->11.5 1.98->2.04 (fanduel)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Robert Gasser Under 3.5->3.5 1.79->1.66 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Robert Gasser Over 3.5->3.5 2.04->2.24 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Freddy Peralta Under 4.5->4.5 2.04->1.93 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Freddy Peralta Over 4.5->4.5 1.79->1.88 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Taylor Walls Under 0.5->0.5 1.87->1.79 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Taylor Walls Over 0.5->0.5 1.95->2.05 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Under 0.5->0.5 1.83->1.71 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Over 0.5->0.5 1.99->2.15 (pinnacle)
+2026-10-26T22:40:14+00:00 Sharp MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases David Hamilton Under 0.5->0.5 1.87->1.92 (pinnacle)
+2026-10-26T22:40:14+00:00 Sharp MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases David Hamilton Over 0.5->0.5 1.95->1.9 (pinnacle)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ben Williamson Under 0.5->0.5 2.19->2.32 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ben Williamson Over 0.5->0.5 1.63->1.57 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Junior Caminero Under 1.5->1.5 1.62->1.69 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Junior Caminero Over 1.5->1.5 2.21->2.12 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases William Contreras Under 1.5->1.5 1.5->1.53 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases William Contreras Over 1.5->1.5 2.49->2.41 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Under 1.5->1.5 1.67->1.7 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Over 1.5->1.5 2.12->2.07 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Under 1.5->1.5 1.49->1.52 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Over 1.5->1.5 2.5->2.42 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Under 1.5->1.5 1.61->1.64 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Over 1.5->1.5 2.22->2.17 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 0.5->1.5 5.75->56.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 1.5->0.5 81.0->6.75 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 0.5->1.5 6.75->81.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Junior Caminero Over 1.5->0.5 28.0->4.2 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Junior Caminero Over 0.5->1.5 4.2->28.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 0.5->1.5 5.25->46.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Yandy Diaz Over 0.5->1.5 6.0->61.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Yandy Diaz Over 1.5->0.5 61.0->6.0 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 1.5->0.5 56.0->5.75 (williamhill_us)
+2026-10-26T22:40:14+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 1.5->0.5 46.0->5.25 (williamhill_us)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Robert Gasser Under 4.5->2.5 1.25->2.5 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Robert Gasser Over 4.5->2.5 3.3->1.45 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Freddy Peralta Under 5.5->3.5 1.42->3.15 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Freddy Peralta Over 5.5->3.5 2.65->1.29 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Under 1.5->0.5 1.4->1.77 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Over 1.5->0.5 2.9->2.0 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Under 0.5->1.5 2.7->1.67 (espnbet)
+2026-10-26T22:40:14+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Over 0.5->1.5 1.45->2.2 (espnbet)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-27T00:15:00Z Dallas Cowboys @ Philadelphia Eagles  id=4853610e63c246f2027a6a248e642c9a
@@ -253,12 +248,12 @@ NBA 2026-10-27T00:10:00Z Indiana Pacers @ Milwaukee Bucks  id=a423c3941aa43179ca
    ML: Indiana Pacers  1.62 (open 1.63, best 1.62) / Milwaukee Bucks  2.41 (open 2.39, best 2.46)
    SPREAD: Indiana Pacers -4.5 1.94 (open -4.5 2.01, best 1.94) / Milwaukee Bucks 4.5 1.94 (open 4.5 1.88, best 1.94)
    TOTAL: Over 240.5 1.96 (open 240.5 1.98, best 1.96) / Under 240.5 1.9 (open 240.5 1.89, best 1.93)
-   moves: {'Move': 10, 'Sharp': 4}
+   moves: {'Move': 32, 'Sharp': 19, 'Steam': 53}
 NBA 2026-10-27T00:10:00Z Phoenix Suns @ Oklahoma City Thunder  id=90620ab57facf54f629af8beec468e54
    ML: Oklahoma City Thunder  1.25 (open 1.24, best 1.27) / Phoenix Suns  4.25 (open 4.35, best 4.25)
    SPREAD: Oklahoma City Thunder -9.5 1.93 (open -9.5 1.89, best 1.93) / Phoenix Suns 9.5 1.96 (open 9.5 2.0, best 1.96)
    TOTAL: Over 218.5 1.93 (open 219.5 1.93, best 1.93) / Under 218.5 1.94 (open 219.5 1.94, best 1.94)
-   moves: {'Move': 8, 'Sharp': 2, 'Steam': 10}
+   moves: {'Move': 69, 'Sharp': 30, 'Steam': 207}
 NBA 2026-10-27T00:40:00Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
    ML: Atlanta Hawks  2.8 (open 2.77, best 2.8) / Houston Rockets  1.48 (open 1.49, best 1.53)
    SPREAD: Atlanta Hawks 5.0 1.96 (open 5.0 1.94, best 2.02) / Houston Rockets -5.0 1.93 (open -5.0 1.94, best 1.93)
@@ -297,40 +292,72 @@ NBA 2026-12-26T03:30:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc491
    SPREAD: Denver Nuggets -4.0 1.99 (open -4.0 1.99, best 1.99) / Golden State Warriors 4.0 1.9 (open 4.0 1.9, best 1.9)
    TOTAL: Over 239.0 1.93 (open 239.0 1.93, best 1.93) / Under 239.0 1.93 (open 239.0 1.93, best 1.93)
 NHL 2026-10-26T23:10:00Z Los Angeles Kings @ New York Rangers  id=daa5166685c4ca1a4f033d8bff91a6ba
-   ML: 
+   ML: Los Angeles Kings  2.17 (open 2.17, best 2.17) / New York Rangers  1.78 (open 1.78, best 1.78)
+   SPREAD: Los Angeles Kings 1.5 1.45 (open 1.5 1.45, best 1.45) / New York Rangers -1.5 2.91 (open -1.5 2.91, best 2.91)
+   TOTAL: Over 6.0 2.04 (open 6.0 2.04, best 2.04) / Under 6.0 1.85 (open 6.0 1.85, best 1.85)
    moves: {'Move': 61, 'Sharp': 29, 'Steam': 20}
 NHL 2026-10-27T00:40:00Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde35c5494acdb5912a68
-   ML: 
+   ML: Calgary Flames  2.17 (open 2.17, best 2.18) / Toronto Maple Leafs  1.78 (open 1.78, best 1.78)
+   SPREAD: Calgary Flames 1.5 1.5 (open 1.5 1.5, best 1.51) / Toronto Maple Leafs -1.5 2.75 (open -1.5 2.75, best 2.76)
+   TOTAL: Over 6.5 1.86 (open 6.5 1.86, best 1.86) / Under 6.5 2.03 (open 6.5 2.03, best 2.05)
 NHL 2026-10-27T01:40:00Z Detroit Red Wings @ Edmonton Oilers  id=5b70654c977b6cc9a110ad8c04c57cac
-   ML: 
+   ML: Detroit Red Wings  2.52 (open 2.52, best 2.6) / Edmonton Oilers  1.59 (open 1.59, best 1.59)
+   SPREAD: Detroit Red Wings 1.5 1.65 (open 1.5 1.65, best 1.65) / Edmonton Oilers -1.5 2.36 (open -1.5 2.36, best 2.38)
+   TOTAL: Over 6.5 1.79 (open 6.5 1.79, best 1.79) / Under 6.5 2.12 (open 6.5 2.12, best 2.13)
 NHL 2026-10-27T23:00:00Z Columbus Blue Jackets @ Philadelphia Flyers  id=f1b86cba8c192fb71581b00443f4af8a
-   ML: 
+   ML: Columbus Blue Jackets  1.83 (open 1.83, best 1.87) / Philadelphia Flyers  2.07 (open 2.07, best 2.07)
+   SPREAD: Columbus Blue Jackets -1.5 3.12 (open -1.5 3.12, best 3.25) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.43)
+   TOTAL: Over 5.5 1.88 (open 5.5 1.88, best 1.88) / Under 5.5 1.99 (open 5.5 1.99, best 2.0)
 NHL 2026-10-28T00:00:00Z Boston Bruins @ Carolina Hurricanes  id=7ca25d591cbdc679a9ad85d1f04811cb
-   ML: 
+   ML: Boston Bruins  2.62 (open 2.62, best 2.62) / Carolina Hurricanes  1.54 (open 1.54, best 1.56)
+   SPREAD: Boston Bruins 1.5 1.62 (open 1.5 1.62, best 1.69) / Carolina Hurricanes -1.5 2.39 (open -1.5 2.39, best 2.4)
+   TOTAL: Over 6.0 1.84 (open 6.0 1.84, best 1.84) / Under 6.0 2.04 (open 6.0 2.04, best 2.09)
 NHL 2026-10-28T00:00:00Z Los Angeles Kings @ Chicago Blackhawks  id=74a990b939cd35873c9bb47d6e37e057
-   ML: 
+   ML: Chicago Blackhawks  2.02 (open 2.02, best 2.04) / Los Angeles Kings  1.83 (open 1.83, best 1.83)
+   SPREAD: Chicago Blackhawks 1.5 1.4 (open 1.5 1.4, best 1.43) / Los Angeles Kings -1.5 2.98 (open -1.5 2.98, best 3.05)
+   TOTAL: Over 5.5 1.77 (open 5.5 1.77, best 1.77) / Under 5.5 2.06 (open 5.5 2.06, best 2.15)
 NHL 2026-10-28T00:00:00Z New Jersey Devils @ Dallas Stars  id=11d4cfe51153e45bb3a9fc6e5f23535a
-   ML: 
+   ML: Dallas Stars  1.83 (open 1.83, best 1.83) / New Jersey Devils  2.07 (open 2.07, best 2.1)
+   SPREAD: Dallas Stars -1.5 3.11 (open -1.5 3.11, best 3.11) / New Jersey Devils 1.5 1.4 (open 1.5 1.4, best 1.43)
+   TOTAL: Over 5.5 1.86 (open 5.5 1.86, best 1.87) / Under 5.5 2.01 (open 5.5 2.01, best 2.02)
 NHL 2026-10-28T00:00:00Z Florida Panthers @ Winnipeg Jets  id=17aa3256e18d8946db708952a66e29ee
-   ML: 
+   ML: Florida Panthers  1.8 (open 1.8, best 1.8) / Winnipeg Jets  2.11 (open 2.11, best 2.12)
+   SPREAD: Florida Panthers -1.5 3.0 (open -1.5 3.0, best 3.0) / Winnipeg Jets 1.5 1.42 (open 1.5 1.42, best 1.45)
+   TOTAL: Over 6.0 1.93 (open 6.0 1.93, best 1.93) / Under 6.0 1.93 (open 6.0 1.93, best 2.0)
 NHL 2026-10-28T00:00:00Z Montréal Canadiens @ St Louis Blues  id=928c19ad83dc850d60051b756f7db2cd
-   ML: 
+   ML: Montréal Canadiens  2.0 (open 2.0, best 2.0) / St Louis Blues  1.89 (open 1.89, best 1.89)
+   SPREAD: Montréal Canadiens 1.5 1.38 (open 1.5 1.38, best 1.42) / St Louis Blues -1.5 3.19 (open -1.5 3.19, best 3.25)
+   TOTAL: Over 6.0 1.87 (open 6.0 1.87, best 1.88) / Under 6.0 2.01 (open 6.0 2.01, best 2.01)
 NHL 2026-10-28T00:00:00Z New York Islanders @ Nashville Predators  id=fa0255827e54afa3c871868fed566dd0
-   ML: 
+   ML: Nashville Predators  1.83 (open 1.83, best 1.85) / New York Islanders  2.08 (open 2.08, best 2.08)
+   SPREAD: Nashville Predators -1.5 3.08 (open -1.5 3.08, best 3.15) / New York Islanders 1.5 1.4 (open 1.5 1.4, best 1.43)
+   TOTAL: Over 5.5 1.84 (open 5.5 1.84, best 1.84) / Under 5.5 2.04 (open 5.5 2.04, best 2.04)
 NHL 2026-10-28T01:00:00Z Minnesota Wild @ Utah Mammoth  id=fc98fb73985d5caecdfffd4cb0f4d3ed
-   ML: 
+   ML: Minnesota Wild  2.11 (open 2.11, best 2.11) / Utah Mammoth  1.8 (open 1.8, best 1.8)
+   SPREAD: Minnesota Wild 1.5 1.42 (open 1.5 1.42, best 1.45) / Utah Mammoth -1.5 2.99 (open -1.5 2.99, best 3.0)
+   TOTAL: Over 6.5 1.97 (open 6.5 1.97, best 2.0) / Under 6.5 1.9 (open 6.5 1.9, best 1.9)
 NHL 2026-10-28T02:00:00Z Vancouver Canucks @ Anaheim Ducks  id=5f16cb74336431221c132f05c0e31d04
-   ML: 
+   ML: Anaheim Ducks  1.48 (open 1.48, best 1.51) / Vancouver Canucks  2.81 (open 2.81, best 2.81)
+   SPREAD: Anaheim Ducks -1.5 2.2 (open -1.5 2.2, best 2.2) / Vancouver Canucks 1.5 1.72 (open 1.5 1.72, best 1.78)
+   TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.85) / Under 6.5 2.05 (open 6.5 2.05, best 2.06)
 NHL 2026-10-28T02:00:00Z Ottawa Senators @ Vegas Golden Knights  id=66690f3994b21af39301701a52df1d66
-   ML: 
+   ML: Ottawa Senators  2.32 (open 2.32, best 2.35) / Vegas Golden Knights  1.67 (open 1.67, best 1.69)
+   SPREAD: Ottawa Senators 1.5 1.52 (open 1.5 1.52, best 1.54) / Vegas Golden Knights -1.5 2.65 (open -1.5 2.65, best 2.65)
+   TOTAL: Over 6.5 1.93 (open 6.5 1.93, best 1.96) / Under 6.5 1.94 (open 6.5 1.94, best 1.94)
 NHL 2026-10-28T02:30:00Z Buffalo Sabres @ San Jose Sharks  id=288b3a1e5241bd3885295af9aab801ca
-   ML: 
+   ML: Buffalo Sabres  1.74 (open 1.74, best 1.74) / San Jose Sharks  2.2 (open 2.2, best 2.2)
+   SPREAD: Buffalo Sabres -1.5 2.78 (open -1.5 2.78, best 2.8) / San Jose Sharks 1.5 1.48 (open 1.5 1.48, best 1.5)
+   TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.85) / Under 6.5 2.06 (open 6.5 2.06, best 2.06)
 MLB 2026-10-27T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=82812d5c946d4e055002fcb42673a38b
-   ML: 
-   moves: {'Move': 4}
+   ML: Milwaukee Brewers  2.03 (open 2.03, best 2.03) / Tampa Bay Rays  1.9 (open 1.9, best 1.92)
+   SPREAD: Milwaukee Brewers 1.5 1.46 (open 1.5 1.46, best 1.48) / Tampa Bay Rays -1.5 2.93 (open -1.5 2.93, best 2.93)
+   TOTAL: Over 7.0 1.88 (open 7.0 1.88, best 1.91) / Under 7.0 2.01 (open 7.0 2.01, best 2.03)
+   moves: {'Move': 76, 'Sharp': 9, 'Steam': 119}
 
-QUARANTINE (38 unresolved player/market pairs; these bets are unsettled, not lost):
+QUARANTINE (39 unresolved player/market pairs; these bets are unsettled, not lost):
+  Tyler Goodson | player_rush_yds | player name did not resolve x2
   AJ Dillon | player_rush_yds | player name did not resolve
+  Ausar Thompson | player_rebounds | player not in either team's box
   Brevyn Spann-Ford | player_anytime_td | player name did not resolve
   Brevyn Spann-Ford | player_reception_yds | player name did not resolve
   Brevyn Spann-Ford | player_receptions | player name did not resolve
@@ -367,4 +394,3 @@ QUARANTINE (38 unresolved player/market pairs; these bets are unsettled, not los
   Saquon Barkley | player_receptions | player name did not resolve
   Saquon Barkley | player_rush_yds | player name did not resolve
   Tyler Goodson | player_anytime_td | player name did not resolve
-  Tyler Goodson | player_rush_yds | player name did not resolve
