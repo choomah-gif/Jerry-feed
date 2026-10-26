@@ -1066,11 +1066,12 @@ class Desk:
                     clv = f"{f['clv']:+.2f}pp" if f["clv"] is not None else "n/a"
                     out.append(f"[{f['f']}] {f['n']} bets | beat close {bc} | CLV {clv} | {f['w']}-{f['l']} | ROI {roi}")
             try:
-                sm = {k: v for k, v in con.execute("select k, v from meta where k in ('splits_articles_source','splits_discovery','splits_feed_url')")}
+                sm = {k: v for k, v in con.execute("select k, v from meta where k in ('splits_articles_source','splits_table')")}
                 nsp = con.execute("select count(*) from splits").fetchone()[0]
-                out += ["", f"DK SPLITS: {nsp} rows on file | articles: {sm.get('splits_articles_source', 'not run')} | "
-                            f"live feed: {sm.get('splits_feed_url', 'not found yet')}",
-                        f"   discovery: {sm.get('splits_discovery', 'not run')[:400]}"]
+                bysrc = ", ".join(f"{r[0]} {r[1]}" for r in con.execute("select source, count(*) from splits group by source"))
+                out += ["", f"DK SPLITS: {nsp} rows on file ({bysrc or 'none'})",
+                        f"   table: {sm.get('splits_table', 'not run')}",
+                        f"   articles: {sm.get('splits_articles_source', 'not run')}"]
             except sqlite3.Error:
                 pass
             g = jr.grade_spins(con)
