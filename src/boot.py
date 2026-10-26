@@ -874,14 +874,54 @@ def _played(row):
     return False
 
 
+
+def nfl_week_of(commence):
+    """(season, week) for a kickoff timestamp. Season opens the Thursday after Labor Day."""
+    from datetime import datetime, timedelta, timezone
+    if isinstance(commence, str):
+        try:
+            dt = datetime.fromisoformat(commence.replace("Z", "+00:00"))
+        except ValueError:
+            return (None, None)
+    else:
+        dt = commence
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    y = dt.year if dt.month >= 3 else dt.year - 1
+    sept = datetime(y, 9, 1, tzinfo=timezone.utc)
+    labor = sept + timedelta(days=(7 - sept.weekday()) % 7)
+    kickoff = labor + timedelta(days=3)
+    return y, max(1, min(22, ((dt - kickoff).days // 7) + 1))
+
+
+def repair_misgraded_props(con, now_iso):
+    """One-time repair of the first grading pass, which had no week filter.
+
+    Only touches rows this grader itself settled (it stamps ' | settled X vs Y'
+    into the note), so nothing graded from team scores is disturbed.
+    """
+    cur = con.execute("""update bets set result='pending', pnl=null, graded_ts=null
+                           where sport='NFL' and market like 'player_%'
+                             and result in ('W','L','P','V')
+                             and note like '%| settled %'""")
+    n = cur.rowcount
+    con.execute("""update bets set note=replace(note, ' | settled', ' | voidstamp')
+                    where note like '%| settled %'""")
+    con.commit()
+    return n
+
 def grade_nfl_props(con, season, week, now_iso, limit=500):
     """Grade every pending NFL prop for one week. Returns a report dict."""
     res = NameResolver(con)
     pend = [dict(r) for r in con.execute(
         """select * from bets where result='pending' and sport='NFL'
              and market like 'player_%' order by id limit ?""", (limit,))]
+    # Only grade bets that belong to THIS week. Without this filter every pending
+    # prop is settled against whichever week's box scores happen to be loaded,
+    # which silently produces a full ledger of meaningless results.
+    pend = [b for b in pend if nfl_week_of(b["commence"]) == (season, week)]
     if not pend:
-        return {"graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending"}
+        return {"graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}
 
     try:
         df = load_nfl_player_week(season, week)
@@ -943,7 +983,7 @@ except Exception:
     print("[boot] WARNING reasoning/grading modules failed to load", flush=True)
 
 
-def backfill_props(db_path, weeks=3):
+def backfill_props(db_path, weeks=8):
     """Grade the player props the old grader could never settle.
 
     Runs once per week-number on start-up, so no manual backfill step is needed.
@@ -956,6 +996,13 @@ def backfill_props(db_path, weeks=3):
     try:
         now = datetime.now(UTC)
         season, week = _desk_season_week(now)
+        if not con.execute("select v from meta where k='props_week_repair'").fetchone():
+            fixed = _jg.repair_misgraded_props(con, now.isoformat(timespec="seconds"))
+            con.execute("insert or replace into meta(k,v) values(?,?)",
+                        ("props_week_repair", f"{now.isoformat(timespec='seconds')} reset {fixed}"))
+            con.execute("delete from meta where k like 'backfill_props_%'")
+            con.commit()
+            print(f"[boot] reset {fixed} props mis-graded without a week filter", flush=True)
         for w in range(max(1, week - weeks + 1), week + 1):
             key = f"backfill_props_{season}_{w}"
             seen = con.execute("select v from meta where k=?", (key,)).fetchone()
