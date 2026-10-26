@@ -1,5 +1,5 @@
-JERRY DESK SUMMARY  (generated 2026-10-26T01:58:46+00:00)
-credits left 2141 | budget/day 294 | spent today 351 | reset in 5.92d | backfill days {}
+JERRY DESK SUMMARY  (generated 2026-10-26T02:08:48+00:00)
+credits left 2138 | budget/day 294 | spent today 354 | reset in 5.91d | backfill days {}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
@@ -12,8 +12,8 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 284 rows
-all: {"n": 284, "closed": 214, "clv_pp_avg": 0.71, "beat_close_pct": 0.449, "graded": 22, "record": "10-12-0", "units": 0.4, "roi": 0.0182}
-  NBA props (price edge): {"n": 18, "closed": 7, "clv_pp_avg": 4.96, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+all: {"n": 284, "closed": 218, "clv_pp_avg": 0.75, "beat_close_pct": 0.454, "graded": 22, "record": "10-12-0", "units": 0.4, "roi": 0.0182}
+  NBA props (price edge): {"n": 18, "closed": 11, "clv_pp_avg": 4.1, "beat_close_pct": 0.909, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NFL moneyline (model): {"n": 16, "closed": 6, "clv_pp_avg": 0.35, "beat_close_pct": 0.833, "graded": 5, "record": "2-3-0", "units": -1.69, "roi": -0.338}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
   NFL props (model): {"n": 157, "closed": 142, "clv_pp_avg": -0.12, "beat_close_pct": 0.239, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
@@ -62,6 +62,10 @@ NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | h2h  Jacksonvi
 (models last refreshed: 2026-10-26T01:36:31+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "MLB": 0})
 
 RECENT SIGNALS (Steam/Sharp/Move):
+2026-10-26T02:06:46+00:00 Sharp NHL Minnesota Wild @ Vancouver Canucks | totals  Under 6.5->6.5 1.99->1.93 (betonlineag)
+2026-10-26T02:06:46+00:00 Sharp NHL Minnesota Wild @ Vancouver Canucks | totals  Over 6.5->6.5 1.87->1.92 (betonlineag)
+2026-10-26T02:06:46+00:00 Sharp NHL Minnesota Wild @ Vancouver Canucks | totals  Under 6.5->6.5 1.99->1.93 (lowvig)
+2026-10-26T02:06:46+00:00 Sharp NHL Minnesota Wild @ Vancouver Canucks | totals  Over 6.5->6.5 1.87->1.92 (lowvig)
 2026-10-26T01:04:44+00:00 Move NBA Memphis Grizzlies @ Sacramento Kings | spreads  Sacramento Kings 3.5->4.5 1.95->1.87 (fanduel)
 2026-10-26T01:04:44+00:00 Move NBA Memphis Grizzlies @ Sacramento Kings | spreads  Memphis Grizzlies -3.5->-4.5 1.87->1.95 (fanduel)
 2026-10-26T01:04:44+00:00 Move NBA Memphis Grizzlies @ Sacramento Kings | spreads  Sacramento Kings 4.0->4.5 1.87->1.87 (williamhill_us)
@@ -98,10 +102,6 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | totals  Under 42.5->43.0 1.93->1.96 (lowvig)
 2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | totals  Over 42.5->43.0 1.93->1.91 (lowvig)
 2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | h2h  Seattle Seahawks None->None 1.66->1.62 (lowvig)
-2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | h2h  Kansas City Chiefs None->None 2.31->2.4 (lowvig)
-2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | totals  Under 42.5->43.5 1.91->1.91 (betonlineag)
-2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | totals  Over 42.5->43.5 1.91->1.91 (betonlineag)
-2026-10-26T00:10:43+00:00 Steam NFL Kansas City Chiefs @ Seattle Seahawks | spreads  Seattle Seahawks -3.0->-3.0 1.95->1.91 (betonlineag)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-26T00:22:42Z Kansas City Chiefs @ Seattle Seahawks  id=176d474ed8b2bbf1eb4d7e9c56b4bf22
@@ -201,9 +201,13 @@ NBA 2026-10-26T01:10:00Z Memphis Grizzlies @ Sacramento Kings  id=dcc4a1c7f0427d
    moves: {'Move': 4, 'Sharp': 4}
 NBA 2026-10-26T23:10:00Z Washington Wizards @ Charlotte Hornets  id=3354649681943139cafc0049d42d9c8c
    ML: 
+NBA 2026-10-26T23:10:00Z Minnesota Timberwolves @ Cleveland Cavaliers  id=d639f79210d0b4b17c8f293c53c8c5aa
+   ML: 
 NBA 2026-10-26T23:30:00Z Chicago Bulls @ Boston Celtics  id=32ac8b94cc41f272efa96f0cf993e07a
    ML: 
 NBA 2026-10-26T23:30:00Z Dallas Mavericks @ Miami Heat  id=69aa52b674648238de10389a3d343208
+   ML: 
+NBA 2026-10-27T00:10:00Z Indiana Pacers @ Milwaukee Bucks  id=a423c3941aa43179ca93caf6b689a0ce
    ML: 
 NBA 2026-10-27T00:30:00Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
    ML: 
@@ -215,7 +219,7 @@ NBA 2026-12-25T19:30:00Z Miami Heat @ Boston Celtics  id=d60e7fc0690e4dff121a086
    ML: 
 NBA 2026-12-25T22:00:00Z Philadelphia 76ers @ Los Angeles Lakers  id=dfd908bad3a3bfcae9e08bf128273b18
    ML: 
-NBA 2026-12-26T01:00:00Z Oklahoma City Thunder @ Minnesota Timberwolves  id=2b7218aa25cf98318a40e6f2469a5c5d
+NBA 2026-12-26T01:10:00Z Oklahoma City Thunder @ Minnesota Timberwolves  id=2b7218aa25cf98318a40e6f2469a5c5d
    ML: 
 NBA 2026-12-26T03:30:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc49135f2759709e55af0c4c6
    ML: 
@@ -235,9 +239,10 @@ NHL 2026-10-26T00:10:00Z Colorado Avalanche @ Nashville Predators  id=61198113cc
    TOTAL: Over 6.5 1.9 (open 6.5 1.93, best 1.99) / Under 6.5 1.99 (open 6.5 1.95, best 1.99)
    moves: {'Sharp': 2}
 NHL 2026-10-26T02:10:00Z Minnesota Wild @ Vancouver Canucks  id=ccf447f1bbe822d28f87352436f70c7c
-   ML: Minnesota Wild  1.51 (open 1.51, best 1.51) / Vancouver Canucks  2.76 (open 2.76, best 2.76)
-   SPREAD: Minnesota Wild -1.5 2.26 (open -1.5 2.26, best 2.3) / Vancouver Canucks 1.5 1.7 (open 1.5 1.7, best 1.7)
-   TOTAL: Over 6.5 1.93 (open 6.5 1.93, best 1.93) / Under 6.5 1.96 (open 6.5 1.96, best 2.02)
+   ML: Minnesota Wild  1.5 (open 1.51, best 1.53) / Vancouver Canucks  2.78 (open 2.76, best 2.78)
+   SPREAD: Minnesota Wild -1.5 2.24 (open -1.5 2.26, best 2.35) / Vancouver Canucks 1.5 1.71 (open 1.5 1.7, best 1.71)
+   TOTAL: Over 6.5 1.92 (open 6.5 1.93, best 1.92) / Under 6.5 1.97 (open 6.5 1.96, best 2.02)
+   moves: {'Sharp': 4}
 NHL 2026-10-26T23:10:00Z Los Angeles Kings @ New York Rangers  id=daa5166685c4ca1a4f033d8bff91a6ba
    ML: 
 NHL 2026-10-27T00:40:00Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde35c5494acdb5912a68
