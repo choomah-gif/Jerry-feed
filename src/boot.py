@@ -1028,6 +1028,56 @@ def _desk_season_week(now):
     return y, max(1, min(22, ((now - kickoff).days // 7) + 1))
 
 
+
+# ---------- jerry.py's schedule URL 404s (nflverse retired that release asset).
+# _cached_csv has no fallback, so a failed refresh raises and the NFL model runs
+# on whatever stale copy is already cached. Wrap it with alternates.
+_JM_FALLBACKS = {
+    "schedules/games.csv": [
+        "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+        "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    ],
+}
+
+def _install_nflverse_fallbacks():
+    import jerry as _JM
+    if getattr(_JM, "_fallbacks_installed", False):
+        return
+    _orig = _JM._cached_csv
+
+    def _cached_csv(url, name, refresh=False):
+        try:
+            return _orig(url, name, refresh)
+        except Exception as first:
+            alts = []
+            for key, urls in _JM_FALLBACKS.items():
+                if url.endswith(key):
+                    alts = [u for u in urls if u != url]
+            for alt in alts:
+                try:
+                    df = _orig(alt, name, refresh)
+                    print(f"[boot] nflverse fallback used for {name}: {alt}", flush=True)
+                    return df
+                except Exception:
+                    continue
+            try:                      # last resort: whatever is already on disk
+                p = _JM.CACHE / name
+                if p.exists():
+                    print(f"[boot] nflverse unreachable for {name}, using cached copy", flush=True)
+                    return _JM.pd.read_csv(p, low_memory=False)
+            except Exception:
+                pass
+            raise first
+
+    _JM._cached_csv = _cached_csv
+    _JM._fallbacks_installed = True
+    print("[boot] nflverse URL fallbacks installed", flush=True)
+
+try:
+    _install_nflverse_fallbacks()
+except Exception:
+    traceback.print_exc()
+
 # ---------- hook into the desk and start it
 def _import_live():
     """jerry.py creates its cache folder at import time; make any missing data folders first."""
