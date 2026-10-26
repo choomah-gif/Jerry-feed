@@ -183,6 +183,9 @@ def init_db():
     if "paper" not in _betcols:
         con.execute("alter table bets add column paper int default 0")
     # reasoning stored as fields, so a loss can be attributed instead of just counted
+    _mpcols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
+    if "reasoning" not in _mpcols:
+        con.execute("alter table model_probs add column reasoning text")
     for _c, _t in (("comp_json", "text"), ("ratio", "real"), ("model_number", "real"),
                    ("market_number", "real"), ("evidence_kind", "text"),
                    ("corr_group", "text"), ("falsifier", "text"),
@@ -232,7 +235,7 @@ def _clv_for(b, c):
 
 # sports with a player-level results feed wired in; everything else cannot be
 # graded yet and is reported as such rather than counted as a backlog
-GRADEABLE_PROP_SPORTS = {"NFL"}
+GRADEABLE_PROP_SPORTS = {"NFL", "NBA", "NHL"}   # NBA/NHL via jerry_feeds box scores
 
 
 class Desk:
@@ -580,7 +583,14 @@ class Desk:
         bf_done = con.execute("select coalesce(sum(cost),0) c from usage where endpoint='historical' and ts>=?",
                               (day0,)).fetchone()["c"]
         hold_bf = max(cap * BACKFILL_SHARE - bf_done, 0) if self.next_backfill(con) else 0
-        for sport, evs in plan.items():
+        # Walk sports most-starved first. Dict order (NFL, NBA, NHL, MLB) meant the
+        # prop floor was always consumed by the first two, and NHL/MLB never got a
+        # game-line pull at all — their boards showed empty moneylines for hours.
+        def _staleness(sp):
+            last = meta_get(con, f"due_tape_{sp}")
+            return (now - parse(last)).total_seconds() if last else 1e9
+        for sport in sorted(plan, key=_staleness, reverse=True):
+            evs = plan[sport]
             if not evs:
                 continue
             cost = len(SPORTS[sport]["markets"].split(","))
@@ -592,6 +602,15 @@ class Desk:
                 every, floor = BASELINE_EVERY, prop_floor + hold_bf * 0.5 + cost * 6
             else:
                 every, floor = OPENER_EVERY, prop_floor + hold_bf + cost * 12
+            # starvation guard: a sport with games inside the baseline window and no
+            # game-line quotes at all gets one pull regardless of the prop floor
+            if soonest <= BASELINE_HOURS * 60:
+                ids = [e["event_id"] for e in evs if (parse(e["commence"]) - now).total_seconds() <= BASELINE_HOURS * 3600]
+                have = con.execute(f"""select count(*) from last_quote where player='' and market='h2h'
+                                       and event_id in ({",".join("?" * len(ids))})""", ids).fetchone()[0] if ids else 1
+                if have == 0:
+                    floor = 0
+                    meta_set(con, f"starved_{sport}", iso(now))
             if self._due(con, f"tape_{sport}", every, now) and self.can_spend(con, cost, now, floor=floor):
                 try:
                     self.pull_featured(con, sport, now)
@@ -965,8 +984,20 @@ class Desk:
             done = void = pend = 0
             nofeed = {}
         err = con.execute("select v from meta where k='grade_props_error'").fetchone()
+        feed_err = {r[0][11:]: r[1] for r in con.execute("select k, v from meta where k like 'feed_error_%'")}
+        try:
+            nres = {r[0]: r[1] for r in con.execute("select sport, count(*) from game_results group by sport")}
+            rejects = con.execute("select count(*) from meta where k like 'label_reject_%'").fetchone()[0]
+        except sqlite3.Error:
+            nres, rejects = {}, 0
         con.close()
         bits = [f"PROPS GRADED: {done} settled ({void} void), {pend} pending"]
+        if nres:
+            bits.append("| results on file: " + ", ".join(f"{k} {v}" for k, v in sorted(nres.items())))
+        if rejects:
+            bits.append(f"| {rejects} props rejected on roster mismatch")
+        for sp, msg in feed_err.items():
+            bits.append(f"| {sp} feed error: {msg[:90]}")
         if nofeed:
             detail = ", ".join(f"{k} {v}" for k, v in sorted(nofeed.items()))
             bits.append(f"| {sum(nofeed.values())} awaiting a results feed ({detail}) — not gradeable yet")
@@ -1011,6 +1042,9 @@ class Desk:
         for r in self.edges():
             lines.append(f"{r['sport']} {r['commence'][:16]}Z {r['away']} @ {r['home']} | {r['market']} {r['player'] or ''} {r['outcome']} "
                          f"{'' if r['line'] is None else r['line']} | model {r['model_prob']:.1%} fair {r['fair_prob']:.1%} edge {r['edge']*100:+.1f} | {r['call']} | {r['note'] or ''}")
+            rz = r["reasoning"] if "reasoning" in r.keys() else None
+            if rz:
+                lines.append(f"      why: {rz}")
         mlast = None
         try:
             c2 = db(); mlast = meta_get(c2, "models_last"); c2.close()
