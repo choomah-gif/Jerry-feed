@@ -1,5 +1,5 @@
-JERRY DESK SUMMARY  (generated 2026-10-26T10:29:55+00:00)
-credits left 2066 | budget/day 300 | spent today 67 | reset in 5.56d | backfill days {'NHL': 1}
+JERRY DESK SUMMARY  (generated 2026-10-26T10:39:56+00:00)
+credits left 2063 | budget/day 299 | spent today 70 | reset in 5.56d | backfill days {'NHL': 1}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -25,8 +25,7 @@ all: {"n": 289, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "gra
   NHL props (price edge): {"n": 5, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
-NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | h2h  Chicago Bulls  | draftkings 6.75 vs fair 15.8% | EV +6.3%
-NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | h2h  Chicago Bulls  | fanduel 6.7 vs fair 15.8% | EV +5.5%
+NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | h2h  Chicago Bulls  | fanduel 6.7 vs fair 15.6% | EV +4.5%
 
 MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):
 NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5 | model 43.2% fair 49.7% edge -6.5 | Lean Dallas Cowboys | model margin -5.8 (home) vs line -4.5; P(|margin|=3) 5%, =7 6%. PHI: Michael Carter II (CB) Out, DeVonta Smith (WR) Out, Dontayvion Wicks (WR) Out, Nolan Smith (LB) Out; DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out | Questionable: Saquon Barkley (PHI), Grant Calcaterra (PHI), Eli Stowers (PHI)
@@ -34,11 +33,11 @@ NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | totals  Under 
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | spreads  Miami Dolphins 7.5 | model 46.7% fair 51.9% edge -5.2 | Lean New England Patriots | model margin -8.3 (home) vs line -7.5; P(|margin|=3) 5%, =7 4%. MIA: Reese Taylor (CB) Out, Rob Beal Jr. (DE) Doubtful; NE: Carlton Davis III (CB) Out, Alijah Vera-Tucker (G) Out, Ben Brown (C) Out, Karon Prunty (CB) Out, Channing Canada (CB) Out
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | totals  Under 45.0 | model 44.8% fair 50.0% edge -5.2 | Play Over | model total 46.7 vs 45.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | totals  Under 46.5 | model 44.9% fair 50.1% edge -5.2 | Play Over | model total 48.2 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.0% edge +5.2 | Lean Detroit Lions | 
 NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | totals  Under 39.5 | model 47.9% fair 52.8% edge -5.0 | Lean Over | model total 40.2 vs 39.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.4% edge +4.8 | Lean Detroit Lions | 
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | spreads  Los Angeles Rams -7.5 | model 51.2% fair 46.9% edge +4.3 | Lean Los Angeles Rams | model margin +7.8 (home) vs line +7.5; P(|margin|=3) 5%, =7 5%. LA: Nate Landman (LB) Out | Questionable: Puka Nacua (LA)
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.3% edge +4.2 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
 NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | totals  Under 40.5 | model 47.0% fair 51.0% edge -3.9 | Lean Over | model total 41.5 vs 40.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.7% edge +3.8 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | totals  Under 44.5 | model 53.9% fair 50.1% edge +3.7 | Lean Under | model total 43.2 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | spreads  Dallas Cowboys -6.25 | model 46.7% fair 50.3% edge -3.6 | Lean Arizona Cardinals | model margin +5.6 (home) vs line +6.2; P(|margin|=3) 6%, =7 5%. DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out; ARI: Andrew Wingard (S) Out, Jon Gaines II (G) Out, Walter Nolen (DT) Out, Jeremiyah Love (RB) Out | Questionable: Carson Beck (ARI)
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | spreads  Tampa Bay Buccaneers -2.0 | model 46.7% fair 50.3% edge -3.6 | Lean Atlanta Falcons | model margin +1.7 (home) vs line +2.0; P(|margin|=3) 6%, =7 5%. TB: Antoine Winfield Jr. (S) Out, Luke Goedeke (T) Out, Emeka Egbuka (WR) Out; ATL: Divine Deablo (LB) Out, Brian Robinson (RB) Out, Michael Jerrell (T) Out, Billy Bowman Jr. (CB) Out, Beaux Collins (WR) Out, Cameron Williams (T) Out | Questionable: Baker Mayfield (TB), Olamide Zaccheaus (ATL)
@@ -59,9 +58,17 @@ NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | totals  Under 46.0 | m
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 57.1% fair 55.2% edge +1.9 | Lean Tampa Bay Buccaneers | 
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | totals  Under 44.5 | model 48.3% fair 50.0% edge -1.7 | Lean Over | model total 45.1 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | spreads  New York Jets -1.0 | model 46.7% fair 48.3% edge -1.6 | Lean Las Vegas Raiders | model margin +0.6 (home) vs line +1.0; P(|margin|=3) 6%, =7 5%. NYJ: Joseph Ossai (DE) Out, Max Mitchell (T) Out, Francisco Mauigoa (LB) Out; LV: Carter Runyon (TE) Out, Dont'e Thornton Jr. (WR) Out | Questionable: Kene Nwangwu (NYJ), Breece Hall (NYJ), Mike Washington Jr. (LV)
-(models last refreshed: 2026-10-26T09:36:45+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 2, "MLB": 0})
+(models last refreshed: 2026-10-26T10:36:47+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 1, "MLB": 0})
 
 RECENT SIGNALS (Steam/Sharp/Move):
+2026-10-26T10:36:57+00:00 Sharp NFL Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5->4.5 1.95->1.89 (pinnacle)
+2026-10-26T10:36:57+00:00 Sharp NFL Dallas Cowboys @ Philadelphia Eagles | spreads  Dallas Cowboys -4.5->-4.5 1.93->1.99 (pinnacle)
+2026-10-26T10:36:57+00:00 Move NFL Dallas Cowboys @ Philadelphia Eagles | totals  Under 43.5->43.5 1.95->2.0 (espnbet)
+2026-10-26T10:36:57+00:00 Move NFL Dallas Cowboys @ Philadelphia Eagles | totals  Over 43.5->43.5 1.87->1.83 (espnbet)
+2026-10-26T10:36:57+00:00 Sharp NFL Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5->4.5 1.99->1.92 (lowvig)
+2026-10-26T10:36:57+00:00 Sharp NFL Dallas Cowboys @ Philadelphia Eagles | spreads  Dallas Cowboys -4.5->-4.5 1.92->1.99 (lowvig)
+2026-10-26T10:36:57+00:00 Move NFL Dallas Cowboys @ Philadelphia Eagles | totals  Under 43.5->44.0 1.93->1.88 (williamhill_us)
+2026-10-26T10:36:57+00:00 Move NFL Dallas Cowboys @ Philadelphia Eagles | totals  Over 43.5->44.0 1.88->1.93 (williamhill_us)
 2026-10-26T10:22:56+00:00 Steam NBA Golden State Warriors @ Denver Nuggets | totals  Under 233.5->234.5 1.91->1.87 (betmgm)
 2026-10-26T10:22:56+00:00 Steam NBA Golden State Warriors @ Denver Nuggets | totals  Over 233.5->234.5 1.91->1.95 (betmgm)
 2026-10-26T10:22:56+00:00 Steam NBA Golden State Warriors @ Denver Nuggets | totals  Under 233.5->234.0 1.91->1.91 (williamhill_us)
@@ -94,21 +101,13 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-26T09:55:55+00:00 Move NBA Memphis Grizzlies @ Utah Jazz | h2h  Memphis Grizzlies None->None 1.93->1.98 (draftkings)
 2026-10-26T09:55:55+00:00 Move NBA Memphis Grizzlies @ Utah Jazz | spreads  Utah Jazz -1.0->-1.5 1.91->1.91 (fanatics)
 2026-10-26T09:55:55+00:00 Move NBA Memphis Grizzlies @ Utah Jazz | spreads  Memphis Grizzlies 1.0->1.5 1.91->1.91 (fanatics)
-2026-10-26T09:55:55+00:00 Move NBA Memphis Grizzlies @ Utah Jazz | h2h  Utah Jazz None->None 1.87->1.83 (fanatics)
-2026-10-26T09:55:55+00:00 Move NBA Memphis Grizzlies @ Utah Jazz | h2h  Memphis Grizzlies None->None 1.95->2.0 (fanatics)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Under 229.5->229.5 1.91->1.95 (betmgm)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Over 229.5->229.5 1.91->1.87 (betmgm)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Under 229.5->230.0 1.91->1.91 (fanatics)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Over 229.5->230.0 1.91->1.91 (fanatics)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Under 228.5->229.5 1.95->1.91 (espnbet)
-2026-10-26T09:55:55+00:00 Move NBA Atlanta Hawks @ Houston Rockets | totals  Over 228.5->229.5 1.87->1.91 (espnbet)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-27T00:15:00Z Dallas Cowboys @ Philadelphia Eagles  id=4853610e63c246f2027a6a248e642c9a
-   ML: Dallas Cowboys  1.46 (open 1.45, best 1.47) / Philadelphia Eagles  2.89 (open 2.91, best 2.95)
-   SPREAD: Dallas Cowboys -4.5 1.93 (open -4.5 1.93, best 1.93) / Philadelphia Eagles 4.5 1.95 (open 4.5 1.96, best 1.99)
-   TOTAL: Over 44.0 1.99 (open 44.0 1.93, best 1.99) / Under 44.0 1.86 (open 44.0 1.93, best 1.93)
-   moves: {'Move': 2, 'Sharp': 1, 'Steam': 8}
+   ML: Dallas Cowboys  1.48 (open 1.45, best 1.49) / Philadelphia Eagles  2.82 (open 2.91, best 2.95)
+   SPREAD: Dallas Cowboys -4.5 1.99 (open -4.5 1.93, best 1.99) / Philadelphia Eagles 4.5 1.89 (open 4.5 1.96, best 1.94)
+   TOTAL: Over 44.0 1.99 (open 44.0 1.93, best 1.99) / Under 44.0 1.87 (open 44.0 1.93, best 1.93)
+   moves: {'Move': 6, 'Sharp': 5, 'Steam': 8}
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
    ML: Carolina Panthers  2.76 (open 2.76, best 2.8) / Green Bay Packers  1.5 (open 1.5, best 1.51)
    SPREAD: Carolina Panthers 4.5 1.85 (open 4.5 1.85, best 1.89) / Green Bay Packers -4.5 2.05 (open -4.5 2.05, best 2.05)
@@ -145,7 +144,7 @@ NFL 2026-11-01T18:00:00Z Minnesota Vikings @ Detroit Lions  id=52e7ee9c42525e6de
    TOTAL: Over 46.0 1.93 (open 46.0 1.93, best 1.93) / Under 46.0 1.93 (open 46.0 1.93, best 1.93)
    moves: {'Move': 2, 'Sharp': 6, 'Steam': 12}
 NFL 2026-11-01T18:00:00Z Indianapolis Colts @ Jacksonville Jaguars  id=159dbf0253dd2038eda2212f84387f0c
-   ML: Indianapolis Colts  4.17 (open 4.17, best 4.5) / Jacksonville Jaguars  1.26 (open 1.26, best 1.27)
+   ML: Indianapolis Colts  4.17 (open 4.17, best 4.5) / Jacksonville Jaguars  1.26 (open 1.26, best 1.26)
    SPREAD: Indianapolis Colts 7.5 1.99 (open 7.5 1.99, best 1.99) / Jacksonville Jaguars -7.5 1.9 (open -7.5 1.9, best 1.94)
    TOTAL: Over 46.5 1.92 (open 46.5 1.92, best 1.92) / Under 46.5 1.93 (open 46.5 1.93, best 1.95)
    moves: {'Move': 2, 'Steam': 12}
