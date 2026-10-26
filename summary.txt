@@ -1,8 +1,9 @@
-JERRY DESK SUMMARY  (generated 2026-10-26T16:51:21+00:00)
+JERRY DESK SUMMARY  (generated 2026-10-26T16:54:42+00:00)
 credits left 2027 | budget/day 307 | spent today 106 | reset in 5.3d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
+PROPS GRADED: 191 settled (6 void), 25 pending, 23 quarantined (unresolved player names — see /api/quarantine)
 overall: null
 by sport: {}
 by bet type: {}
@@ -11,55 +12,54 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 290 rows
-all: {"n": 290, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 218, "record": "121-97-0", "units": 33.08, "roi": 0.1517}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 303 rows
+all: {"n": 303, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 218, "record": "121-97-0", "units": 33.08, "roi": 0.1517}
   NBA moneyline (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NBA props (price edge): {"n": 18, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NFL moneyline (model): {"n": 18, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
+  NFL moneyline (model): {"n": 19, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
   NFL props (model): {"n": 157, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 150, "record": "89-61-0", "units": 31.24, "roi": 0.2083}
   NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 3.2, "beat_close_pct": 1.0, "graded": 35, "record": "16-19-0", "units": 0.86, "roi": 0.0246}
   NFL spread (model): {"n": 26, "closed": 11, "clv_pp_avg": 0.19, "beat_close_pct": 0.545, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 4.05, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0}
-  NFL total (model): {"n": 26, "closed": 8, "clv_pp_avg": 0.1, "beat_close_pct": 0.5, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709}
+  NFL total (model): {"n": 38, "closed": 8, "clv_pp_avg": 0.1, "beat_close_pct": 0.5, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709}
   NHL props (price edge): {"n": 5, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
-NBA 2026-10-26T23:40Z Chicago Bulls @ Boston Celtics | h2h  Chicago Bulls  | fanduel 6.7 vs fair 15.8% | EV +5.5%
 
 MODEL EDGES (Jerry's models vs Pinnacle fair price; props capped at Lean until validated):
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5 | model 43.2% fair 51.2% edge -7.9 | Lean Dallas Cowboys | model margin -5.8 (home) vs line -4.5; P(|margin|=3) 5%, =7 6%. PHI: Michael Carter II (CB) Out, DeVonta Smith (WR) Out, Dontayvion Wicks (WR) Out, Nolan Smith (LB) Out; DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out | Questionable: Saquon Barkley (PHI), Grant Calcaterra (PHI), Eli Stowers (PHI)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | spreads  Philadelphia Eagles 4.5 | model 43.2% fair 51.2% edge -8.0 | Lean Dallas Cowboys | model margin -5.8 (home) vs line -4.5; P(|margin|=3) 5%, =7 6%. PHI: Michael Carter II (CB) Out, DeVonta Smith (WR) Out, Dontayvion Wicks (WR) Out, Nolan Smith (LB) Out; DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out | Questionable: Saquon Barkley (PHI), Grant Calcaterra (PHI), Eli Stowers (PHI)
 NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | totals  Under 46.5 | model 43.7% fair 49.9% edge -6.2 | Play Over | model total 48.6 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | spreads  Miami Dolphins 7.5 | model 46.7% fair 51.9% edge -5.2 | Lean New England Patriots | model margin -8.3 (home) vs line -7.5; P(|margin|=3) 5%, =7 4%. MIA: Reese Taylor (CB) Out, Rob Beal Jr. (DE) Doubtful; NE: Carlton Davis III (CB) Out, Alijah Vera-Tucker (G) Out, Ben Brown (C) Out, Karon Prunty (CB) Out, Channing Canada (CB) Out
+NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | spreads  Miami Dolphins 7.5 | model 46.7% fair 52.0% edge -5.3 | Lean New England Patriots | model margin -8.3 (home) vs line -7.5; P(|margin|=3) 5%, =7 4%. MIA: Reese Taylor (CB) Out, Rob Beal Jr. (DE) Doubtful; NE: Carlton Davis III (CB) Out, Alijah Vera-Tucker (G) Out, Ben Brown (C) Out, Karon Prunty (CB) Out, Channing Canada (CB) Out
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | totals  Under 45.0 | model 44.8% fair 50.0% edge -5.2 | Play Over | model total 46.7 vs 45.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | totals  Under 46.5 | model 44.9% fair 50.1% edge -5.2 | Play Over | model total 48.2 vs 46.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | totals  Under 39.5 | model 47.9% fair 52.8% edge -5.0 | Lean Over | model total 40.2 vs 39.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.4% edge +4.8 | Lean Detroit Lions | 
-NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | spreads  Los Angeles Rams -7.5 | model 51.2% fair 46.9% edge +4.3 | Lean Los Angeles Rams | model margin +7.8 (home) vs line +7.5; P(|margin|=3) 5%, =7 5%. LA: Nate Landman (LB) Out | Questionable: Puka Nacua (LA)
-NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | totals  Under 40.5 | model 47.0% fair 51.0% edge -3.9 | Lean Over | model total 41.5 vs 40.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.7% edge +3.8 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
+NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | totals  Under 39.5 | model 47.9% fair 53.0% edge -5.1 | Lean Over | model total 40.2 vs 39.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | spreads  Los Angeles Rams -7.5 | model 51.2% fair 46.8% edge +4.4 | Lean Los Angeles Rams | model margin +7.8 (home) vs line +7.5; P(|margin|=3) 5%, =7 5%. LA: Nate Landman (LB) Out | Questionable: Puka Nacua (LA)
+NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.9% edge +4.3 | Lean Detroit Lions | 
+NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | totals  Under 40.5 | model 47.0% fair 51.0% edge -4.0 | Lean Over | model total 41.5 vs 40.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | spreads  Detroit Lions -3.0 | model 55.5% fair 51.7% edge +3.7 | Lean Detroit Lions | model margin +4.3 (home) vs line +3.0; P(|margin|=3) 7%, =7 6%. Questionable: Jordan Mason (MIN)
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | totals  Under 44.5 | model 53.9% fair 50.1% edge +3.7 | Lean Under | model total 43.2 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 72.9% edge -3.6 | Lean Arizona Cardinals | 
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | spreads  Dallas Cowboys -6.25 | model 46.7% fair 50.3% edge -3.6 | Lean Arizona Cardinals | model margin +5.6 (home) vs line +6.2; P(|margin|=3) 6%, =7 5%. DAL: KaVontae Turpin (WR) Out, Dee Winters (LB) Out, Drew Shelton (T) Out; ARI: Andrew Wingard (S) Out, Jon Gaines II (G) Out, Walter Nolen (DT) Out, Jeremiyah Love (RB) Out | Questionable: Carson Beck (ARI)
 NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | spreads  Tampa Bay Buccaneers -2.0 | model 46.7% fair 50.3% edge -3.6 | Lean Atlanta Falcons | model margin +1.7 (home) vs line +2.0; P(|margin|=3) 6%, =7 5%. TB: Antoine Winfield Jr. (S) Out, Luke Goedeke (T) Out, Emeka Egbuka (WR) Out; ATL: Divine Deablo (LB) Out, Brian Robinson (RB) Out, Michael Jerrell (T) Out, Billy Bowman Jr. (CB) Out, Beaux Collins (WR) Out, Cameron Williams (T) Out | Questionable: Baker Mayfield (TB), Olamide Zaccheaus (ATL)
-NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | totals  Under 44.0 | model 48.9% fair 52.3% edge -3.5 | Lean Over | model total 44.4 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | totals  Under 44.0 | model 48.9% fair 52.5% edge -3.6 | Lean Over | model total 44.4 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Tennessee Titans @ Cincinnati Bengals | totals  Under 47.0 | model 46.6% fair 50.0% edge -3.4 | Lean Over | model total 48.1 vs 47.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | h2h  New York Jets  | model 53.4% fair 50.0% edge +3.4 | Lean New York Jets | 
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | spreads  Pittsburgh Steelers -4.0 | model 51.2% fair 48.2% edge +3.0 | Lean Pittsburgh Steelers | model margin +4.5 (home) vs line +4.0; P(|margin|=3) 7%, =7 6%. PIT: Brandin Echols (CB) Out, Ben Skowronek (WR) Out; CLE: Teven Jenkins (G) Out, Kalia Davis (DT) Out, Mike Hall Jr. (DT) Out, Dillon Gabriel (QB) Out | Questionable: Rico Dowdle (PIT)
-NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | spreads  Buffalo Bills -3.5 | model 51.2% fair 48.4% edge +2.9 | Lean Buffalo Bills | model margin +3.5 (home) vs line +3.5; P(|margin|=3) 7%, =7 6%. BAL: Lamar Jackson (QB) Out, Jaylinn Hawkins (S) Out, Tavius Robinson (LB) Out, T.J. Tampa (CB) Doubtful
-NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | h2h  Washington Commanders  | model 66.2% fair 63.4% edge +2.8 | Lean Washington Commanders | 
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh Steelers  | model 66.2% fair 63.7% edge +2.5 | Lean Pittsburgh Steelers | 
-NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | totals  Under 53.5 | model 46.7% fair 49.2% edge -2.5 | Lean Over | model total 54.6 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | totals  Under 44.0 | model 54.2% fair 51.8% edge +2.4 | Lean Under | model total 42.6 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | spreads  Pittsburgh Steelers -4.0 | model 51.2% fair 48.1% edge +3.1 | Lean Pittsburgh Steelers | model margin +4.5 (home) vs line +4.0; P(|margin|=3) 7%, =7 6%. PIT: Brandin Echols (CB) Out, Ben Skowronek (WR) Out; CLE: Teven Jenkins (G) Out, Kalia Davis (DT) Out, Mike Hall Jr. (DT) Out, Dillon Gabriel (QB) Out | Questionable: Rico Dowdle (PIT)
+NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | spreads  Buffalo Bills -3.5 | model 51.2% fair 48.3% edge +3.0 | Lean Buffalo Bills | model margin +3.5 (home) vs line +3.5; P(|margin|=3) 7%, =7 6%. BAL: Lamar Jackson (QB) Out, Jaylinn Hawkins (S) Out, Tavius Robinson (LB) Out, T.J. Tampa (CB) Doubtful
+NFL 2026-11-01T18:00Z Baltimore Ravens @ Buffalo Bills | totals  Under 53.5 | model 46.7% fair 49.1% edge -2.4 | Lean Over | model total 54.6 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | totals  Under 44.0 | model 54.2% fair 51.9% edge +2.3 | Lean Under | model total 42.6 vs 44.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | totals  Under 53.5 | model 51.7% fair 49.4% edge +2.3 | Lean Under | model total 52.9 vs 53.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 71.4% edge -2.1 | Lean Arizona Cardinals | 
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | h2h  Philadelphia Eagles  | model 32.1% fair 34.2% edge -2.1 | Lean Dallas Cowboys | 
-NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | h2h  Denver Broncos  | model 45.0% fair 46.9% edge -2.0 | Lean Kansas City Chiefs | 
-NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | totals  Under 41.5 | model 47.5% fair 49.5% edge -2.0 | Lean Over | model total 42.3 vs 41.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | h2h  Washington Commanders  | model 66.2% fair 64.3% edge +1.9 | Lean Washington Commanders | 
+NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | totals  Under 41.5 | model 47.5% fair 49.4% edge -1.9 | Lean Over | model total 42.3 vs 41.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
 NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | totals  Under 46.0 | model 48.1% fair 50.0% edge -1.9 | Lean Over | model total 46.6 vs 46.0; backtest: 1.5+ pt disagreements went 58.5% (n=159)
-NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 57.1% fair 55.2% edge +1.9 | Lean Tampa Bay Buccaneers | 
+NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh Steelers  | model 66.2% fair 64.4% edge +1.8 | Lean Pittsburgh Steelers | 
+NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | h2h  Denver Broncos  | model 45.0% fair 46.7% edge -1.8 | Lean Kansas City Chiefs | 
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | totals  Under 44.5 | model 48.3% fair 50.0% edge -1.7 | Lean Over | model total 45.1 vs 44.5; backtest: 1.5+ pt disagreements went 58.5% (n=159)
+NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 57.1% fair 55.4% edge +1.6 | Lean Tampa Bay Buccaneers | 
 NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | spreads  New York Jets -1.0 | model 46.7% fair 48.3% edge -1.6 | Lean Las Vegas Raiders | model margin +0.6 (home) vs line +1.0; P(|margin|=3) 6%, =7 5%. NYJ: Joseph Ossai (DE) Out, Max Mitchell (T) Out, Francisco Mauigoa (LB) Out; LV: Carter Runyon (TE) Out, Dont'e Thornton Jr. (WR) Out | Questionable: Kene Nwangwu (NYJ), Breece Hall (NYJ), Mike Washington Jr. (LV)
-(models last refreshed: 2026-10-26T16:50:19+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 1, "MLB": 0, "GRADE": [{"week": 5, "graded": 170, "voided": 5, "quarantined": 23, "season": 2026}, {"week": 6, "graded": 18, "voided": 1, "quarantined": 5, "season": 2026}, {"week": 7, "graded": 3, "voided": 0, "quarantined": 2, "season": 2026}]})
+NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.5 | Lean Los Angeles Chargers | 
+(models last refreshed: 2026-10-26T16:53:38+00:00 {"NFL": 90, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 2, "season": 2026}]})
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-26T10:50:57+00:00 Move NBA Golden State Warriors @ Denver Nuggets | totals  Under 234.5->233.5 1.87->1.91 (betmgm)
