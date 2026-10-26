@@ -104,6 +104,9 @@ def _prob(J, mask_win, mask_push):
     w, push = J[mask_win].sum(), J[mask_push].sum()
     return w / max(1 - push, 1e-9)
 
+POSTSEASON_RUN_FACTOR = 0.88   # postseason scoring runs roughly 10-12% below the regular season
+
+
 def refresh_mlb(db_path):
     now = datetime.now(UTC)
     con = sqlite3.connect(db_path, timeout=60); con.row_factory = None
@@ -141,12 +144,30 @@ def refresh_mlb(db_path):
         def_a = STARTER_SHARE * sp["away"][2] + (1 - STARTER_SHARE) * da
         mu_h = lg * oh * def_a * HOME_EDGE
         mu_a = lg * oa * def_h / HOME_EDGE
+        # October: aces start, bullpens are shortened and deployed aggressively, and run
+        # scoring drops. A transparent prior, not a fitted coefficient — logged in detail.
+        post = st.month >= 10
+        if post:
+            mu_h *= POSTSEASON_RUN_FACTOR; mu_a *= POSTSEASON_RUN_FACTOR
         J, diff, tot = _model(mu_h, mu_a)
         tie = J[diff == 0].sum()
         p_home = J[diff > 0].sum() + tie * 0.52
         q, book = _quotes(con, eid)
         if not q:
             continue
+        _jr = sys.modules.get("jerry_reason")
+        try:
+            if _jr:
+                _tl = next((v[0] for (m, o), v in q.items() if m == "totals"), None)
+                _sl = q.get(("spreads", home), (None, None))[0]
+                _jr.record_numbers(con, event_id=eid, sport="MLB", home=home, away=away, commence=st.isoformat(),
+                                   margin=mu_h - mu_a, total=mu_h + mu_a, p_home=p_home,
+                                   mkt_margin=None, mkt_total=None if _tl is None else float(_tl),
+                                   checks={"starters_known": sp["home"][0] != "TBD" and sp["away"][0] != "TBD"},
+                                   detail=f"runs {away} {mu_a:.2f} / {home} {mu_h:.2f}; {'postseason x%.2f; ' % POSTSEASON_RUN_FACTOR if post else ''}"
+                                          f"SP {sp['away'][0]} @ {sp['home'][0]}")
+        except Exception:
+            pass
         def _sp(side):
             name, fip, _ = sp[side]
             return f"{name} ({'n/a' if fip is None else f'{fip:.2f}'} FIP)"
@@ -187,7 +208,7 @@ def refresh_mlb(db_path):
                                  "market_number": float(line), "runs_home": round(mu_h, 3), "runs_away": round(mu_a, 3)}
                         reasoning = _jr.render_reasoning(market="totals", player="", selection=o, line=float(line),
                                                          model_prob=float(mp), fair_prob=float(fair), components=_comp,
-                                                         opponent="", status="", n_games=None)
+                                                         opponent="", status="", n_games=None, sport="MLB")
                         reasoning += f" Starters: {sp_txt}. The MLB model is unvalidated with no graded history."
                     else:
                         call = f"Lean {o}" if edge >= 0.02 else "Sit"
@@ -199,16 +220,25 @@ def refresh_mlb(db_path):
                 else:
                     call = "see other row"
                 note = base + (f"; total {mu_h+mu_a:.1f} vs {line}" if market == "totals" else "")
-                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat(), reasoning))
+                flag = None
+                if _jr and call.startswith(("Lean", "Play")):
+                    try:
+                        call, reasoning, _sg = _jr.sharp_gate(con, eid, market, call, "", reasoning or "")
+                        flag = _sg.get("label") if _sg else None
+                    except Exception:
+                        pass
+                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat(), reasoning, flag))
         # name the columns: the desk now carries a 12th column (reasoning) and a positional insert would fail
         try:
             cols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
             if "reasoning" not in cols:
                 con.execute("alter table model_probs add column reasoning text")
+            if "flag" not in cols:
+                con.execute("alter table model_probs add column flag text")
         except sqlite3.Error:
             pass
-        con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
-                           values(?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
+        con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
+                           values(?,?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
         con.commit(); n += len(rows)
     con.close()
     return n
@@ -542,6 +572,20 @@ BLIND_SPOTS = {
 }
 
 
+SPORT_BLIND_SPOTS = {
+    ("NHL", "totals"): ["confirmed starting goalies", "back-to-back fatigue", "line changes and scratches"],
+    ("NHL", "h2h"): ["confirmed starting goalies", "back-to-back fatigue", "line changes and scratches"],
+    ("NHL", "spreads"): ["confirmed starting goalies", "empty-net tendencies", "back-to-back fatigue"],
+    ("MLB", "totals"): ["bullpen availability", "lineups and platoon splits", "weather and park", "postseason run environment"],
+    ("MLB", "spreads"): ["bullpen availability", "lineups", "postseason run environment"],
+    ("MLB", "h2h"): ["bullpen availability", "lineups", "postseason run environment"],
+    ("NBA", "totals"): ["rest and back-to-backs", "late scratches", "pace changes"],
+    ("NBA", "spreads"): ["rest and back-to-backs", "late scratches", "minutes restrictions"],
+    ("NBA", "h2h"): ["rest and back-to-backs", "late scratches", "minutes restrictions"],
+}
+EXTREME_TOTAL = {"NFL": (40, 52), "NBA": (212, 245), "NHL": (5.5, 6.5), "MLB": (6.5, 10.0)}
+
+
 def steelman(market, model_number, market_number, selection, extra=None):
     """Why the market may be right. Written before the pick is taken, not after.
 
@@ -590,6 +634,11 @@ def falsifier(market, selection, line, model_number=None, player=""):
     if market == "spreads":
         return (f"The {selection} side trails by more than {abs(float(line or 0)) + 7:.0f} "
                 f"at any point, or loses the turnover margin by 2+.")
+    if market == "player_anytime_td":
+        who = player or "the player"
+        if sel == "yes":
+            return f"{who} has fewer than two touches inside the 20 by halftime."
+        return f"{who} scores."
     if market.startswith("player_"):
         who = player or "the player"
         if sel in ("over", "yes"):
@@ -698,7 +747,7 @@ _STAT_WORD = {
 
 
 def render_reasoning(*, market, player, selection, line, model_prob, fair_prob,
-                     components, opponent="", status="", n_games=None):
+                     components, opponent="", status="", n_games=None, sport="NFL"):
     """One paragraph, generated from the fields, explaining why the pick exists.
 
     This is the prose layer of the reasoning rules: it says what the model
@@ -785,16 +834,17 @@ def render_reasoning(*, market, player, selection, line, model_prob, fair_prob,
             out.append(f"The disagreement is {ratio:.2f} error bands, past the point where the model's usual error explains it.")
 
     # 3. what the market can see that the model cannot
-    blind = BLIND_SPOTS.get(market, [])
+    blind = SPORT_BLIND_SPOTS.get((sport, market)) or BLIND_SPOTS.get(market, [])
     if blind:
         out.append("The number on the other side was set by a book that can see " + ", ".join(blind[:3]) +
                    " — none of which this model ingests" + (f", and {who} is listed Questionable" if status == "Q" else "") + ".")
-    if market == "totals" and mkt is not None:
+    if market == "totals" and mkt is not None and sport in EXTREME_TOTAL:
+        lo, hi = EXTREME_TOTAL[sport]
         try:
             m = float(mkt)
-            if m >= 52:
+            if m >= hi and sel == "Over":
                 out.append("This total already sits near the top of the league's range, so the model is claiming the market under-reacted on a number it has already pushed to an extreme.")
-            elif m <= 40:
+            elif m <= lo and sel == "Under":
                 out.append("This total already sits near the bottom of the range, so the model is claiming further room in a direction the market has already taken a long way.")
         except (TypeError, ValueError):
             pass
@@ -807,6 +857,301 @@ def render_reasoning(*, market, player, selection, line, model_prob, fair_prob,
         for w in bad:
             text = text.replace(w, "notable")
     return text
+
+
+# ===================================================================== sharp side
+#
+# Jerry has no ticket or handle percentages — The Odds API doesn't sell them — so
+# "public" and "sharp" are inferred from prices, which is where they show up anyway:
+#
+#   sharp side   the side Pinnacle / LowVig / BetOnline have moved TOWARD since open,
+#                plus Steam/Sharp alerts (sharp book leading, several books following)
+#   public side  the side retail books SHADE — charge more for than Pinnacle does.
+#                Books shade the side the public loads up on; that shade is the tax.
+#
+# The house edge is real: vig plus shading. The only systematic way around it is to
+# be where sharp books are moving and retail books are discounting — which is the
+# same thing as beating the closing line. A pick on the public side with sharp money
+# moving the other way is demoted to Sit, whatever the model says.
+
+SHARP_BOOKS = ("pinnacle", "lowvig", "betonlineag")
+RETAIL_BOOKS = ("draftkings", "fanduel", "betmgm", "williamhill_us", "espnbet", "fanatics", "betrivers")
+
+
+def _imp(price):
+    try:
+        return 1.0 / float(price) if price and float(price) > 1.0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _support(market, outcome, line_from, line_to, p_from, p_to):
+    """+1 if this outcome gained support (shorter price / tougher line), -1 if it lost it, 0 if flat."""
+    if line_from is not None and line_to is not None and abs(float(line_from) - float(line_to)) > 1e-9:
+        lf, lt = float(line_from), float(line_to)
+        if outcome in ("Over", "Under") or market == "totals" or market.startswith("player_"):
+            d = 1 if lt > lf else -1          # Over gained support when the number rose
+            return d if outcome in ("Over", "Yes") else -d
+        return 1 if lt < lf else -1           # spread: -3 -> -3.5 means more support
+    a, b = _imp(p_from), _imp(p_to)
+    if a is None or b is None or abs(b - a) < 0.004:
+        return 0
+    return 1 if b > a else -1
+
+
+def sharp_signal(con, event_id, market, outcome, player=""):
+    """Where the sharp money and the public money are on this outcome.
+
+    Returns {verdict, score, pin_dir, steam_for, steam_against, shade_pp, text}.
+    verdict: 'sharp' (with the sharp side), 'against' (sharp moved the other way),
+             'public' (public side, sharp not with it), or 'neutral'.
+    """
+    player = player or ""
+    out = {"verdict": "neutral", "score": 0, "pin_dir": 0, "steam_for": 0, "steam_against": 0,
+           "shade_pp": None, "text": ""}
+    try:
+        # 1. sharp-book move since open on this outcome
+        for bk in SHARP_BOOKS:
+            o = con.execute("select line, price from opens where event_id=? and book=? and market=? and outcome=? and player=?",
+                            (event_id, bk, market, outcome, player)).fetchone()
+            n = con.execute("select line, price from last_quote where event_id=? and book=? and market=? and outcome=? and player=?",
+                            (event_id, bk, market, outcome, player)).fetchone()
+            if o and n:
+                out["pin_dir"] = _support(market, outcome, o[0], n[0], o[1], n[1])
+                out["pin_book"] = bk
+                break
+        # 2. steam / sharp alerts: for this outcome (+dir) and against it (other outcomes' +dir)
+        for o_name, d, kind in con.execute(
+                """select outcome, dir, kind from alerts where event_id=? and market=? and player=?
+                   and kind in ('Steam','Sharp')""", (event_id, market, player)):
+            same = (o_name == outcome)
+            supports = (d > 0) == same
+            w = 2 if kind == "Steam" else 1
+            if supports:
+                out["steam_for"] += w
+            else:
+                out["steam_against"] += w
+        # 3. public shade: retail implied minus sharp implied, this side vs the other side
+        rows = con.execute("""select book, outcome, line, price from last_quote where event_id=? and market=? and player=?""",
+                           (event_id, market, player)).fetchall()
+        pin = {r[1]: (r[2], r[3]) for r in rows if r[0] == out.get("pin_book", "pinnacle")}
+        if outcome in pin and len(pin) == 2:
+            other = [k for k in pin if k != outcome][0]
+            def shade(side):
+                L = pin[side][0]
+                ret = [_imp(r[3]) for r in rows if r[0] in RETAIL_BOOKS and r[1] == side
+                       and ((L is None and r[2] is None) or (L is not None and r[2] is not None and abs(float(r[2]) - float(L)) < 1e-9))]
+                ret = [x for x in ret if x]
+                return (sum(ret) / len(ret) - _imp(pin[side][1])) if ret and _imp(pin[side][1]) else None
+            s1, s2 = shade(outcome), shade(other)
+            if s1 is not None and s2 is not None:
+                out["shade_pp"] = round((s1 - s2) * 100, 2)
+    except Exception as e:                       # noqa: BLE001 - a signal failure must never block a refresh
+        out["text"] = f"sharp signal unavailable ({str(e)[:60]})"
+        return out
+
+    # 4. DraftKings splits: handle running ahead of tickets = bigger bettors on this side;
+    #    tickets running ahead of handle = lots of small bets, the public
+    out["dk_handle"] = out["dk_bets"] = None
+    try:
+        import jerry_splits as _js
+        spl = _js.splits_for(con, event_id, market, outcome) if not player else None
+        if spl:
+            out["dk_handle"], out["dk_bets"] = spl[0], spl[1]
+    except Exception:
+        pass
+    gap = (out["dk_handle"] - out["dk_bets"]) if out["dk_handle"] is not None else None
+    out["dk_gap"] = gap
+    dk_sharp = gap is not None and gap >= 10
+    dk_public = gap is not None and (gap <= -10 or (out["dk_bets"] >= 65 and gap <= 0))
+    # reverse line movement: the public is on this side and the sharp book moved away from it anyway
+    out["rlm"] = bool(out["dk_bets"] is not None and out["dk_bets"] >= 60 and out["pin_dir"] < 0)
+
+    net_steam = max(-2, min(2, out["steam_for"] - out["steam_against"]))
+    public = (out["shade_pp"] is not None and out["shade_pp"] >= 1.5) or dk_public
+    out["score"] = out["pin_dir"] + (1 if net_steam > 0 else -1 if net_steam < 0 else 0) - (1 if public else 0)
+    sharp_with = out["pin_dir"] > 0 or net_steam > 0 or dk_sharp
+    sharp_against = out["pin_dir"] < 0 or net_steam < 0
+    if sharp_against and not sharp_with:
+        out["verdict"] = "against"
+    elif public and not sharp_with:
+        out["verdict"] = "public"
+    elif sharp_with and not sharp_against:
+        out["verdict"] = "sharp"
+    bits = []
+    if out["pin_dir"]:
+        bits.append(f"{out.get('pin_book', 'pinnacle')} has moved {'toward' if out['pin_dir'] > 0 else 'away from'} it since open")
+    if out["steam_for"] or out["steam_against"]:
+        bits.append(f"sharp/steam alerts {out['steam_for']} for, {out['steam_against']} against")
+    if out["shade_pp"] is not None:
+        if out["shade_pp"] >= 1.5:
+            bits.append(f"retail books shade it {out['shade_pp']:.1f}pp — this is the public side")
+        elif out["shade_pp"] <= -1.5:
+            bits.append(f"retail books discount it {abs(out['shade_pp']):.1f}pp — the public is on the other side")
+    if out["dk_handle"] is not None:
+        bits.append(f"DraftKings {out['dk_bets']:.0f}% of bets / {out['dk_handle']:.0f}% of money")
+    if out["rlm"]:
+        bits.append("reverse line movement — the public is on it and the sharp book moved away")
+    out["text"] = "; ".join(bits) if bits else "no sharp or public signal yet"
+    out["label"] = flag_label(out)
+    return out
+
+
+def flag_label(sig):
+    """Short label for display. Always shown; never used to remove a pick."""
+    if not sig:
+        return "NO READ"
+    tags = []
+    if sig.get("rlm"):
+        tags.append("RLM FADE")
+    v = sig.get("verdict")
+    if v == "sharp":
+        tags.append("SHARP")
+    elif v == "against":
+        tags.append("AGAINST SHARP")
+    elif v == "public":
+        tags.append("PUBLIC")
+    if v != "public" and ((sig.get("shade_pp") or 0) >= 1.5 or (sig.get("dk_gap") is not None and sig["dk_gap"] <= -10)):
+        tags.append("PUBLIC")
+    if (sig.get("dk_gap") or 0) >= 10 and "SHARP" not in tags:
+        tags.append("BIG MONEY")
+    return " · ".join(dict.fromkeys(tags)) or "NEUTRAL"
+
+
+def _selection_from_call(call):
+    """'Lean Dallas Cowboys' -> 'Dallas Cowboys'; 'Lean Over 3.5' -> 'Over'; 'Sit' -> None."""
+    if not call or call.startswith("Sit") or call.startswith("see "):
+        return None
+    words = call.split()
+    if words and words[0] in ("Lean", "Play"):
+        words = words[1:]
+    if not words:
+        return None
+    if words[0] in ("Over", "Under", "Yes", "No"):
+        return words[0]
+    try:
+        float(words[-1]); words = words[:-1]
+    except ValueError:
+        pass
+    return " ".join(words) or None
+
+
+def sharp_gate(con, event_id, market, call, player="", reasoning=""):
+    """Label every pick with where the sharp and public money is. Returns (call, reasoning, signal).
+
+    This used to demote picks to Sit when they were on the public side or against
+    sharp movement. It no longer removes anything: the call stands, and the flag
+    (SHARP / PUBLIC / AGAINST SHARP / RLM FADE / BIG MONEY / NEUTRAL) travels with
+    it, so every pick shows which side of the money it is on. The flags are logged
+    on paper bets so their value is measured, not assumed.
+    """
+    sel = _selection_from_call(call)
+    if not sel:
+        return call, reasoning, None
+    sig = sharp_signal(con, event_id, market, sel, player)
+    lab = sig.get("label", "NEUTRAL")
+    tags = set(lab.split(" · "))                 # exact tags: 'SHARP' must not match 'AGAINST SHARP'
+    note = {"AGAINST SHARP": " Caution: sharp money has moved the other way.",
+            "PUBLIC": " Caution: this is the public side.",
+            "SHARP": " Sharp money agrees.",
+            "BIG MONEY": " Bigger bettors are on this side at DraftKings."}
+    extra = "".join(v for k, v in note.items() if k in tags)
+    if "RLM FADE" in tags:
+        extra += " Reverse line movement against this side — the classic fade signal."
+    return call, (reasoning or "") + f" Market read [{lab}]: {sig['text']}.{extra}", sig
+
+
+# ================================================================ Jerry's numbers
+
+# Each model's own error band for margin and total, in that sport's units. Priors
+# until measured by grade_spins().
+SPORT_MAE = {("NFL", "margin"): 9.5, ("NFL", "total"): 9.1, ("NBA", "margin"): 10.0, ("NBA", "total"): 14.0,
+             ("NHL", "margin"): 1.8, ("NHL", "total"): 1.9, ("MLB", "margin"): 3.2, ("MLB", "total"): 3.3}
+EXPLOIT_RATIO = 0.75
+
+
+def _ensure_numbers(con):
+    con.execute("""create table if not exists jerry_numbers(event_id text primary key, sport text, home text, away text,
+                   commence text, home_pts real, away_pts real, margin real, total real, p_home real,
+                   mkt_margin real, mkt_total real, mkt_p_home real, checks text, detail text, ts text)""")
+    con.execute("""create table if not exists final_scores(event_id text primary key, sport text, home_score real,
+                   away_score real, ts text)""")
+
+
+def record_numbers(con, *, event_id, sport, home, away, commence, margin, total, p_home=None,
+                   mkt_margin=None, mkt_total=None, mkt_p_home=None, checks=None, detail=""):
+    """Store Jerry's own projection for a game — every game, not only the ones with an edge."""
+    _ensure_numbers(con)
+    if margin is None or total is None:
+        return
+    hp, ap = (float(total) + float(margin)) / 2.0, (float(total) - float(margin)) / 2.0
+    from datetime import datetime, timezone
+    con.execute("""insert or replace into jerry_numbers values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (event_id, sport, home, away, str(commence), round(hp, 2), round(ap, 2), round(float(margin), 3),
+                 round(float(total), 3), None if p_home is None else round(float(p_home), 4),
+                 None if mkt_margin is None else float(mkt_margin), None if mkt_total is None else float(mkt_total),
+                 None if mkt_p_home is None else round(float(mkt_p_home), 4),
+                 json.dumps(checks or {}), detail[:400], datetime.now(timezone.utc).isoformat(timespec="seconds")))
+
+
+def spin(con, row):
+    """Jerry's spin for one game: his own score next to the market's, the gap, and
+    whether the gap is an exploit candidate (large, blind spots clear, sharp side not against)."""
+    sp = row["sport"]
+    mm, mt = row["mkt_margin"], row["mkt_total"]
+    out = {"sport": sp, "home": row["home"], "away": row["away"], "commence": row["commence"],
+           "jerry": (row["home_pts"], row["away_pts"]), "market": None, "gap_margin": None, "gap_total": None,
+           "r_margin": None, "r_total": None, "exploit": None, "why": ""}
+    if mm is not None and mt is not None:
+        out["market"] = ((mt + mm) / 2.0, (mt - mm) / 2.0)
+    if mm is not None:
+        out["gap_margin"] = row["margin"] - mm
+        out["r_margin"] = abs(out["gap_margin"]) / SPORT_MAE[(sp, "margin")]
+    if mt is not None:
+        out["gap_total"] = row["total"] - mt
+        out["r_total"] = abs(out["gap_total"]) / SPORT_MAE[(sp, "total")]
+    checks = json.loads(row["checks"] or "{}")
+    blocked = [k for k, ok in checks.items() if ok is False]
+    cand = []
+    if (out["r_margin"] or 0) >= EXPLOIT_RATIO:
+        side = row["home"] if out["gap_margin"] > 0 else row["away"]
+        cand.append(("spreads", side, out["r_margin"]))
+    if (out["r_total"] or 0) >= EXPLOIT_RATIO:
+        cand.append(("totals", "Over" if out["gap_total"] > 0 else "Under", out["r_total"]))
+    if not cand:
+        out["why"] = "no gap large enough to be a mispricing"
+        return out
+    mkt, side, r = max(cand, key=lambda c: c[2])
+    sig = sharp_signal(con, row["event_id"], mkt, side)
+    lab = sig.get("label", "NEUTRAL")
+    warn = f" — WARNING blind-spot checks failed ({', '.join(blocked)}), the gap may be missing information" if blocked else ""
+    out["exploit"] = {"market": mkt, "side": side, "ratio": round(r, 2), "flag": lab, "checks_clear": not blocked}
+    out["why"] = f"EXPLOIT CANDIDATE [{lab}]: {side} {mkt}, {r:.2f} error bands; {sig['text']}{warn}"
+    return out
+
+
+def grade_spins(con):
+    """Jerry's spin error vs the market's, per sport, on completed games."""
+    _ensure_numbers(con)
+    rows = con.execute("""select n.sport, n.margin, n.total, n.mkt_margin, n.mkt_total, f.home_score, f.away_score
+                          from jerry_numbers n join final_scores f using(event_id)""").fetchall()
+    agg = {}
+    for sp, m, t, mm, mt, hs, as_ in rows:
+        a = agg.setdefault(sp, {"n": 0, "jm": 0.0, "mm": 0.0, "jt": 0.0, "mt": 0.0, "nm": 0, "nt": 0})
+        a["n"] += 1
+        am, at = hs - as_, hs + as_
+        if mm is not None:
+            a["jm"] += abs(m - am); a["mm"] += abs(mm - am); a["nm"] += 1
+        if mt is not None:
+            a["jt"] += abs(t - at); a["mt"] += abs(mt - at); a["nt"] += 1
+    out = {}
+    for sp, a in agg.items():
+        out[sp] = {"games": a["n"],
+                   "margin_mae_jerry": round(a["jm"] / a["nm"], 2) if a["nm"] else None,
+                   "margin_mae_market": round(a["mm"] / a["nm"], 2) if a["nm"] else None,
+                   "total_mae_jerry": round(a["jt"] / a["nt"], 2) if a["nt"] else None,
+                   "total_mae_market": round(a["mt"] / a["nt"], 2) if a["nt"] else None}
+    return out
 '''
 
 _GRADE_SRC = r'''"""
@@ -1499,6 +1844,264 @@ def run(con, now, sports=("NBA", "NHL"), days_back=2):
     return rep
 '''
 
+_SPLITS_SRC = r'''"""
+jerry_splits.py — free DraftKings betting splits (bets % and handle %) for KRONOS.
+
+DraftKings Network publishes splits for free in two places:
+  1. the live splits table — the page HTML is a shell; the numbers load from a
+     data feed the browser calls. The feed URL isn't documented, so this module
+     DISCOVERS it: it scans the page and its scripts for candidate endpoints, tries
+     them, and records what it found in meta 'splits_discovery' so the parser can
+     be pinned down from the feed summary.
+  2. per-game "betting splits" articles — plain HTML tables (Market | Side |
+     Handle % | Bets %). Fully parsed here. They are snapshots, not live.
+
+DraftKings is the most recreational book in the US, which is the point: these
+numbers are the cleanest available read on where the public is.
+"""
+from __future__ import annotations
+
+import html as _html
+import json
+import re
+import urllib.request
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
+DKN = "https://dknetwork.draftkings.com"
+UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0 Safari/537.36", "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"}
+
+MARKET_MAP = {"moneyline": "h2h", "money line": "h2h", "run line": "spreads", "puck line": "spreads",
+              "spread": "spreads", "point spread": "spreads", "total": "totals", "game total": "totals"}
+
+MULTIWORD = ("red sox", "white sox", "blue jays", "maple leafs", "red wings", "golden knights",
+             "trail blazers", "blue jackets", "st louis")
+
+
+def _get(url, timeout=25):
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def _ensure(con):
+    con.execute("""create table if not exists splits(event_id text, market text, outcome text, line real,
+                   source text, handle_pct real, bets_pct real, ts text, url text,
+                   primary key(event_id, market, outcome, source))""")
+
+
+def _meta(con, k, v):
+    try:
+        con.execute("insert or replace into meta(k,v) values(?,?)", (k, str(v)[:600]))
+    except Exception:
+        pass
+
+
+def _nick(team):
+    t = re.sub(r"[^a-z ]", "", str(team).lower()).strip()
+    for m in MULTIWORD:
+        if t.endswith(m):
+            return m
+    return t.split()[-1] if t.split() else t
+
+
+# --------------------------------------------------------------- article tables
+
+def parse_article(content_html):
+    """Return [(market, side_text, handle_pct, bets_pct)] from a DK Network splits article."""
+    h = content_html
+    i = h.lower().find("betting splits</h2>")
+    if i < 0:
+        i = h.lower().find("draftkings betting splits")
+    if i < 0:
+        return []
+    seg = h[i:i + 6000]
+    end = seg.lower().find("</table>")
+    seg = seg[:end] if end > 0 else seg
+    out = []
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", seg, flags=re.S | re.I):
+        cells = [_html.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+                 for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", tr, flags=re.S | re.I)]
+        if len(cells) < 4 or not cells[2].endswith("%"):
+            continue
+        try:
+            out.append((cells[0], cells[1], float(cells[2].rstrip("%")), float(cells[3].rstrip("%"))))
+        except ValueError:
+            continue
+    return out
+
+
+def _title_teams(title):
+    t = _html.unescape(re.sub(r"<[^>]+>", "", title))
+    t = re.sub(r"^\s*(?:first|final|early|late)?\s*look\s+at\s+", "", t, flags=re.I)   # "First Look at X vs. Y"
+    t = re.split(r"\s+Betting Splits", t, flags=re.I)[0]
+    for sep in (r"\s+vs\.?\s+", r"\s+@\s+", r"\s+at\s+"):          # 'vs.' first: 'at' also appears in prose
+        parts = re.split(sep, t, maxsplit=1, flags=re.I)
+        if len(parts) == 2:
+            return parts[0].strip(), parts[1].strip()
+    return None, None
+
+
+def _match_event(con, a, b, now):
+    if not a or not b:
+        return None
+    na, nb = _nick(a), _nick(b)
+    lo, hi = (now - timedelta(hours=4)).isoformat(timespec="seconds"), (now + timedelta(hours=40)).isoformat(timespec="seconds")
+    for eid, home, away in con.execute("select event_id, home, away from events where commence>? and commence<?", (lo, hi)):
+        hn, an = _nick(home), _nick(away)
+        if {na, nb} == {hn, an}:
+            return eid, home, away
+    return None
+
+
+def _side_to_outcome(side, home, away):
+    """'MIL Brewers -1.5' -> ('Milwaukee Brewers', -1.5); 'Over 8' -> ('Over', 8.0)."""
+    s = side.strip()
+    m = re.match(r"^(Over|Under)\s+([\d.]+)", s, flags=re.I)
+    if m:
+        return m.group(1).title(), float(m.group(2))
+    line = None
+    mm = re.search(r"([+-]\d+(?:\.\d+)?)\s*$", s)
+    if mm:
+        line = float(mm.group(1)); s = s[:mm.start()].strip()
+    sn = _nick(s)
+    for team in (home, away):
+        if _nick(team) == sn or sn in team.lower():
+            return team, line
+    return None, line
+
+
+def from_articles(con, now, limit=60):
+    """Pull recent DK Network splits articles via the WordPress REST API, falling back
+    to the category listing if REST is closed. Returns number of rows stored."""
+    after = (now - timedelta(hours=30)).strftime("%Y-%m-%dT%H:%M:%S")
+    posts = []
+    try:
+        raw = _get(f"{DKN}/wp-json/wp/v2/posts?search=betting%20splits&per_page={min(limit, 100)}"
+                   f"&after={after}&_fields=title,link,content,modified")
+        posts = [(p["title"]["rendered"], p["link"], p["content"]["rendered"], p.get("modified", "")) for p in json.loads(raw)]
+        _meta(con, "splits_articles_source", f"{now.isoformat(timespec='seconds')} wp-json {len(posts)} posts")
+    except Exception as e:                       # noqa: BLE001
+        _meta(con, "splits_articles_source", f"{now.isoformat(timespec='seconds')} wp-json failed: {str(e)[:120]}")
+        try:
+            listing = _get(f"{DKN}/category/draftkings-sportsbook-insights/")
+            links = sorted(set(re.findall(r'href="(https://dknetwork\.draftkings\.com/\d{4}/\d{2}/\d{2}/[^"]*betting-splits[^"]*)"', listing)))[:limit]
+            for u in links:
+                try:
+                    page = _get(u)
+                    t = re.search(r"<title>(.*?)</title>", page, flags=re.S)
+                    posts.append((t.group(1) if t else "", u, page, ""))
+                except Exception:
+                    continue
+            _meta(con, "splits_articles_source", f"{now.isoformat(timespec='seconds')} category fallback {len(posts)} pages")
+        except Exception as e2:                  # noqa: BLE001
+            _meta(con, "splits_articles_source", f"{now.isoformat(timespec='seconds')} category failed too: {str(e2)[:120]}")
+            return 0
+    n = 0
+    for title, link, content, modified in posts:
+        a, b = _title_teams(title)
+        ev = _match_event(con, a, b, now)
+        if not ev:
+            continue
+        eid, home, away = ev
+        for mkt_txt, side, handle, bets in parse_article(content):
+            market = MARKET_MAP.get(mkt_txt.strip().lower())
+            if not market:
+                continue
+            outcome, line = _side_to_outcome(side, home, away)
+            if not outcome:
+                continue
+            con.execute("insert or replace into splits values(?,?,?,?,?,?,?,?,?)",
+                        (eid, market, outcome, line, "dk_article", handle, bets, modified or now.isoformat(timespec="seconds"), link))
+            n += 1
+    return n
+
+
+# ------------------------------------------------------------- live-table feed
+
+def discover_live_feed(con, now):
+    """Find the data feed behind the live splits table. Records candidates and a
+    sample of whatever JSON comes back, so the exact parser can be written from the
+    feed summary. Returns the working URL or None. Parsing is generic until then."""
+    found = []
+    try:
+        page = _get(f"{DKN}/draftkings-sportsbook-betting-splits/")
+    except Exception as e:                       # noqa: BLE001
+        _meta(con, "splits_discovery", f"{now.isoformat(timespec='seconds')} page fetch failed: {str(e)[:150]}")
+        return None
+    cands = set(re.findall(r'["\'](https?://[^"\']*(?:split|betting-splits|bettingsplits)[^"\']*)["\']', page, flags=re.I))
+    cands |= {DKN + u for u in re.findall(r'["\'](/wp-json/[^"\']+)["\']', page)}
+    for s in re.findall(r'<script[^>]+src="([^"]+)"', page)[:25]:
+        if "split" in s.lower() or "dkn" in s.lower():
+            try:
+                js = _get(s if s.startswith("http") else DKN + s)
+                cands |= set(re.findall(r'["\'](https?://[^"\']+)["\']', js)) if "split" in js.lower() else set()
+                cands |= {DKN + u for u in re.findall(r'["\'](/wp-json/[^"\']*split[^"\']*)["\']', js, flags=re.I)}
+            except Exception:
+                continue
+    cands = [c for c in cands if not c.endswith((".css", ".png", ".jpg", ".svg", ".webp", ".woff2"))][:20]
+    working = None
+    for c in cands:
+        try:
+            body = _get(c)
+            data = json.loads(body)
+            keys = _sample_keys(data)
+            found.append(f"{c} -> json keys {keys[:12]}")
+            if any("handle" in k.lower() for k in keys) and any("bet" in k.lower() for k in keys):
+                working = c
+                break
+        except Exception as e:                   # noqa: BLE001
+            found.append(f"{c} -> {type(e).__name__}")
+    _meta(con, "splits_discovery", f"{now.isoformat(timespec='seconds')} candidates={len(cands)} working={working} | " + " || ".join(found[:6]))
+    if working:
+        _meta(con, "splits_feed_url", working)
+    return working
+
+
+def _sample_keys(obj, depth=0, out=None):
+    out = [] if out is None else out
+    if depth > 5 or len(out) > 60:
+        return out
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k not in out:
+                out.append(k)
+            _sample_keys(v, depth + 1, out)
+    elif isinstance(obj, list):
+        for v in obj[:3]:
+            _sample_keys(v, depth + 1, out)
+    return out
+
+
+def run(con, now=None):
+    """One refresh: try the live feed (discovery only for now), then the articles."""
+    now = now or datetime.now(UTC)
+    _ensure(con)
+    rep = {}
+    try:
+        rep["live_feed"] = discover_live_feed(con, now) or "not found yet"
+    except Exception as e:                       # noqa: BLE001
+        rep["live_feed"] = f"error {str(e)[:80]}"
+    try:
+        rep["article_rows"] = from_articles(con, now)
+    except Exception as e:                       # noqa: BLE001
+        rep["article_rows"] = f"error {str(e)[:80]}"
+    con.commit()
+    return rep
+
+
+def splits_for(con, event_id, market, outcome):
+    """(handle_pct, bets_pct, source) for an outcome, or None."""
+    try:
+        _ensure(con)
+        r = con.execute("""select handle_pct, bets_pct, source from splits where event_id=? and market=? and outcome=?
+                           order by ts desc limit 1""", (event_id, market, outcome)).fetchone()
+        return (r[0], r[1], r[2]) if r else None
+    except Exception:
+        return None
+'''
+
 _NBA_SRC = r'''"""
 jerry_nba.py — a first NBA model.
 
@@ -1618,6 +2221,16 @@ def refresh(db_path, now=None):
                 continue
             gated = min(p["games_h"], p["games_a"]) < MIN_GAMES
             rows = []
+            try:
+                _sl = q.get("spreads", {}).get(ev["home"], (None, None))[0]
+                _tl = q.get("totals", {}).get("Over", (None, None))[0]
+                jr.record_numbers(con, event_id=ev["event_id"], sport="NBA", home=ev["home"], away=ev["away"], commence=ev["commence"],
+                                  margin=p["margin"], total=p["total"], p_home=_ncdf(p["margin"] / MARGIN_SD),
+                                  mkt_margin=None if _sl is None else -float(_sl), mkt_total=None if _tl is None else float(_tl),
+                                  checks={"enough_games": not gated},
+                                  detail=f"ridge ratings; games {p['games_h']}/{p['games_a']}")
+            except Exception:
+                pass
             # ---- spread
             sp = q.get("spreads", {})
             if ev["home"] in sp and ev["away"] in sp:
@@ -1633,7 +2246,7 @@ def refresh(db_path, now=None):
                         "games_h": p["games_h"], "games_a": p["games_a"], "raw_prob": round(p_home, 4)}
                 why = jr.render_reasoning(market="spreads", player="", selection=side, line=hl if e > 0 else al,
                                           model_prob=p_home if e > 0 else 1 - p_home, fair_prob=fair[0] if e > 0 else fair[1],
-                                          components=comp, opponent="", status="", n_games=None)
+                                          components=comp, opponent="", status="", n_games=None, sport="NBA")
                 if gated:
                     why += (f" Gated: only {min(p['games_h'], p['games_a'])} games on record for the thinner team; "
                             f"the model does not make calls below {MIN_GAMES}.")
@@ -1657,7 +2270,7 @@ def refresh(db_path, now=None):
                         "games_h": p["games_h"], "games_a": p["games_a"]}
                 why = jr.render_reasoning(market="totals", player="", selection=side, line=ol,
                                           model_prob=p_under if e > 0 else 1 - p_under, fair_prob=fair[0] if e > 0 else fair[1],
-                                          components=comp, opponent="", status="", n_games=None)
+                                          components=comp, opponent="", status="", n_games=None, sport="NBA")
                 if gated:
                     why += f" Gated below {MIN_GAMES} games per team."
                 why += " NBA model has no backtest and no graded history."
@@ -1679,8 +2292,23 @@ def refresh(db_path, now=None):
                 rows.append((ev["event_id"], "h2h", ev["home"], "", None, p_home, fair[0], e, call,
                              f"NBA ratings margin {p['margin']:+.1f}", now.isoformat(timespec="seconds"), why))
                 rows.append((ev["event_id"], "h2h", ev["away"], "", None, 1 - p_home, fair[1], -e, "see home row", "", now.isoformat(timespec="seconds"), None))
-            con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning)
-                               values(?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
+            gated_rows = []
+            for r_ in rows:
+                r_ = list(r_) + [None]
+                if r_[8].startswith(("Lean", "Play")):
+                    try:
+                        r_[8], r_[11], _sg = jr.sharp_gate(con, r_[0], r_[1], r_[8], "", r_[11] or "")
+                        r_[12] = _sg.get("label") if _sg else None
+                    except Exception:
+                        pass
+                gated_rows.append(tuple(r_))
+            try:
+                if "flag" not in {c[1] for c in con.execute("pragma table_info(model_probs)")}:
+                    con.execute("alter table model_probs add column flag text")
+            except Exception:
+                pass
+            con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
+                               values(?,?,?,?,?,?,?,?,?,?,?,?,?)""", gated_rows)
             n += len(rows)
         con.commit()
         return n
@@ -1693,7 +2321,8 @@ try:
     jerry_grade = _register("jerry_grade", _GRADE_SRC)
     jerry_feeds = _register("jerry_feeds", _FEEDS_SRC)
     jerry_nba = _register("jerry_nba", _NBA_SRC)
-    print("[boot] reasoning + grading + feeds + nba modules registered", flush=True)
+    jerry_splits = _register("jerry_splits", _SPLITS_SRC)
+    print("[boot] KRONOS: reasoning + grading + feeds + nba + splits modules registered", flush=True)
 except Exception:
     traceback.print_exc()
     print("[boot] WARNING reasoning/grading modules failed to load", flush=True)
@@ -1816,7 +2445,18 @@ except Exception:
 
 _orig_refresh_all = L.refresh_all if L else None
 def refresh_all(db_path, sports=None):
+    _spl = None
+    try:
+        import jerry_splits as _js
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        try:
+            _spl = _js.run(_c)
+        finally:
+            _c.close()
+    except Exception as e:   # noqa: BLE001 - splits must never block a refresh
+        _spl = f"error: {e}"
     res = _orig_refresh_all(db_path) if sports is None else _orig_refresh_all(db_path, sports=tuple(s for s in sports if s != "MLB"))
+    res["SPLITS"] = _spl
     if sports is None or "MLB" in sports:
         try:
             res["MLB"] = refresh_mlb(db_path)
@@ -1875,7 +2515,7 @@ def _summary_text():
     page = requests.get(f"http://127.0.0.1:{port}/", timeout=30).text
     for block in re.findall(r"<pre[^>]*>(.*?)</pre>", page, flags=re.S):
         txt = _html.unescape(re.sub(r"<[^>]+>", "", block))
-        if "JERRY DESK SUMMARY" in txt:
+        if "KRONOS DESK SUMMARY" in txt or "JERRY DESK SUMMARY" in txt:
             return txt
     raise RuntimeError("summary block not found on desk page")
 
