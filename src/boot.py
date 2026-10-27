@@ -220,14 +220,16 @@ def refresh_mlb(db_path):
                 else:
                     call = "see other row"
                 note = base + (f"; total {mu_h+mu_a:.1f} vs {line}" if market == "totals" else "")
-                flag = None
+                flag = plain = None
                 if _jr and call.startswith(("Lean", "Play")):
                     try:
                         call, reasoning, _sg = _jr.sharp_gate(con, eid, market, call, "", reasoning or "")
                         flag = _sg.get("label") if _sg else None
+                        call, plain = _jr.finalize_call(con, eid, market, call, "", float(mp), float(fair),
+                                                        None if line is None else float(line), o)
                     except Exception:
                         pass
-                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat(), reasoning, flag))
+                rows.append((eid, market, o, "", None if line is None else float(line), float(mp), float(fair), float(edge), call, note, now.isoformat(), reasoning, flag, plain))
         # name the columns: the desk now carries a 12th column (reasoning) and a positional insert would fail
         try:
             cols = {r[1] for r in con.execute("pragma table_info(model_probs)")}
@@ -235,10 +237,12 @@ def refresh_mlb(db_path):
                 con.execute("alter table model_probs add column reasoning text")
             if "flag" not in cols:
                 con.execute("alter table model_probs add column flag text")
+            if "plain" not in cols:
+                con.execute("alter table model_probs add column plain text")
         except sqlite3.Error:
             pass
-        con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
-                           values(?,?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
+        con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag,plain)
+                           values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", rows)
         con.commit(); n += len(rows)
     con.close()
     return n
@@ -270,6 +274,7 @@ from __future__ import annotations
 import json
 import math
 import sqlite3
+from datetime import datetime, timezone
 from collections import defaultdict
 
 SQRT_2PI = math.sqrt(2 * math.pi)
@@ -371,7 +376,9 @@ def clv_pp(bet_line, bet_price, close_line, close_price, market, selection,
     """
     if not bet_price or bet_price <= 1.0:
         return None
-    p_bet = strip_single_side_vig(bet_price)
+    # The price you actually got is the price you pay: no vig to strip from your own ticket.
+    # (Stripping 2.2% here inflated every CLV by ~1.0-1.2pp; fixed 2026-10-26.)
+    p_bet = 1.0 / float(bet_price)
     p_close = close_fair if close_fair is not None else strip_single_side_vig(close_price)
     if p_bet is None or p_close is None:
         return None
@@ -518,7 +525,7 @@ def correlation_group(sport, event_id, market, selection, player=""):
     return f"{sport}:{event_id}:{market}"
 
 
-MAX_UNITS_PER_GAME = 1.5
+MAX_UNITS_PER_GAME = 0.5   # per-game exposure cap (2026-10-26; was 1.5)
 CORRELATION_HAIRCUT = 0.6     # applied to every leg after the first in a group
 
 
@@ -908,7 +915,7 @@ def sharp_signal(con, event_id, market, outcome, player=""):
     """
     player = player or ""
     out = {"verdict": "neutral", "score": 0, "pin_dir": 0, "steam_for": 0, "steam_against": 0,
-           "shade_pp": None, "text": ""}
+           "shade_pp": None, "text": "", "is_prop": bool(player)}
     try:
         # 1. sharp-book move since open on this outcome
         for bk in SHARP_BOOKS:
@@ -918,19 +925,44 @@ def sharp_signal(con, event_id, market, outcome, player=""):
                             (event_id, bk, market, outcome, player)).fetchone()
             if o and n:
                 out["pin_dir"] = _support(market, outcome, o[0], n[0], o[1], n[1])
+                # props: Pinnacle's prop limits are low, so only a move of 1.5pp+ (or a line
+                # change) counts. 2026-10-26: Jaren Jackson Jr. was SHARP on a sub-1pp move and
+                # scored 6 in limited minutes.
+                if player and out["pin_dir"] and (o[0] == n[0] or o[0] is None):
+                    a_, b_ = _imp(o[1]), _imp(n[1])
+                    if a_ is not None and b_ is not None and abs(b_ - a_) < 0.015:
+                        out["pin_dir"] = 0
                 out["pin_book"] = bk
                 break
         # 2. steam / sharp alerts: for this outcome (+dir) and against it (other outcomes' +dir)
-        for o_name, d, kind in con.execute(
-                """select outcome, dir, kind from alerts where event_id=? and market=? and player=?
-                   and kind in ('Steam','Sharp')""", (event_id, market, player)):
+        # Time-decayed (half-life 6h) and de-duplicated: one market move logs an alert on BOTH
+        # sides, and DAL@PHI had 255 raw "Steam" rows. Count each (book, 15-min bucket) once,
+        # weight by recency, so an opener move days ago no longer outvotes the last 90 minutes.
+        _now = datetime.now(timezone.utc)
+        _seen = set()
+        _for = _against = 0.0
+        for o_name, d, kind, ts, book in con.execute(
+                """select outcome, dir, kind, ts, book from alerts where event_id=? and market=? and player=?
+                   and kind in ('Steam','Sharp') order by ts desc limit 400""", (event_id, market, player)):
             same = (o_name == outcome)
             supports = (d > 0) == same
-            w = 2 if kind == "Steam" else 1
+            try:
+                _t = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+                if _t.tzinfo is None:
+                    _t = _t.replace(tzinfo=timezone.utc)
+                age_h = max(0.0, (_now - _t).total_seconds() / 3600)
+            except Exception:
+                age_h = 24.0
+            key = (book, supports, str(ts)[:15])          # book + direction + 10-min-ish bucket
+            if key in _seen:
+                continue
+            _seen.add(key)
+            w = (2 if kind == "Steam" else 1) * 0.5 ** (age_h / 6.0)
             if supports:
-                out["steam_for"] += w
+                _for += w
             else:
-                out["steam_against"] += w
+                _against += w
+        out["steam_for"], out["steam_against"] = round(_for, 1), round(_against, 1)
         # 3. public shade: retail implied minus sharp implied, this side vs the other side
         rows = con.execute("""select book, outcome, line, price from last_quote where event_id=? and market=? and player=?""",
                            (event_id, market, player)).fetchall()
@@ -967,7 +999,8 @@ def sharp_signal(con, event_id, market, outcome, player=""):
     # reverse line movement: the public is on this side and the sharp book moved away from it anyway
     out["rlm"] = bool(out["dk_bets"] is not None and out["dk_bets"] >= 60 and out["pin_dir"] < 0)
 
-    net_steam = max(-2, min(2, out["steam_for"] - out["steam_against"]))
+    _net = out["steam_for"] - out["steam_against"]
+    net_steam = 0 if abs(_net) < 1.0 else max(-2, min(2, _net))   # under one fresh alert of net weight = noise
     public = (out["shade_pp"] is not None and out["shade_pp"] >= 1.5) or dk_public
     out["score"] = out["pin_dir"] + (1 if net_steam > 0 else -1 if net_steam < 0 else 0) - (1 if public else 0)
     sharp_with = out["pin_dir"] > 0 or net_steam > 0 or dk_sharp
@@ -1015,7 +1048,76 @@ def flag_label(sig):
         tags.append("PUBLIC")
     if (sig.get("dk_gap") or 0) >= 10 and "SHARP" not in tags:
         tags.append("BIG MONEY")
+    # retail discounting this side = retail needs action here = the public is on the other side.
+    # That IS the fade-the-public side; it used to fall through to NEUTRAL (2026-10-26).
+    if (sig.get("shade_pp") is not None and sig["shade_pp"] <= -1.5) and v != "against":
+        tags.append("FADE PUBLIC")
+    if sig.get("is_prop") and any(t in tags for t in ("SHARP", "AGAINST SHARP", "RLM FADE")):
+        tags.append("THIN MARKET")      # a prop money read is worth less than a game-line one
     return " · ".join(dict.fromkeys(tags)) or "NEUTRAL"
+
+
+BET_BOOKS = ("draftkings", "fanduel", "fanatics")   # the books KRONOS picks must be placeable at
+_MKT_WORD = {"player_pass_yds": "passing yards", "player_rush_yds": "rushing yards", "player_reception_yds": "receiving yards",
+             "player_receptions": "receptions", "player_pass_tds": "passing TDs", "player_points": "points",
+             "player_rebounds": "rebounds", "player_assists": "assists", "player_threes": "threes",
+             "player_shots_on_goal": "shots on goal", "player_goals": "goals", "player_anytime_td": "anytime TD"}
+
+
+def plain_pick(market, selection, player, line, tag, model_prob=None, fair_prob=None):
+    """The pick in words a bettor can place: 'Lean: George Pickens Over 64.5 receiving yards'."""
+    word = _MKT_WORD.get(market, market.replace("player_", "").replace("_", " "))
+    pct = (f" — KRONOS {model_prob:.0%} vs market {fair_prob:.0%}"
+           if model_prob is not None and fair_prob is not None else "")
+    ln = "" if line is None else f" {float(line):+g}" if market == "spreads" else f" {float(line):g}"
+    if market == "player_anytime_td":
+        return f"{tag}: {player} to score a TD{pct}"
+    if player:
+        return f"{tag}: {player} {selection}{ln} {word}{pct}"
+    if market == "totals":
+        return f"{tag}: {selection}{ln} total points{pct}"
+    if market == "spreads":
+        return f"{tag}: {selection}{ln}{pct}"
+    if market == "h2h":
+        return f"{tag}: {selection} to win{pct}"
+    return f"{tag}: {selection}{ln}{pct}"
+
+
+def bettable(con, event_id, market, selection, player=""):
+    """True if that exact side has a price at one of BET_BOOKS right now."""
+    try:
+        q = f"""select 1 from last_quote where event_id=? and market=? and outcome=? and player=?
+                and book in ({','.join('?' * len(BET_BOOKS))}) limit 1"""
+        return con.execute(q, (event_id, market, selection, player or "", *BET_BOOKS)).fetchone() is not None
+    except Exception:
+        return True          # never let a lookup failure hide a pick
+
+
+def finalize_call(con, event_id, market, call, player="", model_prob=None, fair_prob=None, line=None, outcome=None):
+    """Turn a model call into something you can actually bet, plus a plain-English line.
+
+    - Anytime TD 'No' is never a pick: books like DraftKings and FanDuel don't offer it.
+      It becomes 'AVOID Yes' — information (don't parlay him), not a bet.
+    - Any other pick whose exact side has no price at DraftKings, FanDuel or Fanatics is
+      demoted to 'Sit (not offered at your books)'.
+    model_prob / fair_prob are for the row's `outcome`; they're flipped when the pick is the other side.
+    Returns (call, plain).
+    """
+    if not call or not str(call).startswith(("Lean", "Play")):
+        return call, None
+    sel = _selection_from_call(call)
+    tag = str(call).split()[0]
+    mp, fp = model_prob, fair_prob
+    if outcome is not None and sel is not None and sel != outcome and mp is not None and fp is not None:
+        mp, fp = 1 - mp, 1 - fp
+    if market == "player_anytime_td" and sel == "No":
+        yes_m = None if model_prob is None else (model_prob if outcome == "Yes" else 1 - model_prob)
+        yes_f = None if fair_prob is None else (fair_prob if outcome == "Yes" else 1 - fair_prob)
+        pct = f" — market {yes_f:.0%}, KRONOS {yes_m:.0%}" if yes_m is not None and yes_f is not None else ""
+        return "AVOID Yes", f"Avoid: {player} to score a TD{pct}. Overpriced to score — not a bet; keep him out of parlays."
+    if sel and not bettable(con, event_id, market, sel, player):
+        return "Sit (not offered at your books)", plain_pick(market, sel, player, line, "Not offered", mp, fp)
+    return call, plain_pick(market, sel, player, line, tag, mp, fp)
 
 
 def _selection_from_call(call):
@@ -1122,9 +1224,15 @@ def spin(con, row):
         out["why"] = "no gap large enough to be a mispricing"
         return out
     mkt, side, r = max(cand, key=lambda c: c[2])
+    if blocked:
+        # A failed blind-spot check means the gap is most likely missing information,
+        # not a mispricing: report it as a gap, never as an EXPLOIT (2026-10-26).
+        out["why"] = (f"gap {side} {mkt} {r:.2f} error bands — NOT an exploit: blind-spot checks failed "
+                      f"({', '.join(blocked)}), the gap is probably missing information")
+        return out
     sig = sharp_signal(con, row["event_id"], mkt, side)
     lab = sig.get("label", "NEUTRAL")
-    warn = f" — WARNING blind-spot checks failed ({', '.join(blocked)}), the gap may be missing information" if blocked else ""
+    warn = ""
     out["exploit"] = {"market": mkt, "side": side, "ratio": round(r, 2), "flag": lab, "checks_clear": not blocked}
     out["why"] = f"EXPLOIT CANDIDATE [{lab}]: {side} {mkt}, {r:.2f} error bands; {sig['text']}{warn}"
     return out
@@ -1792,6 +1900,53 @@ def player_team(con, sport, player):
     return None
 
 
+NBA_MIN_MINUTES = 12.0     # below this a rotation player's counting-stat line is mostly noise
+
+
+def active_status(con, sport, player):
+    """Did this player play real minutes in his team's most recent game?
+
+    Returns (status, minutes): 'active', 'low' (NBA under NBA_MIN_MINUTES), 'dnp'
+    (on the team but absent from, or did-not-play in, the last box score), or
+    'unknown' (no team on file — never blocks, only tags).
+
+    Built after 2026-10-26, when three of ten card bets (Gui Santos, Ryan Rollins,
+    Ben Jones) were on players who did not play. A soft-book edge on a bench player
+    often exists because sharper books already know he is out.
+    """
+    _ensure(con)
+    team = player_team(con, sport, player)
+    if not team:
+        return "unknown", None
+    tk = _team_key(team)
+    last = None
+    for sid, gd, h, a in con.execute("""select source_id, game_date, home, away from game_results where sport=?
+                                        order by game_date desc limit 80""", (sport,)):
+        if tk in (_team_key(h), _team_key(a)):
+            last = sid
+            break
+    if not last:
+        return "unknown", None
+    pn, il = _norm(player), _initial_last(player)
+    row = None
+    for r in con.execute("select player_norm, stats from box_lines where sport=? and source_id=?", (sport, last)):
+        if r[0] == pn or _initial_last(r[0]) == il:
+            row = r
+            break
+    if not row:
+        return "dnp", None
+    try:
+        st = json.loads(row[1])
+    except Exception:
+        return "unknown", None
+    if not st.get("played"):
+        return "dnp", 0.0
+    mins = st.get("min")
+    if sport == "NBA" and mins is not None and float(mins) < NBA_MIN_MINUTES:
+        return "low", float(mins)
+    return "active", (float(mins) if mins is not None else None)
+
+
 def label_ok(con, sport, player, home, away):
     """True if the player's last known team is one of the two in the event, or unknown.
 
@@ -1823,17 +1978,33 @@ def nfl_player_team_from_frame(con, df, now_iso):
     return n
 
 
+SEASON_START = {"NBA": (10, 15), "NHL": (10, 1)}   # (month, day): safely before opening night
+
+
 def run(con, now, sports=("NBA", "NHL"), days_back=2):
-    """Ingest the last few days and grade. Returns a report dict."""
+    """Ingest the last few days and grade. Returns a report dict.
+
+    The first run of a season backfills every day since opening night (once, marked in
+    meta), so the NBA model fits on the whole season instead of the last two days."""
     rep = {}
     for sp in sports:
         try:
             got = 0
-            for k in range(days_back, -1, -1):
+            span = days_back
+            yr = now.year if now.month >= 8 else now.year - 1
+            key = f"feeds_backfill_{sp}_{yr}"
+            done = con.execute("select v from meta where k=?", (key,)).fetchone()
+            if not done:
+                m, d = SEASON_START.get(sp, (10, 1))
+                span = max(days_back, (now - datetime(yr, m, d, tzinfo=UTC)).days)
+            for k in range(span, -1, -1):
                 day = (now - timedelta(days=k)).strftime("%Y-%m-%d")
                 got += ingest_day(con, sp, day, now.isoformat(timespec="seconds"))
             g = grade_props(con, sp, now.isoformat(timespec="seconds"))
-            rep[sp] = {"games_ingested": got, **g}
+            if not done:
+                con.execute("insert or replace into meta(k,v) values(?,?)", (key, f"{now.isoformat(timespec='seconds')} {got} games over {span} days"))
+                con.commit()
+            rep[sp] = {"games_ingested": got, "backfill_days": span if not done else 0, **g}
         except Exception as e:                           # noqa: BLE001
             rep[sp] = {"error": str(e)[:160]}
             try:
@@ -2372,21 +2543,24 @@ def refresh(db_path, now=None):
                 rows.append((ev["event_id"], "h2h", ev["away"], "", None, 1 - p_home, fair[1], -e, "see home row", "", now.isoformat(timespec="seconds"), None))
             gated_rows = []
             for r_ in rows:
-                r_ = list(r_) + [None]
+                r_ = list(r_) + [None, None]
                 if r_[8].startswith(("Lean", "Play")):
                     try:
                         r_[8], r_[11], _sg = jr.sharp_gate(con, r_[0], r_[1], r_[8], "", r_[11] or "")
                         r_[12] = _sg.get("label") if _sg else None
+                        r_[8], r_[13] = jr.finalize_call(con, r_[0], r_[1], r_[8], "", r_[5], r_[6], r_[4], r_[2])
                     except Exception:
                         pass
                 gated_rows.append(tuple(r_))
             try:
-                if "flag" not in {c[1] for c in con.execute("pragma table_info(model_probs)")}:
-                    con.execute("alter table model_probs add column flag text")
+                _cols = {c[1] for c in con.execute("pragma table_info(model_probs)")}
+                for _c in ("flag", "plain"):
+                    if _c not in _cols:
+                        con.execute(f"alter table model_probs add column {_c} text")
             except Exception:
                 pass
-            con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
-                               values(?,?,?,?,?,?,?,?,?,?,?,?,?)""", gated_rows)
+            con.executemany("""insert or replace into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag,plain)
+                               values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", gated_rows)
             n += len(rows)
         con.commit()
         return n
@@ -2521,8 +2695,49 @@ except Exception:
     traceback.print_exc()
     L = None
 
+def recompute_clv_once(db_path):
+    """One-time repair (2026-10-26): every stored clv_pp was inflated ~1pp because the bet
+    price was de-vigged. Recompute all rows with the fixed formula and a two-sided close."""
+    import jerry_reason as _jr
+    c = sqlite3.connect(db_path, timeout=60); c.row_factory = sqlite3.Row
+    try:
+        if c.execute("select 1 from meta where k='clv_fix_2026_10_26'").fetchone():
+            return "already done"
+        rows = c.execute("""select id, event_id, market, selection, player, line, price, commence, close_book,
+                            close_line, close_price, comp_json from bets where close_price is not null""").fetchall()
+        n = 0
+        for b in rows:
+            fair = None
+            try:
+                ol = (-b["close_line"] if (b["market"] == "spreads" and b["close_line"] is not None) else b["close_line"])
+                r = c.execute("""select price from ticks where event_id=? and market=? and player=? and book=? and outcome<>?
+                                 and line is ? and ts<=? order by ts desc limit 1""",
+                              (b["event_id"], b["market"], b["player"] or "", b["close_book"], b["selection"], ol,
+                               b["commence"])).fetchone()
+                if r and r["price"]:
+                    fair = _jr.fair_two_way_power(float(b["close_price"]), float(r["price"]))
+            except Exception:
+                fair = None
+            try:
+                comp = json.loads(b["comp_json"] or "{}")
+            except Exception:
+                comp = {}
+            v = _jr.clv_pp(b["line"], b["price"], b["close_line"], b["close_price"], b["market"], b["selection"],
+                           sd=comp.get("sd"), mu=comp.get("mu"), close_fair=fair)
+            c.execute("update bets set clv_pp=? where id=?", (v, b["id"])); n += 1
+        c.execute("insert or replace into meta(k,v) values('clv_fix_2026_10_26', ?)", (f"{datetime.now(UTC).isoformat()} {n} rows",))
+        c.commit()
+        return f"{n} rows recomputed"
+    finally:
+        c.close()
+
+
 _orig_refresh_all = L.refresh_all if L else None
 def refresh_all(db_path, sports=None):
+    try:
+        print(f"[boot] CLV repair: {recompute_clv_once(db_path)}", flush=True)
+    except Exception as e:   # noqa: BLE001
+        print(f"[boot] CLV repair failed: {e}", flush=True)
     _spl = None
     try:
         import jerry_splits as _js
@@ -2538,6 +2753,10 @@ def refresh_all(db_path, sports=None):
     if sports is None or "MLB" in sports:
         try:
             res["MLB"] = refresh_mlb(db_path)
+            try:
+                c = sqlite3.connect(db_path, timeout=60); c.execute("delete from meta where k='error_model_MLB'"); c.commit(); c.close()
+            except Exception:
+                pass
         except Exception as e:
             res["MLB"] = f"error: {e}"
             traceback.print_exc()
