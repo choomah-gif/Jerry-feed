@@ -83,7 +83,7 @@ BASELINE_HOURS = 36        # games inside 36h get baseline tape
 BASELINE_EVERY = 20
 OPENER_DAYS = 7            # games 36h-7d out get a pull every 6h (openers + early moves)
 OPENER_EVERY = 360
-PROP_SLOTS_MIN = (360, 90, 20)       # props at 6h, 90m and 20m before start
+PROP_SLOTS_MIN = (360, 90, 20, 5)    # props at 6h, 90m, 20m and a T-5 prop CLOSE (only for games with open paper props)
 CLOSE_SLOTS_MIN = ((12, 8), (4, 0))  # two close pulls per start cluster: T-12..T-8 and T-4..T-0
 CLUSTER_MIN = 30
 UFC_LOOKAHEAD_DAYS = 7
@@ -188,8 +188,13 @@ def init_db():
         con.execute("alter table model_probs add column reasoning text")
     if "flag" not in _mpcols:
         con.execute("alter table model_probs add column flag text")
-    if "flag" not in {r[1] for r in con.execute("pragma table_info(value_edges)")}:
+    if "plain" not in _mpcols:
+        con.execute("alter table model_probs add column plain text")
+    _vecols = {r[1] for r in con.execute("pragma table_info(value_edges)")}
+    if "flag" not in _vecols:
         con.execute("alter table value_edges add column flag text")
+    if "activity" not in _vecols:
+        con.execute("alter table value_edges add column activity text")
     for _c, _t in (("comp_json", "text"), ("ratio", "real"), ("model_number", "real"),
                    ("market_number", "real"), ("evidence_kind", "text"),
                    ("corr_group", "text"), ("falsifier", "text"),
@@ -220,7 +225,7 @@ def http_get(path, params):
 
 
 
-def _clv_for(b, c):
+def _clv_for(b, c, con=None):
     """Closing line value in probability points, translated back to the line bet.
 
     The previous rule recorded CLV only when the closing line exactly matched the
@@ -236,7 +241,25 @@ def _clv_for(b, c):
         comp = {}
     return jr.clv_pp(b["line"], b["price"], c["line"], c["price"],
                      b["market"], b["selection"],
-                     sd=comp.get("sd"), mu=comp.get("mu"))
+                     sd=comp.get("sd"), mu=comp.get("mu"),
+                     close_fair=_close_fair(con, b, c) if con is not None else None)
+
+
+def _close_fair(con, b, c):
+    """De-vig the close with BOTH sides of the closing book (power method).
+    Falls back to None (single-side approximation) when the other side is missing."""
+    try:
+        line = c["line"]
+        other_line = (-line if (b["market"] == "spreads" and line is not None) else line)
+        r = con.execute("""select price from ticks where event_id=? and market=? and player=? and book=?
+                           and outcome<>? and line is ? and ts<=? order by ts desc limit 1""",
+                        (b["event_id"], b["market"], b["player"] or "", c["book"], b["selection"],
+                         other_line, b["commence"])).fetchone()
+        if not r or not r["price"]:
+            return None
+        return jr.fair_two_way_power(float(c["price"]), float(r["price"]))
+    except Exception:
+        return None
 
 # sports with a player-level results feed wired in; everything else cannot be
 # graded yet and is reported as such rather than counted as a backlog
@@ -389,9 +412,11 @@ class Desk:
                         rows.append((g, b["key"], m["key"], o["name"], "", o.get("point"), o["price"]))
         self.store(con, sport, rows, now, is_close)
         meta_set(con, f"last_{sport}", iso(now))
+        if not is_close:
+            self._scan_price(con, now)
         return len(data)
 
-    def pull_props(self, con, sport, event_id, now):
+    def pull_props(self, con, sport, event_id, now, is_close=False):
         cfg = SPORTS[sport]
         data, hdr = self.get(f"/sports/{cfg['key']}/events/{event_id}/odds",
                              {"bookmakers": BOOKS, "markets": ",".join(cfg["props"]), "oddsFormat": "decimal"})
@@ -401,7 +426,8 @@ class Desk:
             for m in b.get("markets", []):
                 for o in m.get("outcomes", []):
                     rows.append((data, b["key"], m["key"], o["name"], o.get("description", ""), o.get("point"), o["price"]))
-        self.store(con, sport, rows, now, False)
+        self.store(con, sport, rows, now, is_close)
+        self._scan_price(con, now)
 
     def pull_outright(self, con, label, now):
         data, hdr = self.get(f"/sports/{OUTRIGHTS[label]}/odds", {"bookmakers": BOOKS, "markets": "outrights",
@@ -527,6 +553,31 @@ class Desk:
     def _done(self, con, k):
         return con.execute("select 1 from slots where k=?", (k,)).fetchone() is not None
 
+    def _scan_price(self, con, now):
+        """Price edges need no model and no API spend, so scan right after every odds pull
+        instead of once an hour (a mispriced DK prop rarely lasts 59 minutes). New paper
+        rows are pushed to Telegram the moment they appear."""
+        import sys as _sys
+        L = _sys.modules.get("jerry_live")
+        if L is None or not hasattr(L, "price_edges"):
+            return
+        try:
+            before = con.execute("select coalesce(max(id),0) from bets").fetchone()[0]
+            L.price_edges(con, now); con.commit()
+            new = con.execute("""select sport, game, market, player, selection, line, book, price, note, sharp_flag
+                                 from bets where id>? and paper=1 and note like 'price edge%'""", (before,)).fetchall()
+            if new and os.environ.get("TELEGRAM_BOT_TOKEN") and hasattr(L, "telegram"):
+                msg = "\n".join(f"PRICE {r['sport']} {r['game']} | {r['market']} {r['player'] or ''} {r['selection']} "
+                                f"{'' if r['line'] is None else r['line']} @ {r['book']} {r['price']} | {r['note'][11:60]} [{r['sharp_flag'] or 'NO READ'}]"
+                                for r in new[:8])
+                L.telegram(msg)
+        except Exception as ex:   # noqa: BLE001 - a scan must never block a pull
+            try:
+                con.rollback()
+            except Exception:
+                pass
+            meta_set(con, "error_price_scan", f"{iso(now)} {ex}"[:200])
+
     def _mark(self, con, k, now):
         con.execute("insert or ignore into slots values(?,?)", (k, iso(now)))
 
@@ -572,10 +623,18 @@ class Desk:
                     mins = (start - now).total_seconds() / 60
                     if self._done(con, k) or not props:
                         continue
+                    if s == 5:
+                        # prop close: only worth the credits when a paper/real prop is open on this game,
+                        # and never after the start (that would be a live price)
+                        if not (0 < mins <= 5):
+                            continue
+                        if not con.execute("select 1 from bets where event_id=? and market like 'player_%' and result='pending' limit 1",
+                                           (e["event_id"],)).fetchone():
+                            self._mark(con, k, now); continue
                     if s - 15 < mins <= s:
-                        if self.can_spend(con, len(props), now, priority="props"):
+                        if self.can_spend(con, len(props), now, priority="close" if s == 5 else "props"):
                             try:
-                                self.pull_props(con, sport, e["event_id"], now)
+                                self.pull_props(con, sport, e["event_id"], now, is_close=(s == 5))
                             except Exception as ex:
                                 meta_set(con, f"error_props_{sport}", f"{iso(now)} {ex}"[:200])
                         self._mark(con, k, now)   # missed slots are skipped, not retried
@@ -721,7 +780,8 @@ class Desk:
                         "card": e["card"], "h2h": summary("h2h"), "spreads": summary("spreads"), "totals": summary("totals"),
                         "moves": kinds, "last_signal": dict(last) if last else None,
                         "value": [dict(v) for v in con.execute("select * from value_edges where event_id=? order by ev desc", (e["event_id"],))],
-                        "model": {f"{k[0]}|{k[1]}": {"p": v["model_prob"], "fair": v["fair_prob"], "edge": v["edge"], "call": v["call"], "note": v["note"]} for k, v in mp.items()}})
+                        "model": {f"{k[0]}|{k[1]}": {"p": v["model_prob"], "fair": v["fair_prob"], "edge": v["edge"], "call": v["call"], "note": v["note"],
+                                                           "plain": v["plain"] if "plain" in v.keys() else None} for k, v in mp.items()}})
         con.close()
         return out
 
@@ -820,7 +880,7 @@ class Desk:
             if b["close_price"] is None:
                 c = self.closing(con, b)
                 if c and c["price"]:
-                    clv = _clv_for(b, c)
+                    clv = _clv_for(b, c, con)
                     con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=? where id=?",
                                 (c["book"], c["line"], c["price"], clv, b["id"]))
         if not pend:
@@ -896,7 +956,7 @@ class Desk:
     def finish(self, con, b, res, now, hs=None, as_=None):
         pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0}[res]
         c = self.closing(con, b)
-        clv = _clv_for(b, c) if c else None   # +pp = the market moved toward you
+        clv = _clv_for(b, c, con) if c else None   # +pp = the market moved toward you
         con.execute("""update bets set result=?, pnl=?, home_score=?, away_score=?, close_book=?, close_line=?,
                        close_price=?, clv_pp=?, graded_ts=? where id=?""",
                     (res, round(pnl, 4), hs, as_, c["book"] if c else None, c["line"] if c else None,
@@ -960,7 +1020,8 @@ class Desk:
         rows = [dict(r) for r in con.execute("select * from bets where paper=1 order by id")]
         con.close()
         def kind(r):
-            return "price edge" if (r["note"] or "").startswith("price edge") else "model"
+            n = r["note"] or ""
+            return "price edge, line-adj" if n.startswith("price edge (line-adj") else "price edge" if n.startswith("price edge") else "model"
         def fam(r):
             m = r["market"]
             return "props" if m.startswith("player_") else {"h2h": "moneyline", "spreads": "spread", "totals": "total"}.get(m, m)
@@ -972,11 +1033,44 @@ class Desk:
                     "beat_close_pct": round(sum(c > 0 for c in clv) / len(clv), 3) if clv else None,
                     "graded": len(done), "record": f"{sum(r['result']=='W' for r in done)}-{sum(r['result']=='L' for r in done)}-{sum(r['result']=='P' for r in done)}",
                     "units": round(pnl, 2), "roi": round(pnl / st, 4) if st else None}
-        groups = {}
+        def game_ci(rs, n_boot=2000):
+            """90% ROI interval resampling GAMES, not bets: six props in one game are one bet."""
+            done = [r for r in rs if r["result"] in ("W", "L", "P") and (r["stake"] or 0) > 0]
+            by_g = {}
+            for r in done:
+                g = by_g.setdefault(r["event_id"], [0.0, 0.0]); g[0] += r["pnl"] or 0; g[1] += r["stake"]
+            gs = list(by_g.values())
+            if len(gs) < 8:
+                return None
+            import random
+            rnd = random.Random(7); out_ = []
+            for _ in range(n_boot):
+                smp = [gs[rnd.randrange(len(gs))] for _ in gs]
+                st = sum(x[1] for x in smp)
+                out_.append(sum(x[0] for x in smp) / st if st else 0.0)
+            out_.sort()
+            return [round(out_[int(0.05 * n_boot)], 4), round(out_[int(0.95 * n_boot) - 1], 4), len(gs)]
+        def block2(rs):
+            b = block(rs); b["roi_90ci_by_game"] = game_ci(rs); return b
+        groups, versions, ebuckets, hbuckets = {}, {}, {}, {}
         for r in rows:
             groups.setdefault(f"{r['sport']} {fam(r)} ({kind(r)})", []).append(r)
-        out = {"total": len(rows), "all": block(rows) if rows else None,
-               "by_group": {k: block(v) for k, v in sorted(groups.items())},
+            versions.setdefault(r.get("model_version") or "pre-version (before 2026-10-26)", []).append(r)
+            e = r.get("edge")
+            if e is not None and (r["stake"] or 0) > 0:
+                e = abs(float(e)) * (100 if abs(float(e)) < 1 else 1)
+                bk = "0-2%" if e < 2 else "2-4%" if e < 4 else "4-6%" if e < 6 else "6%+"
+                ebuckets.setdefault(f"{kind(r).split(',')[0]} {bk}", []).append(r)
+            h = r.get("hours_to_start")
+            if h is not None:
+                hb = "<1h" if h < 1 else "1-6h" if h < 6 else "6-24h" if h < 24 else "24h+"
+                hbuckets.setdefault(hb, []).append(r)
+        out = {"total": len(rows), "all": block2(rows) if rows else None,
+               "by_group": {k: block2(v) for k, v in sorted(groups.items())},
+               "by_version": {k: block(v) for k, v in sorted(versions.items())},
+               # the calibration question: do bigger edges win more? A flat curve means the edge is noise.
+               "by_edge_bucket": {k: block(v) for k, v in sorted(ebuckets.items())},
+               "by_hours_to_start": {k: block(v) for k, v in sorted(hbuckets.items())},
                "recent": rows[-40:]}
         return out
 
@@ -1110,16 +1204,27 @@ class Desk:
                   f"all: {json.dumps(pr['all'])}"]
         for k, v in pr["by_group"].items():
             lines.append(f"  {k}: {json.dumps(v)}")
+        for title, key in (("by model version (the 150-bet clock runs per version)", "by_version"),
+                           ("by edge size at call (bigger edges should win more; flat = noise)", "by_edge_bucket"),
+                           ("by hours before start when logged", "by_hours_to_start")):
+            if pr.get(key):
+                lines.append(f" {title}:")
+                for k, v in pr[key].items():
+                    lines.append(f"  {k}: n {v['n']} | CLV {v['clv_pp_avg']} | beat close {v['beat_close_pct']} | {v['record']} | {v['units']}u | ROI {v['roi']}")
         lines += ["", "PRICE EDGES (soft-book price beats Pinnacle fair; CT books):"]
         c3 = db()
         for v in c3.execute("""select v.*, e.sport, e.home, e.away, e.commence from value_edges v join events e using(event_id)
                                where e.commence>? order by v.ev desc limit 40""", (iso(now_utc()),)):
             fl = v["flag"] if "flag" in v.keys() and v["flag"] else "NO READ"
+            act = v["activity"] if "activity" in v.keys() and v["activity"] else ""
             lines.append(f"{v['sport']} {v['commence'][:16]}Z {v['away']} @ {v['home']} | {v['market']} {v['player'] or ''} {v['outcome']} "
-                         f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%} | [{fl}]")
+                         f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%} | [{fl}]"
+                         + (f" [{act}]" if act else ""))
         c3.close()
         lines += ["", "MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):"]
         for r in self.edges():
+            if r.get("plain"):
+                lines.append(f"{r['sport']} {r['commence'][:16]}Z {r['away']} @ {r['home']} | >> {r['plain']}")
             lines.append(f"{r['sport']} {r['commence'][:16]}Z {r['away']} @ {r['home']} | {r['market']} {r['player'] or ''} {r['outcome']} "
                          f"{'' if r['line'] is None else r['line']} | model {r['model_prob']:.1%} fair {r['fair_prob']:.1%} edge {r['edge']*100:+.1f} | {r['call']} "
                          f"[{r.get('flag') or 'NO READ'}] | {r['note'] or ''}")
@@ -1247,12 +1352,12 @@ function px(x,kind,pre){if(!x)return'<span class=mute>—</span>';
 function callSel(c,market){const s=c.split(" ").slice(1).join(" ");return market=="totals"?s.split(" ")[0]:s}
 function callBox(r,k,v){const market=k.split("|")[0],out=k.split("|").slice(1).join("|");const sel=callSel(v.call,market);
  const mine=sel==out;const p=mine?v.p:1-v.p,f=mine?v.fair:1-v.fair;
- return `<div class="call ${v.call.startsWith("Play")?"play":""}"><b>${v.call}</b> <span class=mute>${sgn(p-f)} · model ${pct(p)} vs market ${pct(f)}</span>
+ return `<div class="call ${v.call.startsWith("Play")?"play":""}"><b>${v.plain||v.call}</b> <span class=mute>${sgn(p-f)} · model ${pct(p)} vs market ${pct(f)}</span>
  <button onclick="logCall('${r.event_id}','${market}','${sel.replace(/'/g,"")}',${p.toFixed(3)})">Log</button><div class="note">${v.note||""}</div></div>`}
 function card(r){const ml=r.h2h||{},sp=r.spreads||{},to=r.totals||{};
  const mv=Object.entries(r.moves||{}).map(([k,n])=>`<span class="badge ${k}">${k} ${n}</span>`).join("");
  const calls=Object.entries(r.model||{}).filter(([k,v])=>isCall(v.call));
- const nprops=EDGES.filter(e=>e.event_id==r.event_id&&e.player).length;
+ const nprops=EDGES.filter(e=>e.event_id==r.event_id&&e.player&&isCall(e.call)).length;
  let body="";
  if(r.away){const hasS=Object.keys(sp).length>0,hasT=Object.keys(to).length>0;
   body=`<div class="grid"><div class="h"></div><div class="h">Money</div><div class="h">${hasS?"Spread":""}</div><div class="h">${hasT?"Total":""}</div>`;
@@ -1271,7 +1376,7 @@ async function props(el,eid){if(!el.open||el.dataset.done)return;el.dataset.done
  const rest=rows.filter(x=>!isCall(x.call)).sort((a,b)=>a.player.localeCompare(b.player));
  const line=x=>{const c=isCall(x.call);const sel=c?x.call.split(" ")[1]:"";const mine=sel==x.outcome||!c;const p=mine?x.model_prob:1-x.model_prob,f=mine?x.fair_prob:1-x.fair_prob;
   return `<div class="prow"><span><span class="pl">${x.player}</span> · ${MK[x.market]||x.market}${x.line!=null?" "+x.line:""}<div class="was">${x.note||""}</div></span>
-  <span class="${c?"":"sit"}" style="text-align:right;white-space:nowrap">${c?"<b>"+x.call.split(" ").slice(0,2).join(" ")+"</b><br>"+sgn(p-f):x.call}${c?`<button onclick="logProp('${eid}','${x.player.replace(/'/g,"")}','${sel}',${x.line??"null"},${p.toFixed(3)},'${x.market}')">Log</button>`:""}</span></div>`};
+  <span class="${c?"":"sit"}" style="text-align:right;white-space:nowrap">${c?"<b>"+(x.plain||x.call.split(" ").slice(0,2).join(" "))+"</b><br>"+sgn(p-f):(x.plain||x.call)}${c?`<button onclick="logProp('${eid}','${x.player.replace(/'/g,"")}','${sel}',${x.line??"null"},${p.toFixed(3)},'${x.market}')">Log</button>`:""}</span></div>`};
  el.querySelector("div").innerHTML=(live.length?live.map(line).join(""):"<p class=mute>No prop calls for this game.</p>")+
   (rest.length?`<details><summary class=mute>All other props (${rest.length})</summary>${rest.map(line).join("")}</details>`:"")}
 function pick(s){sport=s;load()}
