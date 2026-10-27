@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T04:31:37+00:00)
-credits left 1809 | budget/day 293 | spent today 1 | reset in 4.81d | backfill days {'NHL': 2}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T04:30:53+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T04:41:38+00:00)
+credits left 1809 | budget/day 293 | spent today 1 | reset in 4.8d | backfill days {'NHL': 2}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T04:40:54+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 23, NHL 19 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -243,11 +243,6 @@ NFL 2026-11-03T01:20:00Z Chicago Bears @ Seattle Seahawks  id=7d664fbcd39350e559
    SPREAD: Chicago Bears 3.5 1.86 (open 3.5 1.86, best 1.86) / Seattle Seahawks -3.5 2.03 (open -3.5 2.03, best 2.03)
    TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.92 (open 46.5 1.92, best 1.95)
    moves: {'Move': 20}
-NBA 2026-10-27T00:40:32Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
-   ML: Atlanta Hawks  2.69 (open 2.77, best 2.69) / Houston Rockets  1.53 (open 1.49, best 1.54)
-   SPREAD: Atlanta Hawks 18.0 1.85 (open 5.0 1.94, best 1.85) / Houston Rockets -18.0 1.97 (open -5.0 1.94, best 1.97)
-   TOTAL: Over 233.0 2.03 (open 229.5 1.94, best 2.03) / Under 233.0 1.78 (open 229.5 1.93, best 1.78)
-   moves: {'Move': 107, 'Sharp': 46, 'Steam': 180}
 NBA 2026-10-27T01:12:00Z Memphis Grizzlies @ Utah Jazz  id=fe453388be0a3bc6a39c847479cac46b
    ML: Memphis Grizzlies  1.24 (open 1.95, best 1.85) / Utah Jazz  4.3 (open 1.93, best 9.5)
    SPREAD: Memphis Grizzlies -7.5 1.87 (open 1.5 1.89, best 1.87) / Utah Jazz 7.5 1.92 (open -1.5 2.0, best 1.92)
