@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T21:20:51+00:00)
-credits left 1647 | budget/day 303 | spent today 163 | reset in 4.11d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-27T21:30:52+00:00)
+credits left 1647 | budget/day 304 | spent today 163 | reset in 4.1d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -72,30 +72,30 @@ NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebou
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Cutter Gauthier Under 3.5 | draftkings 2.2 vs fair 46.2% | EV +1.6% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 69% vs market 58%
-MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 69.1% fair 58.1% edge +10.9 | Lean Tampa Bay Rays [AGAINST SHARP · PUBLIC] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 69% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP · PUBLIC]: sharp/steam alerts 0.0 for, 2.6 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
-MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 53% vs market 44%
-MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 53.0% fair 43.6% edge +9.3 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 53% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 3.6 against. Caution: sharp money has moved the other way.
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 68% vs market 58%
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 67.7% fair 58.1% edge +9.5 | Lean Tampa Bay Rays [AGAINST SHARP · PUBLIC] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 3.83; SP Dustin May (3.63 FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
+      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 3.83 from season run rates, starter FIP (SP Dustin May (3.63 FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 68% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP · PUBLIC]: sharp/steam alerts 0.0 for, 2.3 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 51% vs market 44%
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 51.1% fair 43.6% edge +7.5 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 3.83; SP Dustin May (3.63 FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
+      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 3.83 from season run rates, starter FIP (SP Dustin May (3.63 FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 51% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 3.2 against. Caution: sharp money has moved the other way.
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | >> Lean: Montréal Canadiens to win — KRONOS 51% vs market 47%
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | h2h  St Louis Blues  | model 49.0% fair 52.9% edge -3.9 | Lean Montréal Canadiens [AGAINST SHARP] | xG 2.93-3.44; STL G: Jordan Binnington (Confirmed); MTL G: Jacob Fowler (Confirmed); raw model 41.8%, anchored 35% to market, slate scale 1.09
-      why: Expected goals 2.93-3.44 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Jordan Binnington (Confirmed) / Jacob Fowler (Confirmed). Raw model 42% home, anchored 35% toward the market: Montréal Canadiens 51% versus 47% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 2.0 against. Caution: sharp money has moved the other way.
+      why: Expected goals 2.93-3.44 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Jordan Binnington (Confirmed) / Jacob Fowler (Confirmed). Raw model 42% home, anchored 35% toward the market: Montréal Canadiens 51% versus 47% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 1.8 against. Caution: sharp money has moved the other way.
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | >> Lean: Montréal Canadiens -1.5 — KRONOS 73% vs market 70%
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | spreads  St Louis Blues -1.5 | model 26.8% fair 30.0% edge -3.2 | Lean Montréal Canadiens [AGAINST SHARP] | xG 2.93-3.44; STL G: Jordan Binnington (Confirmed); MTL G: Jacob Fowler (Confirmed); raw model 20.8%, anchored 35% to market, slate scale 1.09
-      why:  Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 2.0 against; retail books discount it 1.6pp — the public is on the other side. Caution: sharp money has moved the other way.
+      why:  Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 1.8 against; retail books discount it 1.6pp — the public is on the other side. Caution: sharp money has moved the other way.
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | >> Lean: Minnesota Wild to win — KRONOS 49% vs market 46%
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth  | model 50.7% fair 53.9% edge -3.2 | Lean Minnesota Wild [NEUTRAL] | xG 3.05-3.36; UTA G: Karel Vejmelka (Confirmed); MIN G: Jesper Wallstedt (Confirmed); raw model 44.9%, anchored 35% to market, slate scale 1.09
       why: Expected goals 3.05-3.36 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed). Raw model 45% home, anchored 35% toward the market: Minnesota Wild 49% versus 46% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T20:29:26+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 21, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 24})
+(models last refreshed: 2026-10-27T21:29:30+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 27, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 24})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-27T23:10Z | KRONOS Columbus Blue Jackets 3.2 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.26), home win 46% vs 47%
       no gap large enough to be a mispricing | xG 2.78-3.21; Dan Vladar (Confirmed) / Cam Talbot (Confirmed)
 NBA 2026-10-27T23:40Z | KRONOS Brooklyn Nets 110.1 @ Boston Celtics 121.2 | market 104.5-116.0 | gap margin -0.3 (0.03), total +10.8 (0.77)
       gap Over totals 0.77 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 4/3
-MLB 2026-10-28T00:00Z | KRONOS Milwaukee Brewers 3.7 @ Tampa Bay Rays 4.0 | market total 7.0 | gap total +0.8 (0.23)
-      no gap large enough to be a mispricing | runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; postseason x0.88; SP TBD @ Griffin Jax
+MLB 2026-10-28T00:00Z | KRONOS Milwaukee Brewers 3.7 @ Tampa Bay Rays 3.8 | market total 7.0 | gap total +0.6 (0.18)
+      no gap large enough to be a mispricing | runs Milwaukee Brewers 3.74 / Tampa Bay Rays 3.83; postseason x0.88; SP Dustin May @ Griffin Jax
 NHL 2026-10-28T00:08Z | KRONOS Boston Bruins 3.0 @ Carolina Hurricanes 3.3 | market total 6.5 | gap total -0.2 (0.12), home win 61% vs 64%
       no gap large enough to be a mispricing | xG 3.30-2.98; Pyotr Kochetkov (Likely, unconfirmed) / Jeremy Swayman (Confirmed)
 NHL 2026-10-28T00:08Z | KRONOS New Jersey Devils 3.0 @ Dallas Stars 3.1 | market total 5.5 | gap total +0.6 (0.33), home win 53% vs 53%
@@ -158,8 +158,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T20:29:22+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T20:29:22+00:00 wp-json 6 posts
+   table: 2026-10-27T21:29:26+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T21:29:26+00:00 wp-json 6 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
