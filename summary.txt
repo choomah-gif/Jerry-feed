@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T00:41:02+00:00)
-credits left 1834 | budget/day 288 | spent today 299 | reset in 4.97d | backfill days {'NHL': 2}
+KRONOS DESK SUMMARY  (generated 2026-10-27T00:51:04+00:00)
+credits left 1834 | budget/day 289 | spent today 299 | reset in 4.96d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -65,37 +65,37 @@ NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh S
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.5 | Lean Los Angeles Chargers [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-26T23:49:54+00:00 {"NFL": 90, "NFL_PROPS": 31, "NHL": 78, "UFC": 0, "PRICE": 25, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 30})
+(models last refreshed: 2026-10-27T00:49:58+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 72, "UFC": 0, "PRICE": 11, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 12})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NBA 2026-10-27T01:10Z | KRONOS Memphis Grizzlies 120.0 @ Utah Jazz 116.0 | market 118.8-120.2 | gap margin -5.5 (0.55), total -3.0 (0.22)
+NBA 2026-10-27T01:10Z | KRONOS Memphis Grizzlies 120.0 @ Utah Jazz 116.0 | market 119.2-118.2 | gap margin -3.0 (0.30), total -1.5 (0.11)
       no gap large enough to be a mispricing | ridge ratings; games 1/1
-NHL 2026-10-27T01:40Z | KRONOS Detroit Red Wings 3.4 @ Edmonton Oilers 3.1 | market total 6.5 | gap total -0.0 (0.03), home win 56% vs 62%
-      no gap large enough to be a mispricing | xG 3.07-3.38; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-27T01:40Z | KRONOS Detroit Red Wings 3.4 @ Edmonton Oilers 3.1 | market total 6.5 | gap total -0.1 (0.03), home win 56% vs 62%
+      no gap large enough to be a mispricing | xG 3.06-3.37; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NBA 2026-10-27T02:10Z | KRONOS Golden State Warriors 119.2 @ Denver Nuggets 119.5 | market 112.8-120.8 | gap margin -7.7 (0.77), total +5.3 (0.38)
       EXPLOIT CANDIDATE [NEUTRAL]: Golden State Warriors spreads, 0.77 error bands; no sharp or public signal yet — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/1
-NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.2 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.26), home win 46% vs 47%
-      no gap large enough to be a mispricing | xG 2.84-3.16; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS Boston Bruins 3.2 @ Carolina Hurricanes 3.2 | market total 6.0 | gap total +0.4 (0.21), home win 59% vs 64%
-      no gap large enough to be a mispricing | xG 3.22-3.18; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS Los Angeles Kings 3.3 @ Chicago Blackhawks 3.0 | market total 5.5 | gap total +0.9 (0.47), home win 47% vs 48%
-      no gap large enough to be a mispricing | xG 3.05-3.34; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS New Jersey Devils 2.8 @ Dallas Stars 3.1 | market total 5.5 | gap total +0.4 (0.19), home win 54% vs 53%
-      no gap large enough to be a mispricing | xG 3.11-2.76; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS Florida Panthers 3.0 @ Winnipeg Jets 3.1 | market total 6.0 | gap total +0.1 (0.06), home win 48% vs 46%
-      no gap large enough to be a mispricing | xG 3.09-3.02; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS Montréal Canadiens 3.3 @ St Louis Blues 3.3 | market total 6.0 | gap total +0.6 (0.33), home win 51% vs 51%
-      no gap large enough to be a mispricing | xG 3.29-3.34; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:00Z | KRONOS New York Islanders 3.2 @ Nashville Predators 2.6 | market total 5.5 | gap total +0.3 (0.18), home win 49% vs 53%
-      no gap large enough to be a mispricing | xG 2.63-3.21; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T01:00Z | KRONOS Minnesota Wild 3.4 @ Utah Mammoth 3.2 | market total 6.5 | gap total +0.1 (0.04), home win 52% vs 54%
-      no gap large enough to be a mispricing | xG 3.19-3.39; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:00Z | KRONOS Vancouver Canucks 3.0 @ Anaheim Ducks 4.1 | market total 6.5 | gap total +0.6 (0.31), home win 67% vs 66%
-      no gap large enough to be a mispricing | xG 4.14-2.95; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:00Z | KRONOS Ottawa Senators 3.0 @ Vegas Golden Knights 3.3 | market total 6.5 | gap total -0.2 (0.10), home win 57% vs 59%
-      no gap large enough to be a mispricing | xG 3.27-3.05; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:30Z | KRONOS Buffalo Sabres 3.3 @ San Jose Sharks 3.2 | market total 6.5 | gap total -0.0 (0.01), home win 46% vs 44%
-      no gap large enough to be a mispricing | xG 3.20-3.28; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.26), home win 46% vs 47%
+      no gap large enough to be a mispricing | xG 2.84-3.15; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS Boston Bruins 3.2 @ Carolina Hurricanes 3.2 | market total 6.0 | gap total +0.4 (0.20), home win 59% vs 64%
+      no gap large enough to be a mispricing | xG 3.21-3.17; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS Los Angeles Kings 3.4 @ Chicago Blackhawks 3.0 | market total 5.5 | gap total +0.9 (0.47), home win 47% vs 48%
+      no gap large enough to be a mispricing | xG 3.05-3.35; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS New Jersey Devils 2.8 @ Dallas Stars 3.2 | market total 5.5 | gap total +0.4 (0.23), home win 55% vs 53%
+      no gap large enough to be a mispricing | xG 3.18-2.76; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS Florida Panthers 3.0 @ Winnipeg Jets 3.0 | market total 6.0 | gap total +0.1 (0.04), home win 47% vs 46%
+      no gap large enough to be a mispricing | xG 3.05-3.03; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS Montréal Canadiens 3.3 @ St Louis Blues 3.2 | market total 6.0 | gap total +0.5 (0.28), home win 50% vs 51%
+      no gap large enough to be a mispricing | xG 3.20-3.34; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:00Z | KRONOS New York Islanders 3.1 @ Nashville Predators 2.8 | market total 5.5 | gap total +0.4 (0.20), home win 50% vs 53%
+      no gap large enough to be a mispricing | xG 2.77-3.11; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T01:00Z | KRONOS Minnesota Wild 3.5 @ Utah Mammoth 3.2 | market total 6.5 | gap total +0.1 (0.07), home win 51% vs 54%
+      no gap large enough to be a mispricing | xG 3.17-3.47; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T02:00Z | KRONOS Vancouver Canucks 2.9 @ Anaheim Ducks 4.2 | market total 6.5 | gap total +0.6 (0.31), home win 67% vs 66%
+      no gap large enough to be a mispricing | xG 4.17-2.93; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T02:00Z | KRONOS Ottawa Senators 3.0 @ Vegas Golden Knights 3.3 | market total 6.5 | gap total -0.2 (0.11), home win 57% vs 59%
+      no gap large enough to be a mispricing | xG 3.26-3.04; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T02:30Z | KRONOS Buffalo Sabres 3.3 @ San Jose Sharks 3.2 | market total 6.5 | gap total -0.0 (0.02), home win 46% vs 44%
+      no gap large enough to be a mispricing | xG 3.19-3.27; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.7 @ Dallas Cowboys 29.2 | market 23.6-29.9 | gap margin -0.7 (0.07), total -0.6 (0.06)
@@ -131,8 +131,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-26T23:49:50+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-26T23:49:50+00:00 wp-json 1 posts
+   table: 2026-10-27T00:49:54+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T00:49:54+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T00:36:33+00:00 Move NHL Toronto Maple Leafs @ Calgary Flames | totals  Under 6.5->6.5 2.0->2.05 (espnbet)
@@ -282,7 +282,7 @@ NBA 2026-10-27T00:11:00Z Phoenix Suns @ Oklahoma City Thunder  id=90620ab57facf5
    SPREAD: Oklahoma City Thunder -8.0 1.93 (open -9.5 1.89, best 1.93) / Phoenix Suns 8.0 1.98 (open 9.5 2.0, best 1.98)
    TOTAL: Over 221.5 1.92 (open 219.5 1.93, best 1.93) / Under 221.5 1.97 (open 219.5 1.94, best 1.97)
    moves: {'Move': 127, 'Sharp': 45, 'Steam': 339}
-NBA 2026-10-27T00:40:00Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
+NBA 2026-10-27T00:40:32Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
    ML: Atlanta Hawks  2.69 (open 2.77, best 2.69) / Houston Rockets  1.53 (open 1.49, best 1.54)
    SPREAD: Atlanta Hawks 4.5 1.98 (open 5.0 1.94, best 1.98) / Houston Rockets -4.5 1.93 (open -5.0 1.94, best 1.95)
    TOTAL: Over 229.5 2.0 (open 229.5 1.94, best 2.0) / Under 229.5 1.88 (open 229.5 1.93, best 1.93)
@@ -324,7 +324,7 @@ NHL 2026-10-26T23:10:23Z Los Angeles Kings @ New York Rangers  id=daa5166685c4ca
    SPREAD: Los Angeles Kings 1.5 1.43 (open 1.5 1.45, best 1.44) / New York Rangers -1.5 2.99 (open -1.5 2.91, best 3.0)
    TOTAL: Over 5.5 1.91 (open 6.0 2.04, best 1.91) / Under 5.5 1.98 (open 6.0 1.85, best 2.01)
    moves: {'Move': 163, 'Sharp': 41, 'Steam': 87}
-NHL 2026-10-27T00:40:00Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde35c5494acdb5912a68
+NHL 2026-10-27T00:42:28Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde35c5494acdb5912a68
    ML: Calgary Flames  2.22 (open 2.17, best 2.22) / Toronto Maple Leafs  1.75 (open 1.78, best 1.76)
    SPREAD: Calgary Flames 1.5 1.52 (open 1.5 1.5, best 1.52) / Toronto Maple Leafs -1.5 2.69 (open -1.5 2.75, best 2.8)
    TOTAL: Over 6.5 1.85 (open 6.5 1.86, best 1.85) / Under 6.5 2.04 (open 6.5 2.03, best 2.05)
