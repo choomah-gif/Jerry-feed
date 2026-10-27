@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T05:41:46+00:00)
+KRONOS DESK SUMMARY  (generated 2026-10-27T05:51:48+00:00)
 credits left 1779 | budget/day 290 | spent today 31 | reset in 4.76d | backfill days {'NHL': 3}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T05:40:55+00:00 'sqlite3.Row' object has no attribute 'get'"}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T05:50:55+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 24, NHL 20 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -59,7 +59,7 @@ NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh S
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.6 | Lean Los Angeles Chargers [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T04:50:16+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 1, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 1, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 1, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 18})
+(models last refreshed: 2026-10-27T05:50:19+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 1, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 18})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.4 (0.24), home win 46% vs 47%
@@ -127,8 +127,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T04:50:12+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T04:50:12+00:00 wp-json 1 posts
+   table: 2026-10-27T05:50:16+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T05:50:16+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T04:00:53+00:00 Move WS  @ MLB World Series Winner | outrights  Tampa Bay Rays None->None 6.0->18.0 (betmgm)
