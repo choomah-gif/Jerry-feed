@@ -232,17 +232,25 @@ def _clv_for(b, c, con=None):
     bet line, which discarded every bet whose number moved — the bets that carry
     the most information. Props were hit hardest: 157 closed rows, none usable.
     """
-    if not c or not c.get("price"):
+    # c arrives as a sqlite3.Row, which has no .get(); 2026-10-27 that crashed auto_grade
+    # (and so stopped ALL grading) the first time props had a closing price to measure.
+    if not c:
         return None
-    comp = {}
     try:
-        comp = json.loads(b["comp_json"] or "{}") if "comp_json" in b.keys() else {}
-    except Exception:
+        c = dict(c)
+        if not c.get("price"):
+            return None
         comp = {}
-    return jr.clv_pp(b["line"], b["price"], c["line"], c["price"],
-                     b["market"], b["selection"],
-                     sd=comp.get("sd"), mu=comp.get("mu"),
-                     close_fair=_close_fair(con, b, c) if con is not None else None)
+        try:
+            comp = json.loads(b["comp_json"] or "{}") if "comp_json" in b.keys() else {}
+        except Exception:
+            comp = {}
+        return jr.clv_pp(b["line"], b["price"], c["line"], c["price"],
+                         b["market"], b["selection"],
+                         sd=comp.get("sd"), mu=comp.get("mu"),
+                         close_fair=_close_fair(con, b, c) if con is not None else None)
+    except Exception:
+        return None      # one bad close must never stop the grading pass
 
 
 def _close_fair(con, b, c):
