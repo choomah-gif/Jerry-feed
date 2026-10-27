@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T03:31:28+00:00)
+KRONOS DESK SUMMARY  (generated 2026-10-27T03:41:29+00:00)
 credits left 1810 | budget/day 291 | spent today 323 | reset in 4.85d | backfill days {'NHL': 2}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T03:30:52+00:00 'sqlite3.Row' object has no attribute 'get'"}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T03:40:52+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 21, NHL 18 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -236,11 +236,6 @@ NFL 2026-11-03T01:20:00Z Chicago Bears @ Seattle Seahawks  id=7d664fbcd39350e559
    SPREAD: Chicago Bears 3.5 1.86 (open 3.5 1.86, best 1.86) / Seattle Seahawks -3.5 2.03 (open -3.5 2.03, best 2.03)
    TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.92 (open 46.5 1.92, best 1.95)
    moves: {'Move': 20}
-NBA 2026-10-26T23:40:52Z Chicago Bulls @ Boston Celtics  id=32ac8b94cc41f272efa96f0cf993e07a
-   ML: Boston Celtics  1.14 (open 1.14, best 1.15) / Chicago Bulls  6.63 (open 6.1, best 6.63)
-   SPREAD: Boston Celtics -14.5 1.96 (open -14.0 1.94, best 1.96) / Chicago Bulls 14.5 1.94 (open 14.0 1.94, best 1.94)
-   TOTAL: Over 232.5 1.88 (open 233.5 1.94, best 1.88) / Under 232.5 2.01 (open 233.5 1.93, best 2.01)
-   moves: {'Move': 107, 'Sharp': 56, 'Steam': 214}
 NBA 2026-10-26T23:41:37Z Dallas Mavericks @ Miami Heat  id=69aa52b674648238de10389a3d343208
    ML: Dallas Mavericks  3.34 (open 3.61, best 3.34) / Miami Heat  1.38 (open 1.32, best 1.38)
    SPREAD: Dallas Mavericks 7.5 1.99 (open 8.5 1.94, best 1.99) / Miami Heat -7.5 1.92 (open -8.5 1.94, best 1.95)
