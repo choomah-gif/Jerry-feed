@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T21:30:52+00:00)
-credits left 1647 | budget/day 304 | spent today 163 | reset in 4.1d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-27T21:40:54+00:00)
+credits left 1644 | budget/day 304 | spent today 166 | reset in 4.1d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 286 settled (16 void), 69 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 286 settled (16 void), 73 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,8 +12,8 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 470 rows
-all: {"n": 470, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 474 rows
+all: {"n": 474, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
   MLB batter_hits (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NBA props (price edge): {"n": 78, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 65, "record": "39-26-0", "units": 10.56, "roi": 0.1625, "roi_90ci_by_game": [-0.0373, 0.3621, 14]}
@@ -25,28 +25,28 @@ all: {"n": 470, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "gr
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 5, "closed": 1, "clv_pp_avg": -1.07, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 37, "closed": 15, "clv_pp_avg": 0.3, "beat_close_pct": 0.667, "graded": 21, "record": "12-9-0", "units": 1.79, "roi": 0.0852, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 41, "closed": 15, "clv_pp_avg": 0.3, "beat_close_pct": 0.667, "graded": 21, "record": "12-9-0", "units": 1.79, "roi": 0.0852, "roi_90ci_by_game": null}
   NHL spread (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL total (model): {"n": 14, "closed": 3, "clv_pp_avg": -2.97, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 26 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price-v3-activegate-2026-10-27: n 30 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 2-4%: n 20 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 0-2%: n 5 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 2-4%: n 22 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 4-6%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by hours before start when logged:
-  1-6h: n 20 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  1-6h: n 24 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   6-24h: n 9 | CLV None | beat close None | 0-0-0 | 0u | ROI None
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | batter_hits Jonny Deluca Under 0.5 | draftkings 2.27 vs fair 46.6% | EV +5.9% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Noah Hanifin Under 1.5 | draftkings 1.71 vs fair 61.7% | EV +5.5% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | fanduel 1.88 vs fair 55.6% | EV +4.5% | [FADE PUBLIC]
-NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Mathieu Olivier Under 1.5 | draftkings 1.95 vs fair 53.4% | EV +4.1% | [FADE PUBLIC]
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Damon Severson Over 1.5 | draftkings 2.35 vs fair 44.2% | EV +3.9% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | draftkings 1.87 vs fair 55.6% | EV +3.9% | [FADE PUBLIC]
 NBA 2026-10-27T23:40Z Brooklyn Nets @ Boston Celtics | player_rebounds Michael Porter Jr Under 5.5 | draftkings 2.12 vs fair 48.8% | EV +3.5% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5 | draftkings 1.67 vs fair 62.0% | EV +3.5% | [FADE PUBLIC]
@@ -61,14 +61,16 @@ NHL 2026-10-28T00:09Z Florida Panthers @ Winnipeg Jets | player_shots_on_goal Sa
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Jake DeBrusk Under 2.5 | draftkings 1.74 vs fair 59.0% | EV +2.7% | [FADE PUBLIC]
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 3.5 | fanduel 1.72 vs fair 59.7% | EV +2.6% | [FADE PUBLIC]
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_points Vincent Trocheck Over 0.5 | draftkings 2.1 vs fair 48.8% | EV +2.5% | [FADE PUBLIC]
-NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_points Denton Mateychuk Under 0.5 | draftkings 1.47 vs fair 69.7% | EV +2.5% | [FADE PUBLIC]
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_points Valeri Nichushkin Over 0.5 | draftkings 2.05 vs fair 50.0% | EV +2.5% | [AGAINST SHARP · THIN MARKET]
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | player_shots_on_goal Colton Parayko Under 1.5 | draftkings 1.87 vs fair 54.8% | EV +2.4% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Tomas Hertl Under 2.5 | draftkings 1.62 vs fair 63.2% | EV +2.3% | [FADE PUBLIC]
 NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points OG Anunoby Under 16.5 | fanduel 1.83 vs fair 55.9% | EV +2.2% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Ivar Stenberg Under 1.5 | draftkings 2.15 vs fair 47.5% | EV +2.1% | [FADE PUBLIC]
 NHL 2026-10-28T00:11Z Los Angeles Kings @ Chicago Blackhawks | player_points Trevor Moore Under 0.5 | draftkings 1.65 vs fair 61.9% | EV +2.1% | [FADE PUBLIC]
 NBA 2026-10-27T23:40Z Brooklyn Nets @ Boston Celtics | player_threes Jayson Tatum Under 3.5 | draftkings 1.61 vs fair 63.3% | EV +1.9% | [FADE PUBLIC]
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Valeri Nichushkin Over 1.5 | draftkings 1.74 vs fair 58.5% | EV +1.8% | [AGAINST SHARP · THIN MARKET]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebounds Luka Doncic Under 7.5 | draftkings 1.89 vs fair 53.8% | EV +1.7% | [FADE PUBLIC]
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_points Charlie Coyle Over 0.5 | draftkings 1.91 vs fair 53.2% | EV +1.7% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Cutter Gauthier Under 3.5 | draftkings 2.2 vs fair 46.2% | EV +1.6% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
@@ -152,10 +154,11 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent missed last game, not on this week's report (pres
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 26 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
+[FADE PUBLIC] 28 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 [NEUTRAL] 9 bets | beat close 80% | CLV +0.27pp | 4-2 | ROI +32.3%
 [SHARP] 7 bets | beat close 75% | CLV +1.13pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
+[AGAINST SHARP · THIN MARKET] 2 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
    table: 2026-10-27T21:29:26+00:00 DraftKings reports the table temporarily unavailable
@@ -168,46 +171,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 1.5->0.5 46.0->5.0 (williamhill_us)
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 1.5->0.5 61.0->6.0 (williamhill_us)
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 1.5->0.5 61.0->6.0 (williamhill_us)
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 1.5->0.5 51.0->5.75 (betrivers)
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 1.5->0.5 34.0->4.7 (betrivers)
-2026-10-27T18:00:46+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 1.5->0.5 67.0->6.25 (betrivers)
-2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.14->2.23 (betrivers)
-2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.74->1.7 (betrivers)
-2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.15->2.2 (espnbet)
-2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.74->1.71 (espnbet)
-2026-10-27T11:29:02+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | spreads  Ottawa Senators 1.5->1.5 1.5->1.53 (betrivers)
-2026-10-27T11:29:02+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | spreads  Ottawa Senators 1.5->1.5 1.53->1.56 (espnbet)
-2026-10-27T11:29:02+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  New York Islanders 1.5->1.5 1.36->1.38 (betrivers)
-2026-10-27T11:29:02+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  New York Islanders 1.5->1.5 1.38->1.4 (fanduel)
-2026-10-27T11:29:02+00:00 Sharp NHL New Jersey Devils @ Dallas Stars | h2h  New Jersey Devils None->None 2.11->2.06 (lowvig)
-2026-10-27T11:29:02+00:00 Sharp NHL New Jersey Devils @ Dallas Stars | h2h  Dallas Stars None->None 1.79->1.83 (lowvig)
-2026-10-27T11:29:02+00:00 Sharp NHL New Jersey Devils @ Dallas Stars | h2h  New Jersey Devils None->None 2.11->2.06 (betonlineag)
-2026-10-27T11:29:02+00:00 Sharp NHL New Jersey Devils @ Dallas Stars | h2h  Dallas Stars None->None 1.79->1.83 (betonlineag)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 238.5->239.5 1.95->1.95 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 238.5->239.5 1.87->1.87 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | h2h  Indiana Pacers None->None 2.05->2.1 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 239.0->239.5 1.91->1.91 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 239.0->239.5 1.91->1.91 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | h2h  Indiana Pacers None->None 2.05->2.1 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 238.5->240.5 1.95->1.87 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 238.5->240.5 1.87->1.95 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | h2h  Indiana Pacers None->None 2.05->2.1 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->235.5 1.91->1.91 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->235.5 1.91->1.91 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.5->2.5 1.87->1.91 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.5->-2.5 1.95->1.91 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.25->2.2 (espnbet)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.0->2.5 1.91->1.95 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.0->-2.5 1.91->1.87 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.25->2.2 (fanatics)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->235.5 1.91->1.89 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->235.5 1.91->1.93 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->2.5 1.98->1.91 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-2.5 1.85->1.91 (draftkings)
-2026-10-27T10:47:01+00:00 Move NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.25->2.2 (betmgm)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Matthew Knies Under 1.5->1.5 1.78->1.83 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Matthew Knies Over 1.5->1.5 1.97->1.92 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Zach Werenski Under 3.5->3.5 1.63->1.59 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Zach Werenski Over 3.5->3.5 2.19->2.26 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_points Porter Martone Under 0.5->0.5 1.83->1.88 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_points Porter Martone Over 0.5->0.5 1.91->1.86 (pinnacle)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Porter Martone Under 1.5->1.5 2.25->2.2 (betmgm)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Porter Martone Over 1.5->1.5 1.54->1.57 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Monahan Under 1.5->1.5 1.87->1.71 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Monahan Over 1.5->1.5 1.8->1.95 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Cole Sillinger Under 1.5->1.5 1.87->1.71 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Cole Sillinger Over 1.5->1.5 1.8->1.95 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_points Adam Fantilli Under 0.5->0.5 2.15->2.1 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_points Charlie Coyle Under 0.5->0.5 2.1->2.0 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_points Charlie Coyle Over 0.5->0.5 1.67->1.74 (betmgm)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_goals Valeri Nichushkin Over 2.5->1.5 131.0->18.0 (betrivers)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Denton Mateychuk Under 2.5->0.5 1.18->3.8 (espnbet)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Denton Mateychuk Over 2.5->0.5 4.2->1.22 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Conor Garland Under 1.5->2.5 1.71->1.17 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Conor Garland Over 1.5->2.5 2.1->4.4 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Conor Garland Under 0.5->1.5 3.8->1.71 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Conor Garland Over 0.5->1.5 1.22->2.1 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Monahan Under 2.5->0.5 1.21->4.2 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Monahan Over 2.5->0.5 3.9->1.18 (espnbet)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Alex Bump Under 1.5->2.5 1.95->1.31 (espnbet)
+2026-10-27T21:40:31+00:00 Sharp NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Alex Bump Over 1.5->2.5 1.8->3.25 (espnbet)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Alex Bump Under 0.5->1.5 4.8->1.95 (espnbet)
+2026-10-27T21:40:31+00:00 Sharp NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Alex Bump Over 0.5->1.5 1.14->1.8 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Cole Sillinger Under 2.5->0.5 1.18->4.0 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Cole Sillinger Over 2.5->0.5 4.2->1.2 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Christian Dvorak Under 1.5->2.5 1.74->1.17 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Christian Dvorak Over 1.5->2.5 2.05->4.4 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Christian Dvorak Under 0.5->1.5 4.0->1.74 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Christian Dvorak Over 0.5->1.5 1.2->2.05 (espnbet)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Mathieu Olivier Under 2.5->0.5 1.24->3.9 (espnbet)
+2026-10-27T21:40:31+00:00 Steam NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Mathieu Olivier Over 2.5->0.5 3.7->1.21 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Damon Severson Under 2.5->0.5 1.2->3.5 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Damon Severson Over 2.5->0.5 4.0->1.27 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Couturier Over 1.5->2.5 2.1->4.2 (espnbet)
+2026-10-27T21:40:31+00:00 Move NHL Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Sean Couturier Over 0.5->1.5 1.21->2.1 (espnbet)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -339,7 +342,7 @@ NHL 2026-10-27T23:10:00Z Columbus Blue Jackets @ Philadelphia Flyers  id=f1b86cb
    ML: Columbus Blue Jackets  1.85 (open 1.83, best 1.85) / Philadelphia Flyers  2.05 (open 2.07, best 2.09)
    SPREAD: Columbus Blue Jackets -1.5 3.11 (open -1.5 3.12, best 3.15) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.43)
    TOTAL: Over 5.5 1.93 (open 5.5 1.88, best 1.93) / Under 5.5 1.94 (open 5.5 1.99, best 1.95)
-   moves: {'Move': 6, 'Sharp': 3, 'Steam': 10}
+   moves: {'Move': 76, 'Sharp': 10, 'Steam': 101}
 NHL 2026-10-28T00:08:00Z Boston Bruins @ Carolina Hurricanes  id=7ca25d591cbdc679a9ad85d1f04811cb
    ML: Boston Bruins  2.63 (open 2.62, best 2.7) / Carolina Hurricanes  1.54 (open 1.54, best 1.55)
    SPREAD: Boston Bruins 1.5 1.63 (open 1.5 1.62, best 1.67) / Carolina Hurricanes -1.5 2.37 (open -1.5 2.39, best 2.37)
