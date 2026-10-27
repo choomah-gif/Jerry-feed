@@ -59,6 +59,11 @@ PROP_STAT = {   # Odds API market -> (nflverse stat column, distribution)
     "player_anytime_td": ("td", "poisson"),
 }
 LEAN, PLAY = 0.015, 0.03          # NFL sides/totals (jerry.py thresholds)
+# NFL props (model) failed its 150-bet review on 2026-10-26: 65-85, -17.2u, -11.8% ROI, beat close 22%.
+# Calls keep paper-logging as evidence but are tagged [PAPER ONLY] and must not go on a card.
+NFL_PROPS_PAPER_ONLY = True
+NFL_ANCHOR = 0.25      # NFL model moves 25% from Pinnacle fair (backtest: calibrated, no side edge); fixed until 150 graded per market
+NFL_SIT_RAW = 0.06     # raw (pre-anchor) NFL edge above this = missing information, not a bet (same rule as NHL/props)
 UFC_LEAN, UFC_PLAY = 0.05, 0.08
 
 
@@ -142,13 +147,21 @@ def write_probs(con, rows, now):
                 r["_sig"] = _sig
             except Exception:
                 pass
-        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag)
-                       values(?,?,?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
+            # a pick must be placeable: TD 'No' becomes an AVOID note, and sides with no price at
+            # DraftKings/FanDuel/Fanatics are demoted (2026-10-27, after 'Pickens TD Lean No')
+            try:
+                r["call"], r["plain"] = jr.finalize_call(con, r["event_id"], r["market"], r["call"], r.get("player", "") or "",
+                                                         r.get("model_prob"), r.get("fair_prob"), r.get("line"), r.get("outcome"))
+            except Exception:
+                pass
+        con.execute("""insert into model_probs(event_id,market,outcome,player,line,model_prob,fair_prob,edge,call,note,ts,reasoning,flag,plain)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id,market,outcome,player) do update set
                        line=excluded.line, model_prob=excluded.model_prob, fair_prob=excluded.fair_prob, edge=excluded.edge,
-                       call=excluded.call, note=excluded.note, ts=excluded.ts, reasoning=excluded.reasoning, flag=excluded.flag""",
+                       call=excluded.call, note=excluded.note, ts=excluded.ts, reasoning=excluded.reasoning, flag=excluded.flag,
+                       plain=excluded.plain""",
                     (r["event_id"], r["market"], r["outcome"], r.get("player", ""), r.get("line"), r["model_prob"],
                      r.get("fair_prob"), r.get("edge"), r["call"], r.get("note", ""), now.isoformat(timespec="seconds"),
-                     r.get("reasoning"), r.get("flag")))
+                     r.get("reasoning"), r.get("flag"), r.get("plain")))
 
 
 # ---------------------------------------------------------------- NFL sides / totals
@@ -192,20 +205,51 @@ def _starting_qbs(pw, season, week, lookback=3):
         qb = g.sort_values("attempts", ascending=False).iloc[0].player_display_name
         team_last = d[d.team == t].week.max()
         played = ((d.team == t) & (d.week == team_last) & (d.player_display_name == qb) & (d.attempts > 5)).any()
-        out[t] = (qb, bool(played))
+        # consecutive most-recent team games he missed (2+ = shut down / IR, even if off the report)
+        missed = 0
+        for wk in sorted(d[d.team == t].week.unique(), reverse=True):
+            if ((d.team == t) & (d.week == wk) & (d.player_display_name == qb) & (d.attempts > 5)).any():
+                break
+            missed += 1
+        out[t] = (qb, bool(played), missed)
     return out
 
 def injury_adjustment(inj, team, qb):
     """(margin_pts, total_pts, detail) — positive margin_pts means this team is WEAKER by that much.
     qb is (name, played_last_game) from _starting_qbs, or None."""
-    qb_name, qb_played = (qb if isinstance(qb, tuple) else (qb, True)) if qb else (None, True)
+    # QB status comes from the official designation, not last week's box score (2026-10-26).
+    #   Out/Doubtful                        -> full QB_OUT_PTS
+    #   missed 2+ straight team games, unlisted (IR / shut down) -> full
+    #   Questionable                        -> half
+    #   missed only the last game, not on this week's report yet -> half, flagged UNVERIFIED
+    #   otherwise                           -> 0
+    if qb and isinstance(qb, tuple):
+        qb_name, qb_played = qb[0], qb[1]
+        qb_missed = qb[2] if len(qb) > 2 else (0 if qb[1] else 1)
+    else:
+        qb_name, qb_played, qb_missed = (qb, True, 0) if qb else (None, True, 0)
     d = inj[inj.team == team] if inj is not None and not inj.empty else None
     out = d[d.report_status.isin(["Out", "Doubtful"])] if d is not None and not d.empty else None
     pts = tot = 0.0; bits = []
     listed_out = qb_name is not None and out is not None and (out.full_name == qb_name).any()
-    if qb_name and (listed_out or not qb_played):
-        pts += QB_OUT_PTS; tot += QB_OUT_TOTAL
-        bits.append(f"starting QB {qb_name} {'out' if listed_out else 'did not play last game'} ({QB_OUT_PTS:+.1f})")
+    listed_q = (qb_name is not None and d is not None and not d.empty
+                and ((d.full_name == qb_name) & (d.report_status == "Questionable")).any())
+    team_reported = d is not None and not d.empty
+    share, why = 0.0, ""
+    if qb_name and listed_out:
+        share, why = 1.0, "listed Out/Doubtful"
+    elif qb_name and qb_missed >= 2:
+        share, why = 1.0, f"missed {qb_missed} straight games"
+    elif qb_name and listed_q:
+        share, why = 0.5, "Questionable"
+    elif qb_name and not qb_played:
+        share, why = (0.0, "missed last game, not on this week's report (presumed back)") if team_reported \
+            else (0.5, "missed last game, status UNVERIFIED — no report yet")
+    if share:
+        pts += QB_OUT_PTS * share; tot += QB_OUT_TOTAL * share
+        bits.append(f"starting QB {qb_name} {why} ({QB_OUT_PTS*share:+.1f})")
+    elif why:
+        bits.append(f"starting QB {qb_name} {why}")
     if out is None:
         return pts, tot, "; ".join(bits)
     starters = out[out.position.isin(["RB", "WR", "TE", "T", "G", "C", "OL"])]
@@ -292,6 +336,16 @@ def refresh_nfl(con, now):
         f_hcov = fair_two_way(hprice, aprice) if hprice and aprice else 0.5
         f_under = fair_two_way(uprice, oprice) if uprice and oprice else 0.5
         f_hml = fair_two_way(hmlp, amlp) if hmlp and amlp else None
+        # ---- market anchor (2026-10-26): NFL had none, so a crude input produced +10.9% ML edges
+        pred = pred.copy()
+        raw_cov, raw_under = float(pred.p_home_cover), float(pred.p_under)
+        raw_ml = float(pred.p_home_ml) if "p_home_ml" in pred.index else None
+        pred["p_home_cover"] = f_hcov + NFL_ANCHOR * (raw_cov - f_hcov)
+        pred["p_under"] = f_under + NFL_ANCHOR * (raw_under - f_under)
+        if raw_ml is not None and f_hml is not None:
+            pred["p_home_ml"] = f_hml + NFL_ANCHOR * (raw_ml - f_hml)
+        def _too_big(raw, fair):
+            return fair is not None and raw is not None and abs(raw - fair) > NFL_SIT_RAW
         inj_h = inj[inj.team == h]; inj_a = inj[inj.team == a]
         note = "; ".join(f"{t}: " + ", ".join(f"{r.full_name} ({r.position}) {r.report_status}" for _, r in d.iterrows() if r.report_status != "Questionable")
                          for t, d in ((h, inj_h), (a, inj_a)) if (d.report_status != "Questionable").any())
@@ -306,8 +360,11 @@ def refresh_nfl(con, now):
         sp_ratio = jr.edge_ratio(pred.pred_margin - (-hline), jr.DEFAULT_MODEL_MAE["spreads"])
         sp_tag, _sp_stake, _ = jr.size_from_ratio(sp_ratio, e, cap_lean=True)
         sp_side = ev.home if e > 0 else ev.away
+        sp_comp["raw_prob_pre_anchor"] = round(raw_cov, 4)
+        if _too_big(raw_cov, f_hcov):
+            sp_tag = "Sit (edge too large — check inputs)"
         out.append(dict(event_id=ev.event_id, market="spreads", outcome=ev.home, line=hline, model_prob=pred.p_home_cover, fair_prob=f_hcov, edge=e,
-                        call=f"{sp_tag} {sp_side}" if sp_tag != "Sit" else "Sit",
+                        call=f"{sp_tag} {sp_side}" if not sp_tag.startswith("Sit") else sp_tag,
                         note=f"model margin {pred.pred_margin:+.1f} (home) vs line {-hline:+.1f}; ratio {sp_ratio:.2f} of a {jr.DEFAULT_MODEL_MAE['spreads']}-pt error band; P(|margin|=3) {pred.abs_margin_3:.0%}, =7 {pred.abs_margin_7:.0%}. {note}",
                         components=sp_comp, model_number=sp_comp["model_number"], market_number=sp_comp["market_number"],
                         reasoning=jr.render_reasoning(market="spreads", player="", selection=sp_side, line=hline if e > 0 else aline,
@@ -322,8 +379,11 @@ def refresh_nfl(con, now):
         tot_ratio = jr.edge_ratio(pred.pred_total - float(oline), jr.DEFAULT_MODEL_MAE["totals"])
         tot_tag, _t_stake, _ = jr.size_from_ratio(tot_ratio, eu)
         tot_side = "Under" if eu > 0 else "Over"
+        tot_comp["raw_prob_pre_anchor"] = round(raw_under, 4)
+        if _too_big(raw_under, f_under):
+            tot_tag = "Sit (edge too large — check inputs)"
         out.append(dict(event_id=ev.event_id, market="totals", outcome="Under", line=uline, model_prob=pred.p_under, fair_prob=f_under, edge=eu,
-                        call=f"{tot_tag} {tot_side}" if tot_tag != "Sit" else "Sit",
+                        call=f"{tot_tag} {tot_side}" if not tot_tag.startswith("Sit") else tot_tag,
                         note=f"model total {pred.pred_total:.1f} vs {oline}; ratio {tot_ratio:.2f} of a {jr.DEFAULT_MODEL_MAE['totals']}-pt error band "
                              f"(backtest 58.5% at n=159 has a 95% interval of 50.8-66.2%, not significant vs 52.4% break-even)",
                         components=tot_comp, model_number=tot_comp["model_number"], market_number=tot_comp["market_number"],
@@ -334,8 +394,11 @@ def refresh_nfl(con, now):
         out.append(dict(event_id=ev.event_id, market="totals", outcome="Over", line=oline, model_prob=1 - pred.p_under, fair_prob=1 - f_under, edge=-eu, call="see Under row"))
         if f_hml is not None:
             em = pred.p_home_ml - f_hml
+            ml_call = ("Sit (edge too large — check inputs)" if _too_big(raw_ml, f_hml)
+                       else f"{call_for(em, LEAN, PLAY, cap_lean=True)} {ev.home if em > 0 else ev.away}" if abs(em) >= LEAN else "Sit")
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.home, model_prob=pred.p_home_ml, fair_prob=f_hml, edge=em,
-                            call=f"{call_for(em, LEAN, PLAY, cap_lean=True)} {ev.home if em > 0 else ev.away}" if abs(em) >= LEAN else "Sit"))
+                            call=ml_call,
+                            note=f"raw model {raw_ml:.1%} vs fair {f_hml:.1%}, anchored {NFL_ANCHOR:.0%} toward market. {inj_detail}"[:400]))
             out.append(dict(event_id=ev.event_id, market="h2h", outcome=ev.away, model_prob=1 - pred.p_home_ml, fair_prob=1 - f_hml, edge=-em, call="see home row"))
     write_probs(con, out, now)
     return out
@@ -547,7 +610,8 @@ def refresh_nfl_props(con, now):
                                         model_prob=p_model, fair_prob=fair, components=comp,
                                         opponent=opp, status=status, n_games=r["n"])
         out.append(dict(event_id=eid, market=market, outcome=o_name, player=player, line=line, model_prob=p_model, fair_prob=fair, edge=edge,
-                        call=f"{tag} {side} {line if line is not None else ''}".strip() if tag != "Sit" else "Sit", note=note,
+                        call=(f"{tag} {side} {line if line is not None else ''}".strip()
+                              + (" [PAPER ONLY]" if NFL_PROPS_PAPER_ONLY else "")) if tag != "Sit" else "Sit", note=note,
                         components=comp, model_number=comp["model_number"], market_number=comp["market_number"],
                         reasoning=reasoning))
     # Clear this sport's prop rows for upcoming games before writing. write_probs only
@@ -561,21 +625,84 @@ def refresh_nfl_props(con, now):
 
 # ---------------------------------------------------------------- NHL
 def dailyfaceoff_goalies():
-    """Confirmed starters from DailyFaceoff (best effort: parses the page's embedded JSON). Returns {team_abbr: (goalie, status)}."""
+    """Confirmed starters from DailyFaceoff. Returns {team_abbr: (goalie, status)}.
+
+    Parses the page's __NEXT_DATA__ JSON and walks it. The old regex used [^{}] spans,
+    which can never step into the nested "team": {...} object, so it matched nothing
+    and every NHL total ran as a goalie-unconfirmed Sit (fixed 2026-10-26).
+    """
     try:
         html = requests.get("https://www.dailyfaceoff.com/starting-goalies", timeout=20,
                             headers={"User-Agent": "Mozilla/5.0"}).text
     except Exception as e:
         log(f"dailyfaceoff unavailable: {e}"); return {}
-    out = {}
     m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
-    blob = m.group(1) if m else html
-    # look for goalie objects: {"name": "...", "team": {"abbreviation": "BOS"}, "status": "Confirmed"} in any nesting
-    for mm in re.finditer(r'"name"\s*:\s*"([^"]+)"[^{}]{0,400}?"abbreviation"\s*:\s*"([A-Z]{2,3})"[^{}]{0,400}?"(?:status|newsStrength)"\s*:\s*"([^"]+)"', blob):
-        name, abbr, status = mm.groups()
-        if abbr not in out or "onfirm" in status:
-            out[abbr] = (name, status)
+    if not m:
+        log("dailyfaceoff: no __NEXT_DATA__ on page"); return {}
+    try:
+        blob = json.loads(m.group(1))
+    except Exception as e:
+        log(f"dailyfaceoff: bad JSON {e}"); return {}
+    out = {}
+    rank = lambda st: 2 if "onfirm" in st else 1 if "ikel" in st or "xpect" in st else 0
+
+    def team_abbr(d, side=""):
+        for k in (f"{side}TeamAbbreviation", f"{side}TeamSlug", f"{side}TeamAbbr"):
+            v = d.get(k)
+            if isinstance(v, str) and 2 <= len(v) <= 3:
+                return v.upper()
+        t = d.get(f"{side}Team") if side else d.get("team")
+        for k in (f"{side}TeamName", "teamName"):
+            if isinstance(d.get(k), str) and d[k] in NHL_TEAMS:
+                return NHL_TEAMS[d[k]]
+        if isinstance(t, str) and t in NHL_TEAMS:
+            return NHL_TEAMS[t]
+        if isinstance(t, dict):
+            if isinstance(t.get("name"), str) and t["name"] in NHL_TEAMS:
+                return NHL_TEAMS[t["name"]]
+            for k in ("abbreviation", "abbr", "triCode", "shortName"):
+                v = t.get(k)
+                if isinstance(v, str) and 2 <= len(v) <= 3:
+                    return v.upper()
+        return None
+
+    alias = {"LA": "LAK", "NJ": "NJD", "SJ": "SJS", "TB": "TBL", "T.B": "TBL", "N.J": "NJD", "L.A": "LAK",
+             "S.J": "SJS", "WAS": "WSH", "MON": "MTL", "CLB": "CBJ", "VEG": "VGK", "UTAH": "UTA", "ARI": "UTA"}
+
+    def put(abbr, name, status):
+        abbr = alias.get(abbr, abbr) if abbr else abbr
+        if abbr and name and (abbr not in out or rank(status) > rank(out[abbr][1])):
+            out[abbr] = (name, status or "")
+
+    def walk(o):
+        if isinstance(o, dict):
+            # layout A: one object per game with home*/away* goalie fields
+            for side in ("home", "away"):
+                name = o.get(f"{side}GoalieName")
+                g = o.get(f"{side}Goalie")
+                if not isinstance(name, str) and isinstance(g, dict):
+                    name = g.get("name") or g.get("fullName")
+                if isinstance(name, str):
+                    st = o.get(f"{side}NewsStrengthName") or o.get(f"{side}GoalieStatus") or o.get(f"{side}Status") or ""
+                    put(team_abbr(o, side), name, str(st))
+            # layout B: one object per goalie with a nested team
+            if isinstance(o.get("name"), str) and ("team" in o) and any(k in o for k in ("status", "newsStrength", "newsStrengthName")):
+                st = o.get("status") or o.get("newsStrengthName") or o.get("newsStrength") or ""
+                put(team_abbr(o), o["name"], str(st))
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(blob)
+    global LAST_GOALIES
+    LAST_GOALIES = (datetime.now(UTC), len(out), sum(1 for v in out.values() if "onfirm" in v[1]))
+    log(f"dailyfaceoff: {len(out)} teams, {LAST_GOALIES[2]} confirmed")
     return out
+
+
+LAST_GOALIES = None   # (ts, teams parsed, confirmed) from the latest DailyFaceoff read, for the health check
 
 
 def goalie_overrides(con):
@@ -675,7 +802,9 @@ def refresh_nhl(con, now):
                 cand = goalies[(goalies.team == t)]
                 hit = cand[cand.name.str.lower().str.contains(_norm(g[0]).split(" ")[-1])]
                 if not hit.empty:
-                    return _gsax60(hit.iloc[0].gsax, hit.iloc[0].iceTime), f"{g[0]} ({g[1]})"
+                    sure = ("onfirm" in g[1]) or g[1] == "Manual"
+                    # a Likely/Expected starter is used for the number but still counts as unconfirmed (totals Sit)
+                    return _gsax60(hit.iloc[0].gsax, hit.iloc[0].iceTime), (f"{g[0]} ({g[1]})" if sure else f"{g[0]} ({g[1]}, unconfirmed)")
             tg = goalies[goalies.team == t]
             if tg.empty:
                 return 0.0, "goalie unconfirmed (league avg)"
@@ -892,6 +1021,70 @@ def alert_new_plays(con, rows):
 PAPER_BOOKS = ("pinnacle", "lowvig", "betonlineag", "draftkings", "fanduel", "fanatics", "betmgm", "williamhill_us", "espnbet", "betrivers")
 PRICE_BOOKS = tuple(b.strip() for b in os.environ.get("PRICE_BOOKS", "draftkings,fanduel,fanatics").split(",") if b.strip())
 PRICE_EDGE_MIN = 0.015     # +EV vs Pinnacle fair needed to flag a soft-book price
+PRICE_EDGE_MIN_ADJ = 0.025 # higher bar when the fair had to be translated across a line gap
+
+# Version tag on every paper row, so a rebuild never mixes with the evidence of the old
+# model. Bump the string whenever a model's logic changes; the 150-bet clock is per version.
+MODEL_VERSIONS = {
+    ("NFL", "model"): "nfl-v3-anchor25-qbstatus-2026-10-26",
+    ("NFL_PROPS", "model"): "nflprops-v2-paperonly-2026-10-26",
+    ("NHL", "model"): "nhl-v3-goaliejson-2026-10-26",
+    ("UFC", "model"): "ufc-v1-2026-10-24",
+    ("NBA", "model"): "nba-v1-2026-10-26",
+    ("MLB", "model"): "mlb-v1-2026-10-24",
+    ("ANY", "price"): "price-v3-activegate-2026-10-27",
+}
+
+
+def model_version(sport, market, kind="model"):
+    if kind == "price":
+        return MODEL_VERSIONS[("ANY", "price")]
+    key = "NFL_PROPS" if (sport == "NFL" and str(market).startswith("player_")) else sport
+    return MODEL_VERSIONS.get((key, kind), f"{key.lower()}-unversioned")
+
+
+def _hours_to(commence, now):
+    try:
+        t = datetime.fromisoformat(str(commence).replace("Z", "+00:00"))
+        return round((t - now).total_seconds() / 3600, 2)
+    except Exception:
+        return None
+
+
+NFL_KEY = (3.0, 7.0, 10.0, 14.0)
+# probability per point near the middle of the distribution (normal density at the mean)
+GAME_SLOPE = {("NFL", "spreads"): 0.028, ("NFL", "totals"): 0.016,
+              ("NBA", "spreads"): 0.031, ("NBA", "totals"): 0.021}
+
+
+def _translate_fair(sport, market, outcome, pin_line, soft_line):
+    """Change in fair probability for `outcome` when moving from Pinnacle's line to the soft
+    book's line, or None when a linear translation would be dishonest."""
+    d = soft_line - pin_line
+    if abs(d) > 1.0:
+        return None
+    if market.startswith("player_"):
+        # Not yet: the flat 0.045/pt prop slope is wrong in both directions (rebounds ~0.13/pt,
+        # yards ~0.016/pt), which would manufacture edges. Queued until per-market dispersion
+        # is measured from graded props.
+        return None
+    elif market == "spreads":
+        if sport == "NFL" and any(min(abs(pin_line), abs(soft_line)) <= k <= max(abs(pin_line), abs(soft_line)) for k in NFL_KEY):
+            return None
+        if sport in ("NHL", "MLB"):
+            return None          # puck/run lines are fixed at 1.5; a different number is a different bet
+    elif market == "totals":
+        if sport in ("NHL", "MLB"):
+            return None          # half a goal/run is far from linear
+    else:
+        return None
+    sign = jr._line_sign(market, outcome)
+    if sign == 0:
+        return None
+    slope = GAME_SLOPE.get((sport, market))
+    if slope is None:
+        return None
+    return sign * slope * d
 BIG_EDGE = 0.08            # a model edge above this is treated as a bug, not a bet
 
 
@@ -909,7 +1102,10 @@ def ensure_paper_schema(con):
     # flags travel with every edge and every paper bet so their value can be measured
     for tbl, col, typ in (("value_edges", "flag", "text"), ("bets", "sharp_flag", "text"),
                           ("bets", "dk_bets_pct", "real"), ("bets", "dk_handle_pct", "real"),
-                          ("model_probs", "flag", "text"), ("model_probs", "reasoning", "text")):
+                          ("model_probs", "flag", "text"), ("model_probs", "reasoning", "text"),
+                          ("bets", "model_version", "text"), ("bets", "hours_to_start", "real"),
+                          ("bets", "edge", "real"), ("bets", "fair_prob", "real"),
+                          ("model_probs", "plain", "text"), ("value_edges", "activity", "text")):
         try:
             if col not in {r[1] for r in con.execute(f"pragma table_info({tbl})")}:
                 con.execute(f"alter table {tbl} add column {col} {typ}")
@@ -989,6 +1185,14 @@ def paper_log(con, rows, now):
                      jr.falsifier(r["market"], sel, line, mnum, player),
                      jr.steelman(r["market"], mnum, knum, sel), stake, r.get("call"),
                      r.get("flag"), (r.get("_sig") or {}).get("dk_bets"), (r.get("_sig") or {}).get("dk_handle")))
+        _fp = r.get("fair_prob")
+        if _fp is not None and sel != r.get("outcome"):
+            _fp = 1 - _fp
+        _ed = r.get("edge")
+        if _ed is not None and sel != r.get("outcome"):
+            _ed = -_ed
+        con.execute("update bets set model_version=?, hours_to_start=?, edge=?, fair_prob=? where id=last_insert_rowid()",
+                    (model_version(ev["sport"], r["market"]), _hours_to(ev["commence"], now), _ed, _fp))
         n += 1
     return n
 
@@ -1024,9 +1228,19 @@ def price_edges(con, now):
                 if r["book"] not in PRICE_BOOKS or r["outcome"] not in fair or not r["price"]:
                     continue
                 L = lines[r["outcome"]]
-                if (L is None) != (r["line"] is None) or (L is not None and abs(float(L) - float(r["line"])) > 1e-9):
+                if (L is None) != (r["line"] is None):
                     continue
-                evv = float(r["price"]) * fair[r["outcome"]] - 1
+                f_use, adj = fair[r["outcome"]], 0.0
+                if L is not None and abs(float(L) - float(r["line"])) > 1e-9:
+                    # Line-translated fair (2026-10-26): retail lines often sit a half-point off
+                    # Pinnacle and were all skipped. Translate only where a linear slope is honest.
+                    adj = _translate_fair(ev["sport"], market, r["outcome"], float(L), float(r["line"]))
+                    if adj is None:
+                        continue
+                    f_use = min(max(f_use + adj, 0.01), 0.99)
+                evv = float(r["price"]) * f_use - 1
+                if adj and evv < PRICE_EDGE_MIN_ADJ:
+                    continue
                 if evv >= PRICE_EDGE_MIN and player:
                     # roster cross-check (#5): The Odds API sometimes returns a player's prop
                     # under the wrong event. If his last known team is neither side, drop it.
@@ -1039,10 +1253,26 @@ def price_edges(con, now):
                         con.execute("insert or replace into meta(k,v) values(?,?)",
                                     (f"label_reject_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
                         continue
+                # active-player gate (2026-10-27): 3 of 10 card bets on 10-26 were players who did not play.
+                # Did not play last game -> no edge. Under 12 NBA minutes -> tagged LOW MINUTES. No team
+                # on file -> tagged MINUTES UNVERIFIED. NFL has no box-score feed here, so it is not gated.
+                activity = None
+                if evv >= PRICE_EDGE_MIN and player and ev["sport"] in ("NBA", "NHL"):
+                    try:
+                        import jerry_feeds as _jf
+                        st_, mins_ = _jf.active_status(con, ev["sport"], player)
+                    except Exception:
+                        st_, mins_ = "unknown", None
+                    if st_ == "dnp":
+                        con.execute("insert or replace into meta(k,v) values(?,?)",
+                                    (f"inactive_skip_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
+                        continue
+                    activity = {"low": f"LOW MINUTES ({mins_:.0f} last game)" if mins_ is not None else "LOW MINUTES",
+                                "unknown": "MINUTES UNVERIFIED"}.get(st_)
                 if evv >= PRICE_EDGE_MIN:
                     row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
-                               price=r["price"], fair=round(fair[r["outcome"]], 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
-                               commence=ev["commence"])
+                               price=r["price"], fair=round(f_use, 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
+                               commence=ev["commence"], line_adj=bool(adj), pin_line=L, activity=activity)
                     try:
                         _sig = jr.sharp_signal(con, ev["event_id"], market, r["outcome"], player)
                     except Exception:
@@ -1051,10 +1281,10 @@ def price_edges(con, now):
                     row["flag_text"] = _sig.get("text") if _sig else ""
                     row["_sig"] = _sig
                     out.append(row)
-                    con.execute("""insert or replace into value_edges(event_id,market,outcome,player,line,book,price,fair,ev,ts,flag)
-                                   values(?,?,?,?,?,?,?,?,?,?,?)""",
+                    con.execute("""insert or replace into value_edges(event_id,market,outcome,player,line,book,price,fair,ev,ts,flag,activity)
+                                   values(?,?,?,?,?,?,?,?,?,?,?,?)""",
                                 (row["event_id"], market, r["outcome"], player, r["line"], r["book"], r["price"], row["fair"], row["ev"],
-                                 now.isoformat(timespec="seconds"), row["flag"]))
+                                 now.isoformat(timespec="seconds"), row["flag"], row.get("activity")))
     # paper-trade them too (one per outcome, first book seen)
     n = 0
     for row in out:
@@ -1065,12 +1295,17 @@ def price_edges(con, now):
                        model_prob, note, paper) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)""",
                     (now.isoformat(timespec="seconds"), row["sport"], row["event_id"], f"{row['away']} @ {row['home']}", row["commence"],
                      row["market"], row["outcome"], row["player"], row["line"], row["price"], row["book"], 1.0, row["fair"],
-                     f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}"))
+                     (f"price edge (line-adj from {row['pin_line']}) {row['ev']:+.1%} vs translated fair {row['fair']:.1%}"
+                      if row.get("line_adj") else f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}")))
         _s = row.get("_sig") or {}
-        con.execute("""update bets set evidence_kind='price', corr_group=?, sharp_flag=?, dk_bets_pct=?, dk_handle_pct=?
+        con.execute("""update bets set evidence_kind=?, corr_group=?, sharp_flag=?, dk_bets_pct=?, dk_handle_pct=?,
+                       model_version=?, hours_to_start=?, edge=?, fair_prob=?
                        where id=last_insert_rowid()""",
-                    (jr.correlation_group(row["sport"], row["event_id"], row["market"], row["outcome"], row["player"]),
-                     row.get("flag"), _s.get("dk_bets"), _s.get("dk_handle")))
+                    ("price_adj" if row.get("line_adj") else "price",
+                     jr.correlation_group(row["sport"], row["event_id"], row["market"], row["outcome"], row["player"]),
+                     row.get("flag"), _s.get("dk_bets"), _s.get("dk_handle"),
+                     model_version(row["sport"], row["market"], "price"), _hours_to(row["commence"], now),
+                     row["ev"], row["fair"]))
         n += 1
     return out, n
 
@@ -1101,6 +1336,24 @@ def health_check(db_path, results):
             probs.append(f"{sport}: {len(ev)} games within 36h but no prices on the board")
         elif not nm and sport in (results or {}) and sport != "NBA":
             probs.append(f"{sport}: prices present but the model produced 0 rows")
+    # NHL goalie feed: a game within 90 minutes with zero confirmed starters league-wide means the parser broke
+    t90 = (now + timedelta(minutes=90)).isoformat(timespec="seconds")
+    nhl_soon = con.execute("select count(*) from events where sport='NHL' and commence>? and commence<?", (t0, t90)).fetchone()[0]
+    if nhl_soon:
+        if LAST_GOALIES is None:
+            probs.append("NHL: games within 90 min but the goalie feed has not been read this session")
+        elif LAST_GOALIES[1] == 0:
+            probs.append("NHL: DailyFaceoff parsed 0 teams — goalie parser broken, every total is a Sit")
+        elif LAST_GOALIES[2] == 0:
+            probs.append(f"NHL: {nhl_soon} games within 90 min and 0 confirmed goalies ({LAST_GOALIES[1]} teams parsed)")
+    spl = (results or {}).get("SPLITS")
+    if isinstance(spl, dict) and not (spl.get("table_rows") or spl.get("article_rows")):
+        probs.append("DK splits: 0 rows — public-money input is empty; flags rest on Pinnacle-vs-retail only")
+    # a [PAPER ONLY] model must never reach Telegram/card as a live Play
+    leak = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>?
+                          and m.call like 'Play%' and m.call like '%PAPER ONLY%'""", (t0,)).fetchone()[0]
+    if leak:
+        probs.append(f"{leak} PAPER ONLY rows tagged Play")
     big = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>? and abs(coalesce(m.edge,0))>?
                          and (m.call like 'Lean%' or m.call like 'Play%')""", (t0, BIG_EDGE)).fetchone()[0]
     if big:
@@ -1137,6 +1390,7 @@ def refresh_all(db_path, sports=("NFL", "NFL_PROPS", "NHL", "UFC")):
             rows = fn(con, now)
             con.commit()
             results[s] = len(rows)
+            con.execute("delete from meta where k=?", (f"error_model_{s}",))   # clear a stale error once the model runs clean
             alert_new_plays(con, rows)
             con.commit()
             try:
