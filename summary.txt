@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T17:03:27+00:00)
+KRONOS DESK SUMMARY  (generated 2026-10-27T17:08:29+00:00)
 credits left 1708 | budget/day 305 | spent today 102 | reset in 4.29d | backfill days {'NHL': 4}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T17:03:09+00:00 'sqlite3.Row' object has no attribute 'get'"}
+errors: {'error_grade': "2026-10-27T17:07:54+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 24, NHL 20 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 66, NHL 179 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -13,84 +13,68 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 441 rows
-all: {"n": 441, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 273, "record": "125-148-0", "units": -14.19, "roi": -0.0527}
-  NBA moneyline (price edge): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NBA props (price edge): {"n": 68, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 45, "record": "27-18-0", "units": 7.92, "roi": 0.176}
-  NFL moneyline (model): {"n": 22, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
-  NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
-  NFL props (model): {"n": 204, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177}
-  NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 3.2, "beat_close_pct": 1.0, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453}
-  NFL spread (model): {"n": 26, "closed": 11, "clv_pp_avg": 0.19, "beat_close_pct": 0.545, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317}
-  NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 4.05, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0}
-  NFL total (model): {"n": 38, "closed": 8, "clv_pp_avg": 0.1, "beat_close_pct": 0.5, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709}
-  NHL moneyline (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NHL props (price edge): {"n": 22, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 11, "record": "5-6-0", "units": -0.91, "roi": -0.0827}
-  NHL spread (model): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NHL total (model): {"n": 14, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
+all: {"n": 441, "closed": 249, "clv_pp_avg": -1.43, "beat_close_pct": 0.217, "graded": 273, "record": "125-148-0", "units": -14.19, "roi": -0.0527, "roi_90ci_by_game": [-0.1945, 0.093, 25]}
+  NBA moneyline (price edge): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NBA props (price edge): {"n": 68, "closed": 18, "clv_pp_avg": 0.94, "beat_close_pct": 0.778, "graded": 45, "record": "27-18-0", "units": 7.92, "roi": 0.176, "roi_90ci_by_game": [-0.05, 0.3961, 9]}
+  NFL moneyline (model): {"n": 22, "closed": 7, "clv_pp_avg": -0.9, "beat_close_pct": 0.0, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886, "roi_90ci_by_game": null}
+  NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
+  NFL props (model): {"n": 204, "closed": 157, "clv_pp_avg": -2.24, "beat_close_pct": 0.057, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
+  NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 0.63, "beat_close_pct": 0.694, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453, "roi_90ci_by_game": [-0.4443, 0.1024, 12]}
+  NFL spread (model): {"n": 26, "closed": 12, "clv_pp_avg": -1.63, "beat_close_pct": 0.083, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317, "roi_90ci_by_game": [-0.1667, 0.8125, 12]}
+  NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
+  NFL total (model): {"n": 38, "closed": 11, "clv_pp_avg": -1.8, "beat_close_pct": 0.091, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709, "roi_90ci_by_game": [-0.8127, 0.2691, 11]}
+  NHL moneyline (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 22, "closed": 5, "clv_pp_avg": 0.03, "beat_close_pct": 0.6, "graded": 11, "record": "5-6-0", "units": -0.91, "roi": -0.0827, "roi_90ci_by_game": null}
+  NHL spread (model): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 14, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+ by model version (the 150-bet clock runs per version):
+  pre-version (before 2026-10-26): n 441 | CLV -1.43 | beat close 0.217 | 125-148-0 | -14.19u | ROI -0.0527
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | h2h  Washington Commanders  | model 75.2% fair 64.3% edge +10.9 | Lean Washington Commanders [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 69% vs market 58%
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 69.1% fair 58.1% edge +10.9 | Lean Tampa Bay Rays [AGAINST SHARP · PUBLIC] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 69% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP · PUBLIC]: sharp/steam alerts 0 for, 20 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
+      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 69% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP · PUBLIC]: sharp/steam alerts 0.0 for, 3.8 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
+MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 53% vs market 44%
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 53.0% fair 43.6% edge +9.3 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 53% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0 for, 28 against. Caution: sharp money has moved the other way.
-NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | h2h  Seattle Seahawks  | model 69.9% fair 63.1% edge +6.8 | Lean Seattle Seahawks [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: retail books discount it 3.3pp — the public is on the other side.
-NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | h2h  Miami Dolphins  | model 29.3% fair 23.7% edge +5.6 | Lean Miami Dolphins [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: retail books discount it 4.0pp — the public is on the other side.
-NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.9% edge +4.3 | Lean Detroit Lions [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: retail books discount it 3.5pp — the public is on the other side.
-NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 72.9% edge -3.6 | Lean Arizona Cardinals [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | h2h  Jacksonville Jaguars  | model 74.9% fair 78.2% edge -3.3 | Lean Indianapolis Colts [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: retail books discount it 1.6pp — the public is on the other side.
-NFL 2026-11-01T18:00Z Las Vegas Raiders @ New York Jets | h2h  New York Jets  | model 53.3% fair 50.0% edge +3.3 | Lean New York Jets [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NFL 2026-11-01T18:00Z Atlanta Falcons @ Tampa Bay Buccaneers | h2h  Tampa Bay Buccaneers  | model 58.1% fair 55.4% edge +2.6 | Lean Tampa Bay Buccaneers [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: retail books discount it 2.7pp — the public is on the other side.
-NFL 2026-11-01T21:25Z Kansas City Chiefs @ Denver Broncos | h2h  Denver Broncos  | model 49.0% fair 46.7% edge +2.3 | Lean Denver Broncos [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh Steelers  | model 66.2% fair 64.4% edge +1.8 | Lean Pittsburgh Steelers [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.6 | Lean Los Angeles Chargers [NEUTRAL] | 
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T16:51:00+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 18})
+      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 53% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 5.4 against. Caution: sharp money has moved the other way.
+(models last refreshed: 2026-10-27T17:07:57+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 42, "backfill_days": 12, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 159, "backfill_days": 26, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 24})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-27T23:10Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.24), home win 46% vs 47%
-      no gap large enough to be a mispricing | xG 2.82-3.13; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NBA 2026-10-27T23:40Z | KRONOS Brooklyn Nets 112.7 @ Boston Celtics 121.5 | market 104.5-116.0 | gap margin -2.7 (0.27), total +13.7 (0.98)
-      EXPLOIT CANDIDATE [AGAINST SHARP]: Over totals, 0.98 error bands; pinnacle has moved away from it since open; sharp/steam alerts 2 for, 22 against; retail books discount it 1.6pp — the public is on the other side — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/2
+NHL 2026-10-27T23:10Z | KRONOS Columbus Blue Jackets 3.2 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.25), home win 46% vs 47%
+      no gap large enough to be a mispricing | xG 2.78-3.20; Dan Vladar (Confirmed) / Cam Talbot (Confirmed)
+NBA 2026-10-27T23:40Z | KRONOS Brooklyn Nets 110.1 @ Boston Celtics 121.2 | market 104.5-116.0 | gap margin -0.3 (0.03), total +10.8 (0.77)
+      gap Over totals 0.77 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 4/3
 MLB 2026-10-28T00:00Z | KRONOS Milwaukee Brewers 3.7 @ Tampa Bay Rays 4.0 | market total 7.0 | gap total +0.8 (0.23)
       no gap large enough to be a mispricing | runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; postseason x0.88; SP TBD @ Griffin Jax
-NHL 2026-10-28T00:08Z | KRONOS Boston Bruins 3.1 @ Carolina Hurricanes 3.2 | market total 6.5 | gap total -0.2 (0.08), home win 59% vs 64%
-      no gap large enough to be a mispricing | xG 3.19-3.15; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:08Z | KRONOS New Jersey Devils 2.7 @ Dallas Stars 3.2 | market total 5.5 | gap total +0.4 (0.21), home win 55% vs 53%
-      no gap large enough to be a mispricing | xG 3.16-2.74; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:09Z | KRONOS Florida Panthers 3.0 @ Winnipeg Jets 3.0 | market total 6.0 | gap total +0.0 (0.02), home win 47% vs 45%
-      no gap large enough to be a mispricing | xG 3.03-3.01; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:10Z | KRONOS Montréal Canadiens 3.3 @ St Louis Blues 3.2 | market total 6.0 | gap total +0.5 (0.26), home win 51% vs 53%
-      no gap large enough to be a mispricing | xG 3.18-3.32; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T00:10Z | KRONOS New York Islanders 3.1 @ Nashville Predators 2.8 | market total 5.5 | gap total +0.3 (0.18), home win 50% vs 53%
-      no gap large enough to be a mispricing | xG 2.75-3.09; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NBA 2026-10-28T00:10Z | KRONOS Detroit Pistons 115.5 @ New York Knicks 113.3 | market 107.5-111.5 | gap margin -6.2 (0.62), total +9.8 (0.70)
-      no gap large enough to be a mispricing | ridge ratings; games 1/1
-NBA 2026-10-28T00:10Z | KRONOS Sacramento Kings 113.8 @ San Antonio Spurs 118.6 | market 106.8-124.2 | gap margin -12.7 (1.27), total +1.4 (0.10)
-      EXPLOIT CANDIDATE [AGAINST SHARP]: Sacramento Kings spreads, 1.27 error bands; pinnacle has moved away from it since open; sharp/steam alerts 0 for, 16 against — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/1
-NHL 2026-10-28T00:11Z | KRONOS Los Angeles Kings 3.3 @ Chicago Blackhawks 3.0 | market total 6.0 | gap total +0.4 (0.19), home win 47% vs 47%
-      no gap large enough to be a mispricing | xG 3.03-3.33; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T01:10Z | KRONOS Minnesota Wild 3.5 @ Utah Mammoth 3.1 | market total 6.5 | gap total +0.1 (0.05), home win 51% vs 54%
-      no gap large enough to be a mispricing | xG 3.15-3.45; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 2.9 @ Anaheim Ducks 4.1 | market total 6.5 | gap total +0.6 (0.29), home win 67% vs 66%
-      no gap large enough to be a mispricing | xG 4.14-2.91; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.0 @ Vegas Golden Knights 3.2 | market total 6.5 | gap total -0.2 (0.12), home win 57% vs 59%
-      no gap large enough to be a mispricing | xG 3.24-3.02; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.2 @ San Jose Sharks 3.2 | market total 6.5 | gap total -0.1 (0.04), home win 45% vs 43%
-      no gap large enough to be a mispricing | xG 3.17-3.25; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:08Z | KRONOS Boston Bruins 3.0 @ Carolina Hurricanes 3.3 | market total 6.5 | gap total -0.2 (0.13), home win 61% vs 64%
+      no gap large enough to be a mispricing | xG 3.29-2.97; Pyotr Kochetkov (Likely, unconfirmed) / Jeremy Swayman (Confirmed)
+NHL 2026-10-28T00:08Z | KRONOS New Jersey Devils 3.0 @ Dallas Stars 3.1 | market total 5.5 | gap total +0.6 (0.33), home win 53% vs 53%
+      no gap large enough to be a mispricing | xG 3.13-2.99; Casey DeSmith (Confirmed) / goalie unconfirmed (team avg)
+NHL 2026-10-28T00:09Z | KRONOS Florida Panthers 3.2 @ Winnipeg Jets 3.0 | market total 6.0 | gap total +0.2 (0.10), home win 46% vs 45%
+      no gap large enough to be a mispricing | xG 3.03-3.16; Clay Stevenson (Confirmed) / Akira Schmid (, unconfirmed)
+NHL 2026-10-28T00:10Z | KRONOS Montréal Canadiens 3.4 @ St Louis Blues 2.9 | market total 6.0 | gap total +0.3 (0.18), home win 49% vs 53%
+      no gap large enough to be a mispricing | xG 2.92-3.43; Jordan Binnington (Likely, unconfirmed) / Jacob Fowler (, unconfirmed)
+NHL 2026-10-28T00:10Z | KRONOS New York Islanders 3.0 @ Nashville Predators 2.9 | market total 5.5 | gap total +0.4 (0.22), home win 51% vs 53%
+      no gap large enough to be a mispricing | xG 2.87-3.05; Juuse Saros (Likely, unconfirmed) / Semyon Varlamov (Likely, unconfirmed)
+NBA 2026-10-28T00:10Z | KRONOS Detroit Pistons 115.7 @ New York Knicks 112.5 | market 107.5-111.5 | gap margin -7.2 (0.72), total +9.2 (0.66)
+      no gap large enough to be a mispricing | ridge ratings; games 4/4
+NBA 2026-10-28T00:10Z | KRONOS Sacramento Kings 109.0 @ San Antonio Spurs 120.2 | market 106.8-124.2 | gap margin -6.3 (0.63), total -1.7 (0.12)
+      no gap large enough to be a mispricing | ridge ratings; games 4/4
+NHL 2026-10-28T00:11Z | KRONOS Los Angeles Kings 3.2 @ Chicago Blackhawks 3.0 | market total 6.0 | gap total +0.2 (0.10), home win 47% vs 47%
+      no gap large enough to be a mispricing | xG 2.97-3.22; Spencer Knight (Confirmed) / Anton Forsberg (, unconfirmed)
+NHL 2026-10-28T01:10Z | KRONOS Minnesota Wild 3.4 @ Utah Mammoth 3.0 | market total 6.5 | gap total -0.1 (0.06), home win 51% vs 54%
+      no gap large enough to be a mispricing | xG 3.04-3.35; Karel Vejmelka (Likely, unconfirmed) / Jesper Wallstedt (Confirmed)
+NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 2.9 @ Anaheim Ducks 4.1 | market total 6.5 | gap total +0.5 (0.27), home win 67% vs 66%
+      no gap large enough to be a mispricing | xG 4.10-2.91; Lukas Dostal (, unconfirmed) / goalie unconfirmed (team avg)
+NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.0 @ Vegas Golden Knights 3.5 | market total 6.5 | gap total -0.0 (0.01), home win 59% vs 59%
+      no gap large enough to be a mispricing | xG 3.51-2.97; Adin Hill (, unconfirmed) / Samuel Ersson (, unconfirmed)
+NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.4 @ San Jose Sharks 3.0 | market total 6.5 | gap total -0.1 (0.07), home win 44% vs 43%
+      no gap large enough to be a mispricing | xG 3.03-3.35; Yaroslav Askarov (, unconfirmed) / Colten Ellis (, unconfirmed)
+NBA 2026-10-28T03:10Z | KRONOS Portland Trail Blazers 116.0 @ Los Angeles Lakers 116.8 | market 117.0-119.5 | gap margin -1.7 (0.17), total -3.7 (0.26)
+      no gap large enough to be a mispricing | ridge ratings; games 4/3
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.9 @ Dallas Cowboys 29.3 | market 23.6-29.9 | gap margin -0.8 (0.08), total -0.3 (0.04)
@@ -115,10 +99,10 @@ NFL 2026-11-01T21:25Z | KRONOS Kansas City Chiefs 21.3 @ Denver Broncos 21.0 | m
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; DEN: 1 skill/OL out (+0.5); KC: 3 skill/OL out (+1.5)
 NFL 2026-11-01T21:25Z | KRONOS New England Patriots 25.3 @ Miami Dolphins 17.9 | market 26.0-18.5 | gap margin +0.2 (0.02), total -1.2 (0.14)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; NE: 2 skill/OL out (+1.0)
-NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 15.2 @ Washington Commanders 24.4 | market 18.5-22.0 | gap margin +5.7 (0.60), total -1.0 (0.11)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +5.0 margin -2.0 total; PHI: starting QB Jalen Hurts did not play last game (+4.0); 2 skill/OL out (+1.0)
-NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 19.6 @ Seattle Seahawks 26.6 | market 21.5-25.0 | gap margin +3.6 (0.37), total -0.3 (0.04)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +4.0 margin -2.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent did not play last game (+4.0); 1 skill/OL out (+0
+NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 18.2 @ Washington Commanders 23.4 | market 18.5-22.0 | gap margin +1.7 (0.18), total +1.0 (0.11)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; PHI: starting QB Jalen Hurts missed last game, not on this week's report (presumed back); 2 skill/OL out (+
+NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | market 21.5-25.0 | gap margin -0.4 (0.05), total +1.7 (0.18)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent missed last game, not on this week's report (pres
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [NEUTRAL] 8 bets | beat close n/a | CLV n/a | 1-1 | ROI +22.0%
@@ -126,8 +110,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T16:50:56+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T16:50:56+00:00 wp-json 5 posts
+   table: 2026-10-27T17:07:23+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T17:07:23+00:00 wp-json 6 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.14->2.23 (betrivers)
