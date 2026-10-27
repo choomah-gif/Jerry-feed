@@ -1857,11 +1857,19 @@ def grade_props(con, sport, now_iso, lookback_days=3, limit=400):
             except ValueError:
                 res.quarantine(b["id"], sport, b["player"], b["market"], "bad game string", now_iso); quar += 1
                 continue
-            rows = con.execute("""select bl.* from box_lines bl join game_results gr using(sport, source_id)
-                                  where bl.sport=? and gr.game_date between ? and ?""",
-                               (sport, day, (datetime.fromisoformat(day) + timedelta(days=1)).strftime("%Y-%m-%d"))).fetchall()
+            # Bets carry a UTC kickoff; the feeds date games by US local date. An 8pm ET start
+            # is the next UTC day, so look one day either side and pin the exact matchup
+            # (2026-10-27: every game from 8pm ET on was silently left ungraded).
+            d0 = datetime.fromisoformat(day)
+            lo, hi = (d0 - timedelta(days=1)).strftime("%Y-%m-%d"), (d0 + timedelta(days=1)).strftime("%Y-%m-%d")
             hk, ak = _team_key(home), _team_key(away)
-            rows = [r for r in rows if _team_key(r["team"]) in (hk, ak)]
+            games = [g for g in con.execute("""select source_id, game_date, home, away from game_results
+                                               where sport=? and game_date between ? and ?""", (sport, lo, hi))
+                     if {_team_key(g["home"]), _team_key(g["away"])} == {hk, ak}]
+            if not games:
+                continue                                   # game not ingested yet; stays pending
+            games.sort(key=lambda g: abs((datetime.fromisoformat(g["game_date"]) - d0).days))
+            rows = con.execute("select * from box_lines where sport=? and source_id=?", (sport, games[0]["source_id"])).fetchall()
             if not rows:
                 continue                                   # game not ingested yet; stays pending
             cands = {r["player"]: r for r in rows}
