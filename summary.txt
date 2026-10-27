@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T08:32:09+00:00)
-credits left 1776 | budget/day 296 | spent today 34 | reset in 4.64d | backfill days {'NHL': 3}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T08:31:58+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T08:42:10+00:00)
+credits left 1773 | budget/day 296 | spent today 37 | reset in 4.64d | backfill days {'NHL': 3}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T08:41:58+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 24, NHL 20 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -65,7 +65,7 @@ KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error 
 NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.4 (0.24), home win 46% vs 47%
       no gap large enough to be a mispricing | xG 2.82-3.13; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NBA 2026-10-27T23:40Z | KRONOS Brooklyn Nets 112.7 @ Boston Celtics 121.5 | market 104.8-116.8 | gap margin -3.2 (0.32), total +12.7 (0.91)
-      EXPLOIT CANDIDATE [NEUTRAL]: Over totals, 0.91 error bands; no sharp or public signal yet — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/2
+      EXPLOIT CANDIDATE [AGAINST SHARP · PUBLIC]: Over totals, 0.91 error bands; pinnacle has moved away from it since open; sharp/steam alerts 0 for, 20 against; retail books shade it 3.7pp — this is the public side — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/2
 MLB 2026-10-28T00:00Z | KRONOS Milwaukee Brewers 3.7 @ Tampa Bay Rays 4.0 | market total 7.0 | gap total +0.8 (0.23)
       no gap large enough to be a mispricing | runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; postseason x0.88; SP TBD @ Griffin Jax
 NHL 2026-10-28T00:00Z | KRONOS Boston Bruins 3.1 @ Carolina Hurricanes 3.2 | market total 6.0 | gap total +0.3 (0.18), home win 59% vs 64%
@@ -83,7 +83,7 @@ NHL 2026-10-28T00:00Z | KRONOS New York Islanders 3.1 @ Nashville Predators 2.8 
 NBA 2026-10-28T00:10Z | KRONOS Detroit Pistons 115.5 @ New York Knicks 113.3 | market 107.8-111.2 | gap margin -5.7 (0.57), total +9.8 (0.70)
       no gap large enough to be a mispricing | ridge ratings; games 1/1
 NBA 2026-10-28T00:10Z | KRONOS Sacramento Kings 113.8 @ San Antonio Spurs 118.6 | market 105.8-123.2 | gap margin -12.7 (1.27), total +3.4 (0.24)
-      EXPLOIT CANDIDATE [NEUTRAL]: Sacramento Kings spreads, 1.27 error bands; no sharp or public signal yet — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/1
+      EXPLOIT CANDIDATE [AGAINST SHARP]: Sacramento Kings spreads, 1.27 error bands; pinnacle has moved away from it since open; sharp/steam alerts 0 for, 16 against — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/1
 NHL 2026-10-28T01:00Z | KRONOS Minnesota Wild 3.5 @ Utah Mammoth 3.1 | market total 6.5 | gap total +0.1 (0.05), home win 51% vs 54%
       no gap large enough to be a mispricing | xG 3.14-3.45; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NHL 2026-10-28T02:00Z | KRONOS Vancouver Canucks 2.9 @ Anaheim Ducks 4.1 | market total 6.5 | gap total +0.5 (0.28), home win 67% vs 66%
@@ -131,46 +131,46 @@ DK SPLITS: 0 rows on file (none)
    articles: 2026-10-27T07:50:22+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-27T08:21:58+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.74->1.71 (pinnacle)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.94->1.98 (pinnacle)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.93->1.89 (pinnacle)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.87->1.91 (betmgm)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.95->1.91 (betmgm)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.87->1.91 (espnbet)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.95->1.91 (espnbet)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.85->1.91 (williamhill_us)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.96->1.88 (williamhill_us)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.87->1.91 (fanatics)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.95->1.91 (fanatics)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.87->1.91 (draftkings)
-2026-10-27T08:21:58+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.95->1.91 (draftkings)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.0->2.05 (betmgm)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Over 6.5->6.5 1.83->1.77 (betmgm)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.0->2.05 (espnbet)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 1.96->2.01 (williamhill_us)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.0->2.05 (draftkings)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.0->2.05 (fanatics)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 1.98->2.04 (fanduel)
-2026-10-27T08:21:58+00:00 Move NHL Vancouver Canucks @ Anaheim Ducks | totals  Over 6.5->6.5 1.83->1.78 (fanduel)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.83->1.87 (espnbet)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 2.0->1.95 (espnbet)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.87->1.91 (lowvig)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.99->1.94 (lowvig)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.87->1.91 (betonlineag)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.99->1.94 (betonlineag)
-2026-10-27T08:21:58+00:00 Move NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->2.1 (draftkings)
-2026-10-27T08:21:58+00:00 Move NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->2.1 (fanatics)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.83->1.88 (fanduel)
-2026-10-27T08:21:58+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.98->1.94 (fanduel)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  New York Islanders 1.5->1.5 1.43->1.4 (betmgm)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  Nashville Predators -1.5->-1.5 2.9->3.0 (betmgm)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | h2h  New York Islanders None->None 2.05->2.0 (betmgm)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | h2h  New York Islanders None->None 2.05->2.0 (fanatics)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  New York Islanders 1.5->1.5 1.42->1.38 (fanduel)
-2026-10-27T08:21:58+00:00 Move NHL New York Islanders @ Nashville Predators | spreads  Nashville Predators -1.5->-1.5 2.9->3.05 (fanduel)
-2026-10-27T08:21:58+00:00 Steam NHL Montréal Canadiens @ St Louis Blues | spreads  Montréal Canadiens 1.5->1.5 1.38->1.4 (pinnacle)
-2026-10-27T08:21:58+00:00 Sharp NHL Montréal Canadiens @ St Louis Blues | h2h  St Louis Blues None->None 1.89->1.83 (pinnacle)
-2026-10-27T08:21:58+00:00 Steam NHL Montréal Canadiens @ St Louis Blues | h2h  Montréal Canadiens None->None 2.0->2.06 (pinnacle)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 238.5->239.0 1.91->1.91 (fanatics)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 238.5->239.0 1.91->1.91 (fanatics)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 237.5->238.5 1.95->1.95 (williamhill_us)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 237.5->238.5 1.87->1.87 (williamhill_us)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Under 237.5->238.5 1.95->1.91 (fanduel)
+2026-10-27T08:35:58+00:00 Move NBA Philadelphia 76ers @ Indiana Pacers | totals  Over 237.5->238.5 1.87->1.91 (fanduel)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.0->2.5 1.95->1.95 (fanatics)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.0->-2.5 1.87->1.87 (fanatics)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.25->2.2 (fanatics)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->2.5 1.95->1.91 (draftkings)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-2.5 1.87->1.91 (draftkings)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->2.14 (draftkings)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.7->1.74 (draftkings)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 237.5->236.0 1.86->1.96 (pinnacle)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 237.5->236.0 2.01->1.91 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.5->2.5 1.91->2.0 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.5->-2.5 1.98->1.88 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.33->2.26 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.66->1.7 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.25->2.2 (betmgm)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.65->1.69 (betmgm)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 235.5->237.5 1.89->1.87 (betrivers)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 235.5->237.5 1.92->1.94 (betrivers)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.5->1.5 1.88->2.02 (betrivers)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.5->-1.5 1.93->1.81 (betrivers)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.35->2.18 (betrivers)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.6->1.7 (betrivers)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.0->3.0 1.95->1.91 (williamhill_us)
+2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.0->-3.0 1.87->1.91 (williamhill_us)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->237.0 1.95->1.85 (lowvig)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->237.0 1.92->2.03 (lowvig)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->237.0 1.93->1.83 (betonlineag)
+2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->237.0 1.89->2.0 (betonlineag)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Under 230.0->230.5 1.91->1.91 (fanatics)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Over 230.0->230.5 1.91->1.91 (fanatics)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Under 229.0->231.0 1.99->1.92 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Over 229.0->231.0 1.88->1.95 (pinnacle)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Under 229.5->230.5 1.95->1.91 (betmgm)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | totals  Over 229.5->230.5 1.87->1.91 (betmgm)
+2026-10-27T08:35:58+00:00 Steam NBA Sacramento Kings @ San Antonio Spurs | spreads  San Antonio Spurs -17.5->-18.5 1.87->1.95 (betmgm)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -244,25 +244,30 @@ NFL 2026-11-03T01:20:00Z Chicago Bears @ Seattle Seahawks  id=7d664fbcd39350e559
    TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.92 (open 46.5 1.92, best 1.95)
    moves: {'Move': 20}
 NBA 2026-10-27T23:40:00Z Brooklyn Nets @ Boston Celtics  id=9ad8cc650802c0c5c3c23a1f32c3e0f6
-   ML: Boston Celtics  1.16 (open 1.16, best 1.17) / Brooklyn Nets  5.69 (open 5.69, best 5.69)
-   SPREAD: Boston Celtics -12.0 1.95 (open -12.0 1.95, best 1.95) / Brooklyn Nets 12.0 1.93 (open 12.0 1.93, best 1.94)
-   TOTAL: Over 221.5 1.91 (open 221.5 1.91, best 1.93) / Under 221.5 1.96 (open 221.5 1.96, best 1.96)
+   ML: Boston Celtics  1.18 (open 1.16, best 1.18) / Brooklyn Nets  5.32 (open 5.69, best 5.56)
+   SPREAD: Boston Celtics -11.5 1.92 (open -12.0 1.95, best 1.92) / Brooklyn Nets 11.5 1.97 (open 12.0 1.93, best 1.97)
+   TOTAL: Over 221.5 2.01 (open 221.5 1.91, best 2.01) / Under 221.5 1.87 (open 221.5 1.96, best 1.95)
+   moves: {'Sharp': 2, 'Steam': 16}
 NBA 2026-10-28T00:10:00Z Detroit Pistons @ New York Knicks  id=bde272846214fd6cf197e14c278c12f2
-   ML: Detroit Pistons  2.4 (open 2.4, best 2.48) / New York Knicks  1.63 (open 1.63, best 1.63)
-   SPREAD: Detroit Pistons 3.5 1.95 (open 3.5 1.95, best 1.99) / New York Knicks -3.5 1.93 (open -3.5 1.93, best 1.93)
-   TOTAL: Over 219.0 2.01 (open 219.0 2.01, best 2.01) / Under 219.0 1.86 (open 219.0 1.86, best 1.86)
+   ML: Detroit Pistons  2.54 (open 2.4, best 2.54) / New York Knicks  1.57 (open 1.63, best 1.65)
+   SPREAD: Detroit Pistons 4.5 1.9 (open 3.5 1.95, best 1.9) / New York Knicks -4.5 1.98 (open -3.5 1.93, best 1.98)
+   TOTAL: Over 219.0 1.92 (open 219.0 2.01, best 1.92) / Under 219.0 1.95 (open 219.0 1.86, best 1.95)
+   moves: {'Move': 8, 'Sharp': 4, 'Steam': 24}
 NBA 2026-10-28T00:10:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74cbbfd05008d0875455b
-   ML: Sacramento Kings  12.02 (open 12.02, best 12.02) / San Antonio Spurs  1.05 (open 1.05, best 1.06)
-   SPREAD: Sacramento Kings 17.5 1.93 (open 17.5 1.93, best 1.95) / San Antonio Spurs -17.5 1.95 (open -17.5 1.95, best 1.95)
-   TOTAL: Over 229.0 1.88 (open 229.0 1.88, best 1.88) / Under 229.0 1.99 (open 229.0 1.99, best 1.99)
+   ML: Sacramento Kings  11.98 (open 12.02, best 13.0) / San Antonio Spurs  1.05 (open 1.05, best 1.06)
+   SPREAD: Sacramento Kings 17.5 1.96 (open 17.5 1.93, best 1.99) / San Antonio Spurs -17.5 1.93 (open -17.5 1.95, best 1.93)
+   TOTAL: Over 231.0 1.95 (open 229.0 1.88, best 1.95) / Under 231.0 1.92 (open 229.0 1.99, best 1.92)
+   moves: {'Move': 2, 'Steam': 20}
 NBA 2026-10-28T03:10:00Z Portland Trail Blazers @ Los Angeles Lakers  id=82afe4e028b0fbbd9f6cf92697bec6fc
-   ML: Los Angeles Lakers  1.66 (open 1.66, best 1.7) / Portland Trail Blazers  2.33 (open 2.33, best 2.35)
-   SPREAD: Los Angeles Lakers -3.5 1.98 (open -3.5 1.98, best 1.98) / Portland Trail Blazers 3.5 1.91 (open 3.5 1.91, best 1.91)
-   TOTAL: Over 237.5 2.01 (open 237.5 2.01, best 2.01) / Under 237.5 1.86 (open 237.5 1.86, best 1.86)
+   ML: Los Angeles Lakers  1.7 (open 1.66, best 1.74) / Portland Trail Blazers  2.26 (open 2.33, best 2.27)
+   SPREAD: Los Angeles Lakers -2.5 1.88 (open -3.5 1.98, best 1.91) / Portland Trail Blazers 2.5 2.0 (open 3.5 1.91, best 2.0)
+   TOTAL: Over 236.0 1.91 (open 237.5 2.01, best 1.91) / Under 236.0 1.96 (open 237.5 1.86, best 1.96)
+   moves: {'Sharp': 8, 'Steam': 19}
 NBA 2026-10-28T23:10:00Z Philadelphia 76ers @ Indiana Pacers  id=5997ee5c9fbdc53f9c86732b02f58158
-   ML: Indiana Pacers  2.05 (open 2.05, best 2.08) / Philadelphia 76ers  1.8 (open 1.8, best 1.8)
-   SPREAD: Indiana Pacers 1.5 1.95 (open 1.5 1.95, best 1.95) / Philadelphia 76ers -1.5 1.87 (open -1.5 1.87, best 1.87)
-   TOTAL: Over 237.5 1.87 (open 237.5 1.87, best 1.87) / Under 237.5 1.95 (open 237.5 1.95, best 1.95)
+   ML: Indiana Pacers  2.1 (open 2.05, best 2.1) / Philadelphia 76ers  1.77 (open 1.8, best 1.8)
+   SPREAD: Indiana Pacers 1.5 1.95 (open 1.5 1.95, best 1.98) / Philadelphia 76ers -1.5 1.87 (open -1.5 1.87, best 1.87)
+   TOTAL: Over 238.5 1.87 (open 237.5 1.87, best 1.91) / Under 238.5 1.95 (open 237.5 1.95, best 1.95)
+   moves: {'Move': 6}
 NBA 2026-12-25T17:10:00Z San Antonio Spurs @ New York Knicks  id=a6555e8b7252dfb32f1817fc8c59ad83
    ML: New York Knicks  1.87 (open 1.87, best 1.95) / San Antonio Spurs  1.95 (open 1.95, best 1.95)
    SPREAD: New York Knicks 0.0 1.94 (open 0.0 1.94, best 1.94) / San Antonio Spurs 0.0 1.94 (open 0.0 1.94, best 1.94)
