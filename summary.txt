@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T15:43:14+00:00)
-credits left 1709 | budget/day 301 | spent today 101 | reset in 4.34d | backfill days {'NHL': 4}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T15:43:07+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T15:53:16+00:00)
+credits left 1709 | budget/day 302 | spent today 101 | reset in 4.34d | backfill days {'NHL': 4}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T15:53:07+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 24, NHL 20 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -58,7 +58,7 @@ NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh S
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.6 | Lean Los Angeles Chargers [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T14:50:52+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 18})
+(models last refreshed: 2026-10-27T15:50:56+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 18})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-27T23:10Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.24), home win 46% vs 47%
@@ -126,8 +126,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T14:50:47+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T14:50:47+00:00 wp-json 2 posts
+   table: 2026-10-27T15:50:52+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T15:50:52+00:00 wp-json 5 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.14->2.23 (betrivers)
@@ -339,6 +339,14 @@ NHL 2026-10-28T02:40:00Z Buffalo Sabres @ San Jose Sharks  id=288b3a1e5241bd3885
    SPREAD: Buffalo Sabres -1.5 2.73 (open -1.5 2.78, best 2.74) / San Jose Sharks 1.5 1.49 (open 1.5 1.48, best 1.5)
    TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.83) / Under 6.5 2.06 (open 6.5 2.06, best 2.06)
    moves: {'Move': 4, 'Sharp': 1}
+NHL 2026-10-28T23:40:00Z Philadelphia Flyers @ Washington Capitals  id=46dec80debcc79de4c248a0edd4f8d74
+   ML: 
+NHL 2026-10-29T00:40:00Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242da6a96468d61f9
+   ML: 
+NHL 2026-10-29T01:10:00Z New Jersey Devils @ Colorado Avalanche  id=dad41ac378a6c36e1be03122f7f34470
+   ML: 
+NHL 2026-10-29T02:10:00Z Toronto Maple Leafs @ Seattle Kraken  id=f7510932dec00855b611e3685080819c
+   ML: 
 MLB 2026-10-28T00:00:00Z Milwaukee Brewers @ Tampa Bay Rays  id=e03ea0f98bdd5fa277a34fbfe1a47efa
    ML: Milwaukee Brewers  1.74 (open 1.74, best 1.74) / Tampa Bay Rays  2.23 (open 2.22, best 2.25)
    SPREAD: Milwaukee Brewers -1.5 2.3 (open -1.5 2.31, best 2.38) / Tampa Bay Rays 1.5 1.68 (open 1.5 1.68, best 1.68)
