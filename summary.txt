@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T00:10:58+00:00)
-credits left 1849 | budget/day 290 | spent today 284 | reset in 4.99d | backfill days {'NHL': 2}
+KRONOS DESK SUMMARY  (generated 2026-10-27T00:21:00+00:00)
+credits left 1846 | budget/day 290 | spent today 287 | reset in 4.99d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -51,16 +51,12 @@ NHL 2026-10-27T00:40Z Toronto Maple Leafs @ Calgary Flames | player_shots_on_goa
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 NFL 2026-11-02T01:20Z Philadelphia Eagles @ Washington Commanders | h2h  Washington Commanders  | model 75.2% fair 64.3% edge +10.9 | Lean Washington Commanders [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | h2h  Philadelphia Eagles  | model 23.3% fair 33.4% edge -10.1 | Lean Dallas Cowboys [AGAINST SHARP] | 
-      why:  Market read [AGAINST SHARP]: pinnacle has moved away from it since open. Caution: sharp money has moved the other way.
 NFL 2026-11-03T01:20Z Chicago Bears @ Seattle Seahawks | h2h  Seattle Seahawks  | model 69.9% fair 63.1% edge +6.8 | Lean Seattle Seahawks [NEUTRAL] | 
       why:  Market read [NEUTRAL]: retail books discount it 3.3pp — the public is on the other side.
 NFL 2026-11-01T21:25Z New England Patriots @ Miami Dolphins | h2h  Miami Dolphins  | model 29.4% fair 23.7% edge +5.6 | Lean Miami Dolphins [NEUTRAL] | 
       why:  Market read [NEUTRAL]: retail books discount it 4.0pp — the public is on the other side.
 NFL 2026-11-01T18:00Z Minnesota Vikings @ Detroit Lions | h2h  Detroit Lions  | model 66.2% fair 61.9% edge +4.3 | Lean Detroit Lions [NEUTRAL] | 
       why:  Market read [NEUTRAL]: retail books discount it 3.5pp — the public is on the other side.
-NFL 2026-10-27T00:15Z Dallas Cowboys @ Philadelphia Eagles | player_anytime_td George Pickens Yes  | model 30.1% fair 34.4% edge -4.3 | Lean No [NEUTRAL] | proj 0.3 (sd 0.0) from last 5 games x opp factor 1.02; raw model 22.2%, anchored 35%; ratio 0.77
-      why: George Pickens projects 0.25 touchdowns per game over his last 5 games on about 10 touches a week, shrunk toward a role prior of 0.25. That is 30% to score versus a de-vigged market of 34%. The disagreement is 0.77 error bands: real but small, which caps this at a quarter-unit Lean. The number on the other side was set by a book that can see red-zone role, goal-line committee, depth-chart position — none of which this model ingests. Falsifier: George Pickens scores. Market read [NEUTRAL]: pinnacle has moved away from it since open; sharp/steam alerts 1 for, 0 against.
 NFL 2026-11-01T18:00Z Arizona Cardinals @ Dallas Cowboys | h2h  Dallas Cowboys  | model 69.3% fair 72.9% edge -3.6 | Lean Arizona Cardinals [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
 NFL 2026-11-01T18:00Z Indianapolis Colts @ Jacksonville Jaguars | h2h  Jacksonville Jaguars  | model 74.9% fair 78.2% edge -3.3 | Lean Indianapolis Colts [NEUTRAL] | 
@@ -78,8 +74,6 @@ NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles
 (models last refreshed: 2026-10-26T23:49:54+00:00 {"NFL": 90, "NFL_PROPS": 31, "NHL": 78, "UFC": 0, "PRICE": 25, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 30})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NFL 2026-10-27T00:15Z | KRONOS Dallas Cowboys 25.2 @ Philadelphia Eagles 15.4 | market 24.2-19.8 | gap margin -5.3 (0.56), total -3.4 (0.37)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj -4.0 margin -2.0 total; PHI: starting QB Jalen Hurts did not play last game (+4.0); 2 skill/OL out (+1.0); DAL: 2 skill/OL out (+1.
 NHL 2026-10-27T00:40Z | KRONOS Toronto Maple Leafs 3.5 @ Calgary Flames 3.2 | market total 6.5 | gap total +0.3 (0.16), home win 45% vs 45%
       no gap large enough to be a mispricing | xG 3.25-3.55; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NBA 2026-10-27T00:40Z | KRONOS Atlanta Hawks 117.7 @ Houston Rockets 116.9 | market 112.2-117.2 | gap margin -5.8 (0.58), total +5.0 (0.36)
@@ -193,7 +187,7 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T00:06:24+00:00 Steam NBA Indiana Pacers @ Milwaukee Bucks | totals  Over 238.5->239.5 1.85->1.85 (fanduel)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
-NFL 2026-10-27T00:15:00Z Dallas Cowboys @ Philadelphia Eagles  id=4853610e63c246f2027a6a248e642c9a
+NFL 2026-10-27T00:16:21Z Dallas Cowboys @ Philadelphia Eagles  id=4853610e63c246f2027a6a248e642c9a
    ML: Dallas Cowboys  1.48 (open 1.45, best 1.48) / Philadelphia Eagles  2.84 (open 2.91, best 2.9)
    SPREAD: Dallas Cowboys -4.0 1.95 (open -4.5 1.93, best 1.95) / Philadelphia Eagles 4.0 1.95 (open 4.5 1.96, best 1.97)
    TOTAL: Over 43.5 1.93 (open 44.0 1.93, best 1.93) / Under 43.5 1.96 (open 44.0 1.93, best 1.98)
@@ -293,7 +287,7 @@ NBA 2026-10-27T00:10:00Z Indiana Pacers @ Milwaukee Bucks  id=a423c3941aa43179ca
    SPREAD: Indiana Pacers -3.5 1.95 (open -4.5 2.01, best 1.97) / Milwaukee Bucks 3.5 1.95 (open 4.5 1.88, best 1.95)
    TOTAL: Over 239.0 1.92 (open 240.5 1.98, best 1.92) / Under 239.0 1.97 (open 240.5 1.89, best 1.97)
    moves: {'Move': 100, 'Sharp': 27, 'Steam': 309}
-NBA 2026-10-27T00:10:00Z Phoenix Suns @ Oklahoma City Thunder  id=90620ab57facf54f629af8beec468e54
+NBA 2026-10-27T00:11:00Z Phoenix Suns @ Oklahoma City Thunder  id=90620ab57facf54f629af8beec468e54
    ML: Oklahoma City Thunder  1.32 (open 1.24, best 1.33) / Phoenix Suns  3.74 (open 4.35, best 3.74)
    SPREAD: Oklahoma City Thunder -8.0 1.93 (open -9.5 1.89, best 1.93) / Phoenix Suns 8.0 1.98 (open 9.5 2.0, best 1.98)
    TOTAL: Over 221.5 1.92 (open 219.5 1.93, best 1.93) / Under 221.5 1.97 (open 219.5 1.94, best 1.97)
