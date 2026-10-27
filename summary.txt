@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T17:40:16+00:00)
-credits left 1697 | budget/day 304 | spent today 113 | reset in 4.26d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-27T17:50:17+00:00)
+credits left 1693 | budget/day 304 | spent today 117 | reset in 4.26d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 286 settled (16 void), 46 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 286 settled (16 void), 49 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,10 +12,10 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 445 rows
-all: {"n": 445, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 448 rows
+all: {"n": 448, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
   NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 68, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 65, "record": "39-26-0", "units": 10.56, "roi": 0.1625, "roi_90ci_by_game": [-0.0373, 0.3621, 14]}
+  NBA props (price edge): {"n": 71, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 65, "record": "39-26-0", "units": 10.56, "roi": 0.1625, "roi_90ci_by_game": [-0.0373, 0.3621, 14]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -31,18 +31,22 @@ all: {"n": 445, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "gr
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price-v3-activegate-2026-10-27: n 5 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 2-4%: n 1 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 0-2%: n 1 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 2-4%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 4-6%: n 1 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by hours before start when logged:
-  1-6h: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  1-6h: n 5 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   6-24h: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Mathieu Olivier Under 1.5 | draftkings 1.95 vs fair 53.4% | EV +4.1% | [FADE PUBLIC]
+NBA 2026-10-27T23:40Z Brooklyn Nets @ Boston Celtics | player_rebounds Michael Porter Jr Under 5.5 | draftkings 2.12 vs fair 48.8% | EV +3.5% | [FADE PUBLIC]
+NBA 2026-10-27T23:40Z Brooklyn Nets @ Boston Celtics | player_points Jordan Walsh Under 4.5 | draftkings 1.93 vs fair 53.4% | EV +3.1% | [FADE PUBLIC]
 NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_points Denton Mateychuk Under 0.5 | draftkings 1.47 vs fair 69.7% | EV +2.5% | [FADE PUBLIC]
+NBA 2026-10-27T23:40Z Brooklyn Nets @ Boston Celtics | player_threes Jayson Tatum Under 3.5 | draftkings 1.61 vs fair 63.3% | EV +1.9% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 69% vs market 58%
@@ -124,8 +128,8 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [NEUTRAL] 8 bets | beat close 80% | CLV +0.27pp | 4-2 | ROI +32.3%
 [SHARP] 7 bets | beat close 75% | CLV +1.13pp | 4-2 | ROI +27.5%
+[FADE PUBLIC] 5 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
-[FADE PUBLIC] 2 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
    table: 2026-10-27T17:29:08+00:00 DraftKings reports the table temporarily unavailable
