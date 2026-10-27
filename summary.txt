@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T01:31:10+00:00)
-credits left 1825 | budget/day 289 | spent today 308 | reset in 4.94d | backfill days {'NHL': 2}
+KRONOS DESK SUMMARY  (generated 2026-10-27T01:41:11+00:00)
+credits left 1822 | budget/day 288 | spent today 311 | reset in 4.93d | backfill days {'NHL': 2}
 errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -34,8 +34,6 @@ NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_rebounds G
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_threes Stephen Curry Under 4.5 | draftkings 1.67 vs fair 61.9% | EV +3.3% | [NEUTRAL]
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_threes Christian Braun Under 1.5 | draftkings 1.66 vs fair 61.7% | EV +2.4% | [NEUTRAL]
 NBA 2026-10-27T02:10Z Golden State Warriors @ Denver Nuggets | player_rebounds Draymond Green Under 5.5 | draftkings 1.69 vs fair 60.6% | EV +2.4% | [NEUTRAL]
-NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | player_shots_on_goal Ryan Shea Under 1.5 | draftkings 1.62 vs fair 63.2% | EV +2.3% | [NEUTRAL]
-NHL 2026-10-27T01:40Z Detroit Red Wings @ Edmonton Oilers | player_shots_on_goal Dylan Larkin Over 2.5 | draftkings 1.83 vs fair 55.9% | EV +2.2% | [NEUTRAL]
 NHL 2026-10-28T00:00Z Boston Bruins @ Carolina Hurricanes | spreads  Boston Bruins 1.5 | fanduel 1.69 vs fair 60.1% | EV +1.6% | [NEUTRAL]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
@@ -64,8 +62,6 @@ NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles
 (models last refreshed: 2026-10-27T00:49:58+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 72, "UFC": 0, "PRICE": 11, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 12})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-27T01:40Z | KRONOS Detroit Red Wings 3.4 @ Edmonton Oilers 3.1 | market total 6.5 | gap total -0.1 (0.03), home win 56% vs 62%
-      no gap large enough to be a mispricing | xG 3.06-3.37; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
 NBA 2026-10-27T02:10Z | KRONOS Golden State Warriors 119.2 @ Denver Nuggets 119.5 | market 112.8-120.8 | gap margin -7.7 (0.77), total +5.3 (0.38)
       EXPLOIT CANDIDATE [NEUTRAL]: Golden State Warriors spreads, 0.77 error bands; no sharp or public signal yet — WARNING blind-spot checks failed (enough_games), the gap may be missing information | ridge ratings; games 1/1
 NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.26), home win 46% vs 47%
@@ -129,6 +125,9 @@ DK SPLITS: 0 rows on file (none)
    articles: 2026-10-27T00:49:54+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
+2026-10-27T01:36:44+00:00 Sharp NHL Detroit Red Wings @ Edmonton Oilers | totals  Under 6.5->6.5 2.06->2.11 (pinnacle)
+2026-10-27T01:36:44+00:00 Sharp NHL Detroit Red Wings @ Edmonton Oilers | totals  Over 6.5->6.5 1.84->1.8 (pinnacle)
+2026-10-27T01:36:44+00:00 Sharp NHL Detroit Red Wings @ Edmonton Oilers | h2h  Edmonton Oilers None->None 1.56->1.59 (draftkings)
 2026-10-27T01:28:43+00:00 Steam NHL Detroit Red Wings @ Edmonton Oilers | totals  Under 6.5->6.5 2.13->2.05 (williamhill_us)
 2026-10-27T01:28:43+00:00 Steam NHL Detroit Red Wings @ Edmonton Oilers | totals  Over 6.5->6.5 1.69->1.78 (williamhill_us)
 2026-10-27T01:28:43+00:00 Steam NHL Detroit Red Wings @ Edmonton Oilers | totals  Under 7.0->6.5 1.69->2.1 (betmgm)
@@ -166,9 +165,6 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | h2h  Memphis Grizzlies None->None 1.91->1.8 (williamhill_us)
 2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | spreads  Utah Jazz 0.5->1.5 1.91->1.89 (betrivers)
 2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | spreads  Memphis Grizzlies -0.5->-1.5 1.91->1.92 (betrivers)
-2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | h2h  Utah Jazz None->None 1.91->2.02 (betrivers)
-2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | h2h  Memphis Grizzlies None->None 1.91->1.8 (betrivers)
-2026-10-27T00:58:37+00:00 Steam NBA Memphis Grizzlies @ Utah Jazz | spreads  Utah Jazz -1.5->1.5 2.0->1.85 (draftkings)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-27T00:16:21Z Dallas Cowboys @ Philadelphia Eagles  id=4853610e63c246f2027a6a248e642c9a
@@ -324,10 +320,10 @@ NHL 2026-10-27T00:42:28Z Toronto Maple Leafs @ Calgary Flames  id=20277c97a62bde
    TOTAL: Over 6.5 1.85 (open 6.5 1.86, best 1.85) / Under 6.5 2.04 (open 6.5 2.03, best 2.05)
    moves: {'Move': 74, 'Sharp': 26, 'Steam': 46}
 NHL 2026-10-27T01:40:00Z Detroit Red Wings @ Edmonton Oilers  id=5b70654c977b6cc9a110ad8c04c57cac
-   ML: Detroit Red Wings  2.49 (open 2.52, best 2.6) / Edmonton Oilers  1.6 (open 1.59, best 1.61)
-   SPREAD: Detroit Red Wings 1.5 1.65 (open 1.5 1.65, best 1.65) / Edmonton Oilers -1.5 2.36 (open -1.5 2.36, best 2.4)
-   TOTAL: Over 6.5 1.84 (open 6.5 1.79, best 1.84) / Under 6.5 2.06 (open 6.5 2.12, best 2.12)
-   moves: {'Sharp': 2, 'Steam': 13}
+   ML: Detroit Red Wings  2.5 (open 2.52, best 2.6) / Edmonton Oilers  1.6 (open 1.59, best 1.62)
+   SPREAD: Detroit Red Wings 1.5 1.65 (open 1.5 1.65, best 1.65) / Edmonton Oilers -1.5 2.35 (open -1.5 2.36, best 2.4)
+   TOTAL: Over 6.5 1.8 (open 6.5 1.79, best 1.81) / Under 6.5 2.11 (open 6.5 2.12, best 2.12)
+   moves: {'Sharp': 5, 'Steam': 13}
 NHL 2026-10-27T23:00:00Z Columbus Blue Jackets @ Philadelphia Flyers  id=f1b86cba8c192fb71581b00443f4af8a
    ML: Columbus Blue Jackets  1.83 (open 1.83, best 1.87) / Philadelphia Flyers  2.07 (open 2.07, best 2.07)
    SPREAD: Columbus Blue Jackets -1.5 3.12 (open -1.5 3.12, best 3.25) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.43)
