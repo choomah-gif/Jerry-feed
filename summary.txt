@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T09:02:13+00:00)
-credits left 1770 | budget/day 296 | spent today 40 | reset in 4.62d | backfill days {'NHL': 3}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T09:01:59+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T09:12:14+00:00)
+credits left 1767 | budget/day 296 | spent today 43 | reset in 4.62d | backfill days {'NHL': 3}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T09:11:59+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 24, NHL 20 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -131,6 +131,9 @@ DK SPLITS: 0 rows on file (none)
    articles: 2026-10-27T08:50:25+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
+2026-10-27T09:03:59+00:00 Sharp NHL Columbus Blue Jackets @ Philadelphia Flyers | totals  Under 5.5->5.5 1.98->1.94 (pinnacle)
+2026-10-27T09:03:59+00:00 Sharp NHL Columbus Blue Jackets @ Philadelphia Flyers | totals  Over 5.5->5.5 1.89->1.93 (pinnacle)
+2026-10-27T09:03:59+00:00 Sharp NHL Columbus Blue Jackets @ Philadelphia Flyers | totals  Under 5.5->5.5 2.0->1.94 (williamhill_us)
 2026-10-27T08:49:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays None->None 2.05->2.22 (betonlineag)
 2026-10-27T08:49:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | h2h  Milwaukee Brewers None->None 1.86->1.74 (betonlineag)
 2026-10-27T08:49:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5->1.5 1.59->1.64 (lowvig)
@@ -168,9 +171,6 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-2.5 1.87->1.91 (draftkings)
 2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->2.14 (draftkings)
 2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.7->1.74 (draftkings)
-2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 237.5->236.0 1.86->1.96 (pinnacle)
-2026-10-27T08:35:58+00:00 Sharp NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 237.5->236.0 2.01->1.91 (pinnacle)
-2026-10-27T08:35:58+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.5->2.5 1.91->2.0 (pinnacle)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -288,9 +288,9 @@ NBA 2026-12-26T03:40:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc491
    TOTAL: Over 239.0 1.93 (open 239.0 1.93, best 1.93) / Under 239.0 1.93 (open 239.0 1.93, best 1.93)
 NHL 2026-10-27T23:00:00Z Columbus Blue Jackets @ Philadelphia Flyers  id=f1b86cba8c192fb71581b00443f4af8a
    ML: Columbus Blue Jackets  1.85 (open 1.83, best 1.85) / Philadelphia Flyers  2.05 (open 2.07, best 2.09)
-   SPREAD: Columbus Blue Jackets -1.5 3.1 (open -1.5 3.12, best 3.15) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.43)
-   TOTAL: Over 5.5 1.89 (open 5.5 1.88, best 1.91) / Under 5.5 1.98 (open 5.5 1.99, best 2.0)
-   moves: {'Move': 6, 'Steam': 10}
+   SPREAD: Columbus Blue Jackets -1.5 3.11 (open -1.5 3.12, best 3.15) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.43)
+   TOTAL: Over 5.5 1.93 (open 5.5 1.88, best 1.93) / Under 5.5 1.94 (open 5.5 1.99, best 1.96)
+   moves: {'Move': 6, 'Sharp': 3, 'Steam': 10}
 NHL 2026-10-28T00:00:00Z Boston Bruins @ Carolina Hurricanes  id=7ca25d591cbdc679a9ad85d1f04811cb
    ML: Boston Bruins  2.63 (open 2.62, best 2.63) / Carolina Hurricanes  1.54 (open 1.54, best 1.56)
    SPREAD: Boston Bruins 1.5 1.63 (open 1.5 1.62, best 1.69) / Carolina Hurricanes -1.5 2.37 (open -1.5 2.39, best 2.4)
@@ -302,7 +302,7 @@ NHL 2026-10-28T00:00:00Z Los Angeles Kings @ Chicago Blackhawks  id=74a990b939cd
 NHL 2026-10-28T00:00:00Z New Jersey Devils @ Dallas Stars  id=11d4cfe51153e45bb3a9fc6e5f23535a
    ML: Dallas Stars  1.83 (open 1.83, best 1.83) / New Jersey Devils  2.07 (open 2.07, best 2.11)
    SPREAD: Dallas Stars -1.5 3.11 (open -1.5 3.11, best 3.11) / New Jersey Devils 1.5 1.4 (open 1.5 1.4, best 1.43)
-   TOTAL: Over 5.5 1.86 (open 5.5 1.86, best 1.87) / Under 5.5 2.01 (open 5.5 2.01, best 2.02)
+   TOTAL: Over 5.5 1.88 (open 5.5 1.86, best 1.88) / Under 5.5 1.99 (open 5.5 2.01, best 2.02)
    moves: {'Sharp': 7, 'Steam': 4}
 NHL 2026-10-28T00:00:00Z Florida Panthers @ Winnipeg Jets  id=17aa3256e18d8946db708952a66e29ee
    ML: Florida Panthers  1.79 (open 1.8, best 1.79) / Winnipeg Jets  2.13 (open 2.11, best 2.13)
@@ -315,7 +315,7 @@ NHL 2026-10-28T00:00:00Z Montréal Canadiens @ St Louis Blues  id=928c19ad83dc85
    TOTAL: Over 6.0 1.88 (open 6.0 1.87, best 1.88) / Under 6.0 1.99 (open 6.0 2.01, best 2.01)
    moves: {'Sharp': 2, 'Steam': 8}
 NHL 2026-10-28T00:00:00Z New York Islanders @ Nashville Predators  id=fa0255827e54afa3c871868fed566dd0
-   ML: Nashville Predators  1.85 (open 1.83, best 1.85) / New York Islanders  2.05 (open 2.08, best 2.08)
+   ML: Nashville Predators  1.85 (open 1.83, best 1.87) / New York Islanders  2.05 (open 2.08, best 2.08)
    SPREAD: Nashville Predators -1.5 3.11 (open -1.5 3.08, best 3.15) / New York Islanders 1.5 1.4 (open 1.5 1.4, best 1.42)
    TOTAL: Over 5.5 1.84 (open 5.5 1.84, best 1.84) / Under 5.5 2.04 (open 5.5 2.04, best 2.04)
    moves: {'Move': 6}
