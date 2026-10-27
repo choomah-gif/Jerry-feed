@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T04:01:32+00:00)
+KRONOS DESK SUMMARY  (generated 2026-10-27T04:11:34+00:00)
 credits left 1809 | budget/day 292 | spent today 1 | reset in 4.83d | backfill days {'NHL': 2}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T04:00:53+00:00 'sqlite3.Row' object has no attribute 'get'"}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T04:10:53+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 23, NHL 19 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -248,16 +248,6 @@ NFL 2026-11-03T01:20:00Z Chicago Bears @ Seattle Seahawks  id=7d664fbcd39350e559
    SPREAD: Chicago Bears 3.5 1.86 (open 3.5 1.86, best 1.86) / Seattle Seahawks -3.5 2.03 (open -3.5 2.03, best 2.03)
    TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.92 (open 46.5 1.92, best 1.95)
    moves: {'Move': 20}
-NBA 2026-10-27T00:10:00Z Indiana Pacers @ Milwaukee Bucks  id=a423c3941aa43179ca93caf6b689a0ce
-   ML: Indiana Pacers  1.68 (open 1.63, best 1.69) / Milwaukee Bucks  2.34 (open 2.39, best 2.34)
-   SPREAD: Indiana Pacers -3.5 1.95 (open -4.5 2.01, best 1.97) / Milwaukee Bucks 3.5 1.95 (open 4.5 1.88, best 1.95)
-   TOTAL: Over 239.0 1.92 (open 240.5 1.98, best 1.92) / Under 239.0 1.97 (open 240.5 1.89, best 1.97)
-   moves: {'Move': 100, 'Sharp': 27, 'Steam': 309}
-NBA 2026-10-27T00:11:00Z Phoenix Suns @ Oklahoma City Thunder  id=90620ab57facf54f629af8beec468e54
-   ML: Oklahoma City Thunder  1.32 (open 1.24, best 1.33) / Phoenix Suns  3.74 (open 4.35, best 3.74)
-   SPREAD: Oklahoma City Thunder -8.0 1.93 (open -9.5 1.89, best 1.93) / Phoenix Suns 8.0 1.98 (open 9.5 2.0, best 1.98)
-   TOTAL: Over 221.5 1.92 (open 219.5 1.93, best 1.93) / Under 221.5 1.97 (open 219.5 1.94, best 1.97)
-   moves: {'Move': 127, 'Sharp': 45, 'Steam': 339}
 NBA 2026-10-27T00:40:32Z Atlanta Hawks @ Houston Rockets  id=b57695c11301fc8264db6b94a5ea2485
    ML: Atlanta Hawks  2.69 (open 2.77, best 2.69) / Houston Rockets  1.53 (open 1.49, best 1.54)
    SPREAD: Atlanta Hawks 18.0 1.85 (open 5.0 1.94, best 1.85) / Houston Rockets -18.0 1.97 (open -5.0 1.94, best 1.97)
@@ -365,11 +355,6 @@ NHL 2026-10-28T02:30:00Z Buffalo Sabres @ San Jose Sharks  id=288b3a1e5241bd3885
    ML: Buffalo Sabres  1.74 (open 1.74, best 1.74) / San Jose Sharks  2.2 (open 2.2, best 2.2)
    SPREAD: Buffalo Sabres -1.5 2.78 (open -1.5 2.78, best 2.8) / San Jose Sharks 1.5 1.48 (open 1.5 1.48, best 1.5)
    TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.85) / Under 6.5 2.06 (open 6.5 2.06, best 2.06)
-MLB 2026-10-27T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=82812d5c946d4e055002fcb42673a38b
-   ML: Milwaukee Brewers  2.02 (open 2.03, best 2.04) / Tampa Bay Rays  1.91 (open 1.9, best 36.0)
-   SPREAD: Milwaukee Brewers -9.5 1.17 (open 1.5 1.46, best 1.22) / Tampa Bay Rays 9.5 5.12 (open -1.5 2.93, best 6.0)
-   TOTAL: Over 10.5 2.74 (open 7.0 1.88, best 6.0) / Under 10.5 1.45 (open 7.0 2.01, best 1.45)
-   moves: {'Move': 144, 'Sharp': 17, 'Steam': 170}
 MLB 2026-10-28T00:00:00Z Milwaukee Brewers @ Tampa Bay Rays  id=e03ea0f98bdd5fa277a34fbfe1a47efa
    ML: Milwaukee Brewers  1.86 (open 1.86, best 1.86) / Tampa Bay Rays  2.05 (open 2.05, best 2.08)
    SPREAD: Milwaukee Brewers -1.5 2.5 (open -1.5 2.5, best 2.5) / Tampa Bay Rays 1.5 1.59 (open 1.5 1.59, best 1.59)
