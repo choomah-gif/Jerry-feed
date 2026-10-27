@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T17:08:29+00:00)
-credits left 1708 | budget/day 305 | spent today 102 | reset in 4.29d | backfill days {'NHL': 4}
-errors: {'error_grade': "2026-10-27T17:07:54+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T17:15:22+00:00)
+credits left 1697 | budget/day 303 | spent today 113 | reset in 4.28d | backfill days {'NHL': 4}
+errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 66, NHL 179 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 256 settled (16 void), 76 pending | results on file: NBA 66, NHL 179 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,26 +12,34 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 441 rows
-all: {"n": 441, "closed": 249, "clv_pp_avg": -1.43, "beat_close_pct": 0.217, "graded": 273, "record": "125-148-0", "units": -14.19, "roi": -0.0527, "roi_90ci_by_game": [-0.1945, 0.093, 25]}
-  NBA moneyline (price edge): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 68, "closed": 18, "clv_pp_avg": 0.94, "beat_close_pct": 0.778, "graded": 45, "record": "27-18-0", "units": 7.92, "roi": 0.176, "roi_90ci_by_game": [-0.05, 0.3961, 9]}
-  NFL moneyline (model): {"n": 22, "closed": 7, "clv_pp_avg": -0.9, "beat_close_pct": 0.0, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886, "roi_90ci_by_game": null}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 443 rows
+all: {"n": 443, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 281, "record": "128-153-0", "units": -14.03, "roi": -0.0512, "roi_90ci_by_game": [-0.1816, 0.0911, 26]}
+  NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
+  NBA props (price edge): {"n": 68, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 45, "record": "27-18-0", "units": 7.92, "roi": 0.176, "roi_90ci_by_game": [-0.05, 0.3961, 9]}
+  NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
-  NFL props (model): {"n": 204, "closed": 157, "clv_pp_avg": -2.24, "beat_close_pct": 0.057, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
+  NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
   NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 0.63, "beat_close_pct": 0.694, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453, "roi_90ci_by_game": [-0.4443, 0.1024, 12]}
-  NFL spread (model): {"n": 26, "closed": 12, "clv_pp_avg": -1.63, "beat_close_pct": 0.083, "graded": 12, "record": "8-4-0", "units": 3.98, "roi": 0.3317, "roi_90ci_by_game": [-0.1667, 0.8125, 12]}
+  NFL spread (model): {"n": 26, "closed": 13, "clv_pp_avg": -1.73, "beat_close_pct": 0.077, "graded": 13, "record": "9-4-0", "units": 4.91, "roi": 0.3777, "roi_90ci_by_game": [-0.08, 0.8162, 13]}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NFL total (model): {"n": 38, "closed": 11, "clv_pp_avg": -1.8, "beat_close_pct": 0.091, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709, "roi_90ci_by_game": [-0.8127, 0.2691, 11]}
-  NHL moneyline (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 22, "closed": 5, "clv_pp_avg": 0.03, "beat_close_pct": 0.6, "graded": 11, "record": "5-6-0", "units": -0.91, "roi": -0.0827, "roi_90ci_by_game": null}
+  NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
+  NHL moneyline (model): {"n": 3, "closed": 1, "clv_pp_avg": -1.07, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 24, "closed": 15, "clv_pp_avg": 0.3, "beat_close_pct": 0.667, "graded": 11, "record": "5-6-0", "units": -0.91, "roi": -0.0827, "roi_90ci_by_game": null}
   NHL spread (model): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 14, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 14, "closed": 3, "clv_pp_avg": -2.97, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
-  pre-version (before 2026-10-26): n 441 | CLV -1.43 | beat close 0.217 | 125-148-0 | -14.19u | ROI -0.0527
+  pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 128-153-0 | -14.03u | ROI -0.0512
+  price-v3-activegate-2026-10-27: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+ by edge size at call (bigger edges should win more; flat = noise):
+  price edge 2-4%: n 1 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 4-6%: n 1 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+ by hours before start when logged:
+  1-6h: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_shots_on_goal Mathieu Olivier Under 1.5 | draftkings 1.95 vs fair 53.4% | EV +4.1% | [FADE PUBLIC]
+NHL 2026-10-27T23:10Z Columbus Blue Jackets @ Philadelphia Flyers | player_points Denton Mateychuk Under 0.5 | draftkings 1.47 vs fair 69.7% | EV +2.5% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 69% vs market 58%
@@ -39,8 +47,8 @@ MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Ra
       why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 69% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP · PUBLIC]: sharp/steam alerts 0.0 for, 3.8 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 53% vs market 44%
 MLB 2026-10-28T00:00Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 53.0% fair 43.6% edge +9.3 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.74 / Tampa Bay Rays 4.02; SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 53% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 5.4 against. Caution: sharp money has moved the other way.
-(models last refreshed: 2026-10-27T17:07:57+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 42, "backfill_days": 12, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 159, "backfill_days": 26, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 24})
+      why: Negative-binomial runs model: Milwaukee Brewers 3.74, Tampa Bay Rays 4.02 from season run rates, starter FIP (SP TBD (n/a FIP) @ Griffin Jax (3.76 FIP)) and home edge. Makes Tampa Bay Rays 53% versus 44% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 5.3 against. Caution: sharp money has moved the other way.
+(models last refreshed: 2026-10-27T17:14:21+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 2, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 24})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-27T23:10Z | KRONOS Columbus Blue Jackets 3.2 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.5 (0.25), home win 46% vs 47%
@@ -105,13 +113,20 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent missed last game, not on this week's report (pres
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[NEUTRAL] 8 bets | beat close n/a | CLV n/a | 1-1 | ROI +22.0%
-[SHARP] 7 bets | beat close n/a | CLV n/a | 2-0 | ROI +96.5%
+[NEUTRAL] 8 bets | beat close 80% | CLV +0.27pp | 1-1 | ROI +22.0%
+[SHARP] 7 bets | beat close 75% | CLV +1.13pp | 2-0 | ROI +96.5%
+[FADE PUBLIC] 2 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 [AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T17:07:23+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T17:07:23+00:00 wp-json 6 posts
+   table: 2026-10-27T17:14:16+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T17:14:16+00:00 wp-json 6 posts
+
+SPIN SCORECARD (mean absolute error on completed games; lower is better):
+MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
+NBA: 6 games | margin KRONOS 10.58 vs market 10.5 | total KRONOS 12.68 vs market 16.75
+NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 15.0
+NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T11:29:02+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.14->2.23 (betrivers)
