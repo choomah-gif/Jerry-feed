@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T02:41:19+00:00)
-credits left 1816 | budget/day 290 | spent today 317 | reset in 4.89d | backfill days {'NHL': 2}
-errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T02:40:51+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-27T02:51:21+00:00)
+credits left 1816 | budget/day 290 | spent today 317 | reset in 4.88d | backfill days {'NHL': 2}
+errors: {'error_model_NFL': '2026-10-26T04:36:34+00:00 404 Client Error: Not Found for url: https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv', 'error_grade': "2026-10-27T02:50:52+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 229 settled (16 void), 101 pending | results on file: NBA 16, NHL 17 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 256 settled (16 void), 74 pending | results on file: NBA 21, NHL 18 | 41 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -13,9 +13,9 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 440 rows
-all: {"n": 440, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 246, "record": "110-136-0", "units": -15.89, "roi": -0.0655}
+all: {"n": 440, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "graded": 273, "record": "125-148-0", "units": -14.19, "roi": -0.0527}
   NBA moneyline (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NBA props (price edge): {"n": 68, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 25, "record": "15-10-0", "units": 4.71, "roi": 0.1884}
+  NBA props (price edge): {"n": 68, "closed": 18, "clv_pp_avg": 4.4, "beat_close_pct": 0.944, "graded": 45, "record": "27-18-0", "units": 7.92, "roi": 0.176}
   NFL moneyline (model): {"n": 22, "closed": 7, "clv_pp_avg": 0.3, "beat_close_pct": 0.714, "graded": 7, "record": "3-4-0", "units": -2.02, "roi": -0.2886}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": 0.81, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5}
   NFL props (model): {"n": 204, "closed": 157, "clv_pp_avg": -0.13, "beat_close_pct": 0.217, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177}
@@ -24,7 +24,7 @@ all: {"n": 440, "closed": 245, "clv_pp_avg": 0.83, "beat_close_pct": 0.445, "gra
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 4.05, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0}
   NFL total (model): {"n": 38, "closed": 8, "clv_pp_avg": 0.1, "beat_close_pct": 0.5, "graded": 11, "record": "4-7-0", "units": -2.98, "roi": -0.2709}
   NHL moneyline (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
-  NHL props (price edge): {"n": 22, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 4, "record": "2-2-0", "units": 0.6, "roi": 0.15}
+  NHL props (price edge): {"n": 22, "closed": 5, "clv_pp_avg": 3.56, "beat_close_pct": 1.0, "graded": 11, "record": "5-6-0", "units": -0.91, "roi": -0.0827}
   NHL spread (model): {"n": 2, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
   NHL total (model): {"n": 14, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null}
@@ -55,7 +55,7 @@ NFL 2026-11-01T18:00Z Cleveland Browns @ Pittsburgh Steelers | h2h  Pittsburgh S
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
 NFL 2026-11-01T21:05Z Los Angeles Chargers @ Los Angeles Rams | h2h  Los Angeles Rams  | model 74.7% fair 76.3% edge -1.5 | Lean Los Angeles Chargers [NEUTRAL] | 
       why:  Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T01:50:05+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 5, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 1, "graded": 8, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 0, "graded": 0, "voided": 0, "quarantined": 0}}, "NBA": 6})
+(models last refreshed: 2026-10-27T02:50:09+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 1, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 5, "graded": 20, "voided": 0, "quarantined": 1}, "NHL": {"games_ingested": 1, "graded": 7, "voided": 0, "quarantined": 0}}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-27T23:00Z | KRONOS Columbus Blue Jackets 3.1 @ Philadelphia Flyers 2.8 | market total 5.5 | gap total +0.4 (0.24), home win 46% vs 47%
@@ -110,13 +110,13 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 19.6 @ Seattle Seahawks 26.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +4.0 margin -2.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent did not play last game (+4.0); 1 skill/OL out (+0
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[NEUTRAL] 8 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
-[SHARP] 6 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
-[AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
+[NEUTRAL] 8 bets | beat close n/a | CLV n/a | 1-1 | ROI +22.0%
+[SHARP] 6 bets | beat close n/a | CLV n/a | 2-0 | ROI +96.5%
+[AGAINST SHARP] 2 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T01:49:58+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T01:49:58+00:00 wp-json 1 posts
+   table: 2026-10-27T02:50:05+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-27T02:50:05+00:00 wp-json 1 posts
 
 RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-27T02:06:50+00:00 Steam NBA Golden State Warriors @ Denver Nuggets | spreads  Golden State Warriors 7.5->6.5 1.87->1.94 (betrivers)
