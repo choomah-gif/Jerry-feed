@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-27T23:41:13+00:00)
-credits left 1575 | budget/day 293 | spent today 235 | reset in 4.01d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-27T23:51:14+00:00)
+credits left 1548 | budget/day 287 | spent today 262 | reset in 4.01d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 286 settled (16 void), 97 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 286 settled (16 void), 107 pending | results on file: NBA 66, NHL 179 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,12 +12,12 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 499 rows
-all: {"n": 499, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 509 rows
+all: {"n": 509, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "graded": 311, "record": "147-164-0", "units": -8.69, "roi": -0.0286, "roi_90ci_by_game": [-0.1514, 0.1089, 33]}
   MLB batter_hits (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 93, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 65, "record": "39-26-0", "units": 10.56, "roi": 0.1625, "roi_90ci_by_game": [-0.0373, 0.3621, 14]}
+  NBA props (price edge): {"n": 98, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 65, "record": "39-26-0", "units": 10.56, "roi": 0.1625, "roi_90ci_by_game": [-0.0373, 0.3621, 14]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -26,53 +26,56 @@ all: {"n": 499, "closed": 327, "clv_pp_avg": -1.48, "beat_close_pct": 0.226, "gr
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 5, "closed": 1, "clv_pp_avg": -1.07, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 50, "closed": 15, "clv_pp_avg": 0.3, "beat_close_pct": 0.667, "graded": 21, "record": "12-9-0", "units": 1.79, "roi": 0.0852, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 55, "closed": 15, "clv_pp_avg": 0.3, "beat_close_pct": 0.667, "graded": 21, "record": "12-9-0", "units": 1.79, "roi": 0.0852, "roi_90ci_by_game": null}
   NHL spread (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL total (model): {"n": 14, "closed": 3, "clv_pp_avg": -2.97, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 55 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price-v3-activegate-2026-10-27: n 65 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 12 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 2-4%: n 34 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 0-2%: n 14 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 2-4%: n 41 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 4-6%: n 4 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 6%+: n 5 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 6%+: n 6 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by hours before start when logged:
   1-6h: n 36 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   6-24h: n 9 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  <1h: n 13 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  <1h: n 23 | CLV None | beat close None | 0-0-0 | 0u | ROI None
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points Paul Reed Jr Under 12.5 | draftkings 1.88 vs fair 56.9% | EV +7.0% | [SHARP · FADE PUBLIC · THIN MARKET] [MINUTES UNVERIFIED]
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_threes Landry Shamet Under 1.5 | draftkings 1.83 vs fair 58.4% | EV +6.9% | [AGAINST SHARP · THIN MARKET]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_threes Josh Hart Over 1.5 | fanduel 2.38 vs fair 44.5% | EV +6.0% | [AGAINST SHARP · THIN MARKET]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points Paul Reed Jr Under 12.5 | draftkings 1.86 vs fair 57.0% | EV +6.0% | [SHARP · FADE PUBLIC · THIN MARKET] [MINUTES UNVERIFIED]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points Duncan Robinson Under 12.5 | draftkings 1.84 vs fair 57.4% | EV +5.6% | [SHARP · FADE PUBLIC · THIN MARKET]
 NHL 2026-10-28T02:10Z Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Noah Hanifin Under 1.5 | draftkings 1.71 vs fair 61.7% | EV +5.5% | [FADE PUBLIC]
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_rebounds John Collins Over 6.5 | draftkings 1.75 vs fair 60.2% | EV +5.3% | [AGAINST SHARP · THIN MARKET]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_rebounds John Collins Over 6.5 | draftkings 1.79 vs fair 58.9% | EV +5.3% | [AGAINST SHARP · THIN MARKET]
+NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_rebounds Zach LaVine Under 3.5 | draftkings 1.71 vs fair 61.5% | EV +5.1% | [SHARP · FADE PUBLIC · THIN MARKET]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | fanduel 1.88 vs fair 55.6% | EV +4.5% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | draftkings 1.87 vs fair 55.6% | EV +3.9% | [FADE PUBLIC]
-NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_rebounds Zach LaVine Under 3.5 | draftkings 1.68 vs fair 61.8% | EV +3.8% | [SHARP · FADE PUBLIC · THIN MARKET]
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points Duncan Robinson Under 12.5 | draftkings 1.8 vs fair 57.5% | EV +3.5% | [SHARP · FADE PUBLIC · THIN MARKET]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5 | draftkings 1.67 vs fair 62.0% | EV +3.5% | [FADE PUBLIC]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_threes Landry Shamet Under 1.5 | draftkings 1.79 vs fair 57.7% | EV +3.3% | [AGAINST SHARP · THIN MARKET]
+NHL 2026-10-28T00:08Z Boston Bruins @ Carolina Hurricanes | player_shots_on_goal Jordan Martinook Under 1.5 | draftkings 1.8 vs fair 57.3% | EV +3.1% | [FADE PUBLIC]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_assists Austin Reaves Over 5.5 | draftkings 1.88 vs fair 54.8% | EV +3.1% | [FADE PUBLIC]
-NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_points Keldon Johnson Under 10.5 | draftkings 1.93 vs fair 53.4% | EV +3.1% | [AGAINST SHARP · THIN MARKET]
-NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_points Keldon Johnson Under 10.5 | fanduel 1.93 vs fair 53.4% | EV +3.1% | [AGAINST SHARP · THIN MARKET]
-MLB 2026-10-28T00:10Z Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Garrett Mitchell Over 0.5 | fanatics 1.83 vs fair 56.2% | EV +2.9% | [AGAINST SHARP · THIN MARKET]
-NHL 2026-10-28T00:09Z Florida Panthers @ Winnipeg Jets | player_shots_on_goal Carter Verhaeghe Under 2.5 | fanduel 1.65 vs fair 62.4% | EV +2.9% | [FADE PUBLIC]
+NHL 2026-10-28T00:08Z Boston Bruins @ Carolina Hurricanes | player_points Sebastian Aho Under 0.5 | draftkings 2.65 vs fair 38.9% | EV +3.0% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Jake DeBrusk Under 2.5 | draftkings 1.74 vs fair 59.0% | EV +2.7% | [FADE PUBLIC]
+NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_threes Stephon Castle Under 1.5 | draftkings 1.96 vs fair 52.4% | EV +2.7% | [SHARP · FADE PUBLIC · THIN MARKET]
+NHL 2026-10-28T00:10Z New York Islanders @ Nashville Predators | player_points Bo Horvat Under 0.5 | draftkings 2.3 vs fair 44.6% | EV +2.6% | [FADE PUBLIC]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points John Collins Under 15.5 | draftkings 1.81 vs fair 56.6% | EV +2.4% | [SHARP · FADE PUBLIC · THIN MARKET]
+NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_threes Miles McBride Over 1.5 | fanduel 2.32 vs fair 44.1% | EV +2.4% | [AGAINST SHARP · THIN MARKET]
 NHL 2026-10-28T02:10Z Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Tomas Hertl Under 2.5 | draftkings 1.62 vs fair 63.2% | EV +2.3% | [FADE PUBLIC]
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_rebounds John Collins Over 6.5 | fanduel 1.7 vs fair 60.2% | EV +2.3% | [AGAINST SHARP · THIN MARKET]
+NHL 2026-10-28T00:08Z Boston Bruins @ Carolina Hurricanes | player_shots_on_goal Logan Stankoven Over 2.5 | draftkings 2.1 vs fair 48.7% | EV +2.2% | [SHARP · FADE PUBLIC · THIN MARKET]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Ivar Stenberg Under 1.5 | draftkings 2.15 vs fair 47.5% | EV +2.1% | [FADE PUBLIC]
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 3.5 | fanduel 1.71 vs fair 59.7% | EV +2.0% | [AGAINST SHARP · THIN MARKET]
 NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | player_shots_on_goal Colton Parayko Over 1.5 | draftkings 2.25 vs fair 45.2% | EV +1.8% | [FADE PUBLIC]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebounds Luka Doncic Under 7.5 | draftkings 1.89 vs fair 53.8% | EV +1.7% | [FADE PUBLIC]
+NHL 2026-10-28T00:08Z Boston Bruins @ Carolina Hurricanes | player_shots_on_goal Seth Jarvis Under 2.5 | draftkings 1.83 vs fair 55.6% | EV +1.7% | [FADE PUBLIC]
 NHL 2026-10-28T00:08Z Boston Bruins @ Carolina Hurricanes | player_shots_on_goal David Pastrnak Over 2.5 | draftkings 1.74 vs fair 58.4% | EV +1.7% | [SHARP · FADE PUBLIC · THIN MARKET]
-NHL 2026-10-28T00:10Z Montréal Canadiens @ St Louis Blues | player_shots_on_goal Dylan Holloway Under 2.5 | fanduel 1.83 vs fair 55.6% | EV +1.7% | [AGAINST SHARP · THIN MARKET]
 NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_points OG Anunoby Under 16.5 | fanduel 1.82 vs fair 55.9% | EV +1.7% | [SHARP · FADE PUBLIC · THIN MARKET]
-NBA 2026-10-28T00:10Z Detroit Pistons @ New York Knicks | player_rebounds Paul Reed Jr Under 8.5 | fanduel 1.71 vs fair 59.4% | EV +1.6% | [SHARP · FADE PUBLIC · THIN MARKET] [MINUTES UNVERIFIED]
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_points Vincent Trocheck Over 0.5 | draftkings 2.1 vs fair 48.4% | EV +1.6% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Cutter Gauthier Under 3.5 | draftkings 2.2 vs fair 46.2% | EV +1.6% | [FADE PUBLIC]
+NBA 2026-10-28T00:10Z Sacramento Kings @ San Antonio Spurs | player_assists Darius Acuff Jr. Over 4.5 | fanduel 2.18 vs fair 46.6% | EV +1.6% | [NEUTRAL]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 MLB 2026-10-28T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 68% vs market 58%
@@ -151,10 +154,10 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent missed last game, not on this week's report (pres
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 35 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
-[SHARP · FADE PUBLIC · THIN MARKET] 11 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
-[NEUTRAL] 10 bets | beat close 80% | CLV +0.27pp | 4-2 | ROI +32.3%
-[AGAINST SHARP · THIN MARKET] 8 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
+[FADE PUBLIC] 39 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
+[SHARP · FADE PUBLIC · THIN MARKET] 14 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
+[NEUTRAL] 11 bets | beat close 80% | CLV +0.27pp | 4-2 | ROI +32.3%
+[AGAINST SHARP · THIN MARKET] 10 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 [SHARP] 7 bets | beat close 75% | CLV +1.13pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 
@@ -169,46 +172,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Blake Coleman Under 1.5->1.5 2.0->2.07 (pinnacle)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points MacKenzie Weegar Under 0.5->0.5 1.56->1.52 (pinnacle)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points MacKenzie Weegar Over 0.5->0.5 2.35->2.43 (pinnacle)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Kirill Kaprizov Over 2.5->1.5 26.0->6.75 (betrivers)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Nick Schmaltz Over 1.5->2.5 11.5->71.0 (betrivers)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Matt Boldy Over 2.5->1.5 56.0->10.0 (betrivers)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Blake Coleman Under 1.5->2.5 2.0->1.3 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Blake Coleman Over 1.5->2.5 1.77->3.3 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Blake Coleman Under 0.5->1.5 5.0->2.0 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Blake Coleman Over 0.5->1.5 1.13->1.77 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Under 2.5->0.5 1.17->3.8 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Over 2.5->0.5 4.4->1.22 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Vincent Trocheck Under 1.5->2.5 1.83->1.24 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Vincent Trocheck Over 1.5->2.5 1.91->3.7 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Vincent Trocheck Under 0.5->1.5 4.4->1.83 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Vincent Trocheck Over 0.5->1.5 1.17->1.91 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Logan Cooley Under 2.5->1.5 1.4->2.3 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Logan Cooley Over 2.5->1.5 2.8->1.59 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Barrett Hayton Under 2.5->0.5 1.3->4.6 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Barrett Hayton Over 2.5->0.5 3.3->1.15 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Under 3.5->1.5 1.3->3.5 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Over 3.5->1.5 3.3->1.27 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Nick Schmaltz Under 3.5->1.5 1.22->2.8 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Nick Schmaltz Over 3.5->1.5 3.8->1.4 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 3.5->4.5 1.62->1.25 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Over 3.5->4.5 2.2->3.6 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 2.5->3.5 2.35->1.62 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Over 2.5->3.5 1.56->2.2 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Bobby Brink Under 0.5->1.5 1.45->1.04 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_points Bobby Brink Over 0.5->1.5 2.65->11.0 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points MacKenzie Weegar Under 1.5->0.5 1.04->1.59 (espnbet)
-2026-10-27T23:40:56+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points MacKenzie Weegar Over 1.5->0.5 11.0->2.35 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_points Logan Cooley Under 1.5->0.5 1.22->2.25 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_points Joel Eriksson Ek Under 0.5->1.5 2.1->1.2 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_points Joel Eriksson Ek Over 0.5->1.5 1.74->4.25 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Nick Schmaltz Over 0.5->0.5 3.0->2.55 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Matt Boldy Over 0.5->0.5 2.4->2.5 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Kirill Kaprizov Under 0.5->0.5 1.71->1.67 (espnbet)
-2026-10-27T23:40:56+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_goals Kirill Kaprizov Over 0.5->0.5 2.05->2.1 (espnbet)
-2026-10-27T23:40:56+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Logan Cooley Under 1.5->1.5 2.41->2.28 (betonlineag)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Under 3.5->3.5 1.94->2.01 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Over 3.5->3.5 1.88->1.82 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Under 0.5->0.5 1.95->1.9 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Over 0.5->0.5 1.87->1.92 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Under 0.5->0.5 2.02->2.07 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Over 0.5->0.5 1.81->1.77 (pinnacle)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Under 0.5->0.5 2.0->2.06 (williamhill_us)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Over 0.5->0.5 1.75->1.71 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Under 1.5->1.5 1.58->1.61 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Over 1.5->1.5 2.29->2.23 (williamhill_us)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Under 0.5->0.5 1.89->1.85 (williamhill_us)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Over 0.5->0.5 1.83->1.88 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 1.5->0.5 41.0->5.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jackson Chourio Over 0.5->1.5 5.0->41.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 1.5->0.5 56.0->5.75 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs William Contreras Over 0.5->1.5 5.75->56.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Junior Caminero Over 0.5->1.5 4.9->41.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 1.5->0.5 56.0->5.75 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Jake Bauers Over 0.5->1.5 5.75->56.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs David Hamilton Over 0.5->0.5 12.0->14.0 (williamhill_us)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Junior Caminero Over 1.5->0.5 41.0->4.9 (williamhill_us)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Under 3.5->4.5 1.87->1.38 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Over 3.5->4.5 1.83->2.8 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Under 2.5->3.5 2.8->1.87 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | pitcher_strikeouts Griffin Jax Over 2.5->3.5 1.38->1.83 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Garrett Mitchell Under 0.5->1.5 2.0->1.33 (espnbet)
+2026-10-27T23:50:59+00:00 Sharp MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Under 0.5->1.5 2.7->1.45 (espnbet)
+2026-10-27T23:50:59+00:00 Sharp MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Over 0.5->1.5 1.45->2.7 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Under 1.5->0.5 1.45->2.7 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Chandler Simpson Over 1.5->0.5 2.7->1.45 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Under 0.5->1.5 2.1->1.42 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jake Bauers Over 0.5->1.5 1.71->2.8 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Under 0.5->1.5 2.9->1.61 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Yandy Diaz Over 0.5->1.5 1.4->2.3 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Under 0.5->1.5 3.0->1.71 (espnbet)
+2026-10-27T23:50:59+00:00 Sharp MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Jackson Chourio Over 0.5->1.5 1.38->2.1 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Under 1.5->0.5 1.29->1.91 (espnbet)
+2026-10-27T23:50:59+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | batter_total_bases Ryan Vilade Over 1.5->0.5 3.4->1.83 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_home_runs Yandy Diaz Over 0.5->0.5 9.0->10.0 (espnbet)
+2026-10-27T23:50:59+00:00 Move MLB Milwaukee Brewers @ Tampa Bay Rays | batter_hits Jake Bauers Over 0.5->1.5 1.71->4.6 (espnbet)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -302,12 +305,12 @@ NBA 2026-10-28T00:10:00Z Detroit Pistons @ New York Knicks  id=bde272846214fd6cf
    ML: Detroit Pistons  2.47 (open 2.4, best 2.5) / New York Knicks  1.62 (open 1.63, best 1.65)
    SPREAD: Detroit Pistons 4.0 1.94 (open 3.5 1.95, best 1.95) / New York Knicks -4.0 1.96 (open -3.5 1.93, best 1.96)
    TOTAL: Over 220.5 1.93 (open 219.0 2.01, best 1.93) / Under 220.5 1.95 (open 219.0 1.86, best 1.95)
-   moves: {'Move': 86, 'Sharp': 32, 'Steam': 186}
+   moves: {'Move': 138, 'Sharp': 56, 'Steam': 247}
 NBA 2026-10-28T00:10:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74cbbfd05008d0875455b
    ML: Sacramento Kings  11.47 (open 12.02, best 12.0) / San Antonio Spurs  1.07 (open 1.05, best 1.07)
    SPREAD: Sacramento Kings 19.0 1.96 (open 17.5 1.93, best 1.96) / San Antonio Spurs -19.0 1.94 (open -17.5 1.95, best 1.94)
    TOTAL: Over 232.0 1.89 (open 229.0 1.88, best 1.93) / Under 232.0 2.0 (open 229.0 1.99, best 2.0)
-   moves: {'Move': 67, 'Sharp': 29, 'Steam': 193}
+   moves: {'Move': 116, 'Sharp': 38, 'Steam': 205}
 NBA 2026-10-28T03:10:00Z Portland Trail Blazers @ Los Angeles Lakers  id=82afe4e028b0fbbd9f6cf92697bec6fc
    ML: Los Angeles Lakers  1.7 (open 1.66, best 1.72) / Portland Trail Blazers  2.26 (open 2.33, best 2.27)
    SPREAD: Los Angeles Lakers -2.5 1.88 (open -3.5 1.98, best 1.91) / Portland Trail Blazers 2.5 2.0 (open 3.5 1.91, best 2.0)
@@ -363,27 +366,27 @@ NHL 2026-10-28T00:08:00Z Boston Bruins @ Carolina Hurricanes  id=7ca25d591cbdc67
    ML: Boston Bruins  2.63 (open 2.62, best 2.7) / Carolina Hurricanes  1.54 (open 1.54, best 1.55)
    SPREAD: Boston Bruins 1.5 1.63 (open 1.5 1.62, best 1.67) / Carolina Hurricanes -1.5 2.37 (open -1.5 2.39, best 2.37)
    TOTAL: Over 6.5 2.04 (open 6.0 1.84, best 2.06) / Under 6.5 1.84 (open 6.0 2.04, best 1.85)
-   moves: {'Move': 29, 'Sharp': 34, 'Steam': 28}
+   moves: {'Move': 212, 'Sharp': 37, 'Steam': 28}
 NHL 2026-10-28T00:08:00Z New Jersey Devils @ Dallas Stars  id=11d4cfe51153e45bb3a9fc6e5f23535a
    ML: Dallas Stars  1.83 (open 1.83, best 1.83) / New Jersey Devils  2.07 (open 2.07, best 2.09)
    SPREAD: Dallas Stars -1.5 3.11 (open -1.5 3.11, best 3.12) / New Jersey Devils 1.5 1.4 (open 1.5 1.4, best 1.43)
    TOTAL: Over 5.5 1.88 (open 5.5 1.86, best 1.88) / Under 5.5 1.99 (open 5.5 2.01, best 2.02)
-   moves: {'Move': 24, 'Sharp': 13, 'Steam': 22}
+   moves: {'Move': 84, 'Sharp': 18, 'Steam': 34}
 NHL 2026-10-28T00:09:00Z Florida Panthers @ Winnipeg Jets  id=17aa3256e18d8946db708952a66e29ee
    ML: Florida Panthers  1.79 (open 1.8, best 1.79) / Winnipeg Jets  2.13 (open 2.11, best 2.13)
    SPREAD: Florida Panthers -1.5 2.97 (open -1.5 3.0, best 2.97) / Winnipeg Jets 1.5 1.43 (open 1.5 1.42, best 1.45)
    TOTAL: Over 6.0 1.98 (open 6.0 1.93, best 1.98) / Under 6.0 1.89 (open 6.0 1.93, best 1.94)
-   moves: {'Move': 27, 'Sharp': 22, 'Steam': 18}
+   moves: {'Move': 64, 'Sharp': 22, 'Steam': 24}
 NHL 2026-10-28T00:10:00Z Montréal Canadiens @ St Louis Blues  id=928c19ad83dc850d60051b756f7db2cd
    ML: Montréal Canadiens  2.06 (open 2.0, best 2.06) / St Louis Blues  1.84 (open 1.89, best 1.87)
    SPREAD: Montréal Canadiens 1.5 1.4 (open 1.5 1.38, best 1.43) / St Louis Blues -1.5 3.11 (open -1.5 3.19, best 3.11)
    TOTAL: Over 6.0 1.88 (open 6.0 1.87, best 1.88) / Under 6.0 1.99 (open 6.0 2.01, best 2.01)
-   moves: {'Move': 36, 'Sharp': 20, 'Steam': 35}
+   moves: {'Move': 100, 'Sharp': 23, 'Steam': 41}
 NHL 2026-10-28T00:10:00Z New York Islanders @ Nashville Predators  id=fa0255827e54afa3c871868fed566dd0
    ML: Nashville Predators  1.85 (open 1.83, best 1.85) / New York Islanders  2.05 (open 2.08, best 2.08)
    SPREAD: Nashville Predators -1.5 3.11 (open -1.5 3.08, best 3.11) / New York Islanders 1.5 1.4 (open 1.5 1.4, best 1.41)
    TOTAL: Over 5.5 1.84 (open 5.5 1.84, best 1.84) / Under 5.5 2.04 (open 5.5 2.04, best 2.04)
-   moves: {'Move': 50, 'Sharp': 8, 'Steam': 19}
+   moves: {'Move': 107, 'Sharp': 22, 'Steam': 46}
 NHL 2026-10-28T00:11:00Z Los Angeles Kings @ Chicago Blackhawks  id=74a990b939cd35873c9bb47d6e37e057
    ML: Chicago Blackhawks  2.04 (open 2.04, best 2.04) / Los Angeles Kings  1.85 (open 1.85, best 1.85)
    SPREAD: Chicago Blackhawks 1.5 1.39 (open 1.5 1.39, best 1.43) / Los Angeles Kings -1.5 3.15 (open -1.5 3.15, best 3.15)
@@ -421,7 +424,7 @@ MLB 2026-10-28T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=e03ea0f98bdd5fa2
    ML: Milwaukee Brewers  1.74 (open 1.74, best 1.74) / Tampa Bay Rays  2.23 (open 2.22, best 2.25)
    SPREAD: Milwaukee Brewers -1.5 2.3 (open -1.5 2.31, best 2.38) / Tampa Bay Rays 1.5 1.68 (open 1.5 1.68, best 1.68)
    TOTAL: Over 7.0 1.9 (open 7.0 1.91, best 1.93) / Under 7.0 1.97 (open 7.0 1.96, best 2.0)
-   moves: {'Move': 90, 'Sharp': 20, 'Steam': 121}
+   moves: {'Move': 133, 'Sharp': 26, 'Steam': 145}
 
 QUARANTINE (42 unresolved player/market pairs; these bets are unsettled, not lost):
   George Pickens | player_anytime_td | player name did not resolve x2
