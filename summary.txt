@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T03:21:45+00:00)
-credits left 1455 | budget/day 273 | spent today 355 | reset in 3.86d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T03:31:46+00:00)
+credits left 1455 | budget/day 274 | spent today 355 | reset in 3.85d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 305 settled (16 void), 107 pending | results on file: NBA 67, NHL 180 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 344 settled (18 void), 68 pending | results on file: NBA 69, NHL 186 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -13,11 +13,11 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 394, "clv_pp_avg": -1.34, "beat_close_pct": 0.294, "graded": 330, "record": "155-175-0", "units": -13.04, "roi": -0.0404, "roi_90ci_by_game": [-0.1577, 0.0909, 35]}
+all: {"n": 528, "closed": 394, "clv_pp_avg": -1.34, "beat_close_pct": 0.294, "graded": 367, "record": "175-192-0", "units": -13.05, "roi": -0.0362, "roi_90ci_by_game": [-0.1407, 0.0713, 42]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 107, "closed": 64, "clv_pp_avg": -0.02, "beat_close_pct": 0.656, "graded": 73, "record": "43-30-0", "units": 9.82, "roi": 0.1345, "roi_90ci_by_game": [-0.046, 0.3205, 15]}
+  NBA props (price edge): {"n": 107, "closed": 64, "clv_pp_avg": -0.02, "beat_close_pct": 0.656, "graded": 95, "record": "57-38-0", "units": 13.81, "roi": 0.1454, "roi_90ci_by_game": [-0.0058, 0.2939, 17]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -26,29 +26,29 @@ all: {"n": 528, "closed": 394, "clv_pp_avg": -1.34, "beat_close_pct": 0.294, "gr
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 5, "closed": 4, "clv_pp_avg": 0.04, "beat_close_pct": 0.25, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 65, "closed": 41, "clv_pp_avg": 0.66, "beat_close_pct": 0.805, "graded": 32, "record": "16-16-0", "units": -1.82, "roi": -0.0569, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 65, "closed": 41, "clv_pp_avg": 0.66, "beat_close_pct": 0.805, "graded": 47, "record": "22-25-0", "units": -5.82, "roi": -0.1238, "roi_90ci_by_game": [-0.2577, 0.0785, 12]}
   NHL spread (model): {"n": 3, "closed": 3, "clv_pp_avg": -18.16, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL total (model): {"n": 14, "closed": 10, "clv_pp_avg": -2.31, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV -23.03 | beat close 0.5 | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.49 | beat close 0.221 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 84 | CLV 0.47 | beat close 0.769 | 8-11-0 | -4.35u | ROI -0.2289
+  price-v3-activegate-2026-10-27: n 84 | CLV 0.47 | beat close 0.769 | 28-28-0 | -4.36u | ROI -0.0779
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV -23.03 | beat close 0.5 | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 17 | CLV 0.53 | beat close 0.917 | 2-5-0 | -3.26u | ROI -0.4657
-  price edge 2-4%: n 53 | CLV 0.88 | beat close 0.806 | 5-6-0 | -2.04u | ROI -0.1855
-  price edge 4-6%: n 7 | CLV 1.58 | beat close 0.667 | 1-0-0 | 0.95u | ROI 0.95
-  price edge 6%+: n 7 | CLV -2.37 | beat close 0.333 | 0-0-0 | 0u | ROI None
+  price edge 0-2%: n 17 | CLV 0.53 | beat close 0.917 | 6-7-0 | -1.88u | ROI -0.1446
+  price edge 2-4%: n 53 | CLV 0.88 | beat close 0.806 | 17-19-0 | -5.87u | ROI -0.1631
+  price edge 4-6%: n 7 | CLV 1.58 | beat close 0.667 | 2-0-0 | 1.72u | ROI 0.86
+  price edge 6%+: n 7 | CLV -2.37 | beat close 0.333 | 3-2-0 | 1.67u | ROI 0.334
  by hours before start when logged:
-  1-6h: n 36 | CLV 1.01 | beat close 0.821 | 4-5-0 | -1.62u | ROI -0.18
+  1-6h: n 36 | CLV 1.01 | beat close 0.821 | 12-15-0 | -5.3u | ROI -0.1963
   6-24h: n 9 | CLV -23.03 | beat close 0.5 | 0-0-0 | 0u | ROI None
-  <1h: n 42 | CLV -0.17 | beat close 0.708 | 4-6-0 | -2.73u | ROI -0.273
+  <1h: n 42 | CLV -0.17 | beat close 0.708 | 16-13-0 | 0.94u | ROI 0.0324
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-(models last refreshed: 2026-10-28T02:29:49+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 6, "UFC": 0, "PRICE": 6, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 1, "backfill_days": 0, "graded": 8, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 1, "backfill_days": 0, "graded": 11, "voided": 0, "quarantined": 1}}, "NBA": 6})
+(models last refreshed: 2026-10-28T03:29:53+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 2, "backfill_days": 0, "graded": 24, "voided": 2, "quarantined": 3}, "NHL": {"games_ingested": 6, "backfill_days": 0, "graded": 15, "voided": 0, "quarantined": 1}}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
@@ -81,17 +81,17 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 45 bets | beat close 74% | CLV +0.39pp | 3-6 | ROI -39.1%
-[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 83% | CLV +0.69pp | 2-3 | ROI -35.2%
-[AGAINST SHARP · THIN MARKET] 17 bets | beat close 73% | CLV +0.01pp | 2-2 | ROI -6.2%
-[NEUTRAL] 11 bets | beat close 83% | CLV +0.91pp | 5-2 | ROI +44.6%
+[FADE PUBLIC] 45 bets | beat close 74% | CLV +0.39pp | 13-16 | ROI -18.6%
+[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 83% | CLV +0.69pp | 6-7 | ROI -20.5%
+[AGAINST SHARP · THIN MARKET] 17 bets | beat close 73% | CLV +0.01pp | 6-5 | ROI +8.6%
+[NEUTRAL] 11 bets | beat close 83% | CLV +0.91pp | 6-2 | ROI +48.6%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 0-2 | ROI -100.0%
-[SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 0-0 | ROI n/a
+[SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T02:29:45+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T02:29:45+00:00 wp-json 5 posts
+   table: 2026-10-28T03:29:49+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T03:29:49+00:00 wp-json 5 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
@@ -239,7 +239,7 @@ NBA 2026-10-28T00:15:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74c
    SPREAD: Sacramento Kings 19.0 1.93 (open 17.5 1.93, best 1.93) / San Antonio Spurs -19.0 1.97 (open -17.5 1.95, best 1.97)
    TOTAL: Over 232.0 1.86 (open 229.0 1.88, best 1.86) / Under 232.0 2.03 (open 229.0 1.99, best 2.03)
    moves: {'Move': 169, 'Sharp': 44, 'Steam': 263}
-NBA 2026-10-28T03:10:00Z Portland Trail Blazers @ Los Angeles Lakers  id=82afe4e028b0fbbd9f6cf92697bec6fc
+NBA 2026-10-28T03:13:00Z Portland Trail Blazers @ Los Angeles Lakers  id=82afe4e028b0fbbd9f6cf92697bec6fc
    ML: Los Angeles Lakers  1.9 (open 1.66, best 1.91) / Portland Trail Blazers  2.01 (open 2.33, best 2.06)
    SPREAD: Los Angeles Lakers -2.0 2.03 (open -3.5 1.98, best 2.03) / Portland Trail Blazers 2.0 1.88 (open 3.5 1.91, best 1.88)
    TOTAL: Over 233.5 1.9 (open 237.5 2.01, best 1.9) / Under 233.5 1.99 (open 237.5 1.86, best 1.99)
