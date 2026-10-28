@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T06:52:18+00:00)
-credits left 1453 | budget/day 284 | spent today 2 | reset in 3.71d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T07:02:20+00:00)
+credits left 1451 | budget/day 284 | spent today 4 | reset in 3.71d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -13,10 +13,10 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 391, "record": "187-204-0", "units": -14.64, "roi": -0.0381, "roi_90ci_by_game": [-0.1426, 0.0807, 47]}
+all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 392, "record": "188-204-0", "units": -13.99, "roi": -0.0363, "roi_90ci_by_game": [-0.1437, 0.081, 47]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
+  NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": -0.35, "roi": -0.175, "roi_90ci_by_game": null}
   NBA props (price edge): {"n": 107, "closed": 71, "clv_pp_avg": 0.08, "beat_close_pct": 0.676, "graded": 102, "record": "64-38-0", "units": 20.25, "roi": 0.1985, "roi_90ci_by_game": [0.0423, 0.3607, 18]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
@@ -32,7 +32,7 @@ all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "gr
   NHL total (model): {"n": 14, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
-  pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 147-164-0 | -8.69u | ROI -0.0286
+  pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 148-164-0 | -8.04u | ROI -0.0264
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
@@ -85,7 +85,7 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 9-8 | ROI -6.5%
 [AGAINST SHARP · THIN MARKET] 17 bets | beat close 77% | CLV +0.28pp | 8-8 | ROI -3.8%
 [NEUTRAL] 11 bets | beat close 86% | CLV +0.84pp | 6-2 | ROI +48.6%
-[SHARP] 7 bets | beat close 80% | CLV +0.93pp | 4-2 | ROI +27.5%
+[SHARP] 7 bets | beat close 80% | CLV +0.93pp | 5-2 | ROI +32.9%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 0-2 | ROI -100.0%
 [SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
@@ -95,7 +95,7 @@ DK SPLITS: 0 rows on file (none)
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 2 games | margin KRONOS None vs market None | total KRONOS 1.79 vs market 2.0
-NBA: 6 games | margin KRONOS 10.58 vs market 10.5 | total KRONOS 12.68 vs market 16.75
+NBA: 10 games | margin KRONOS 11.47 vs market 10.3 | total KRONOS 14.99 vs market 16.85
 NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 15.0
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
