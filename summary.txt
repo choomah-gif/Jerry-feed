@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T01:01:25+00:00)
-credits left 1492 | budget/day 276 | spent today 318 | reset in 3.96d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T01:11:26+00:00)
+credits left 1486 | budget/day 275 | spent today 324 | reset in 3.95d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -54,20 +54,13 @@ NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_assis
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Jake DeBrusk Under 2.5 | draftkings 1.74 vs fair 59.0% | EV +2.7% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Tomas Hertl Under 2.5 | draftkings 1.62 vs fair 63.2% | EV +2.3% | [FADE PUBLIC]
 NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Ivar Stenberg Under 1.5 | draftkings 2.15 vs fair 47.5% | EV +2.1% | [FADE PUBLIC]
-NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 3.5 | fanduel 1.71 vs fair 59.7% | EV +2.0% | [AGAINST SHARP · THIN MARKET]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebounds Luka Doncic Under 7.5 | draftkings 1.89 vs fair 53.8% | EV +1.7% | [FADE PUBLIC]
-NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | player_points Vincent Trocheck Over 0.5 | draftkings 2.1 vs fair 48.4% | EV +1.6% | [FADE PUBLIC]
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Cutter Gauthier Under 3.5 | draftkings 2.2 vs fair 46.2% | EV +1.6% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | >> Lean: Minnesota Wild to win — KRONOS 49% vs market 46%
-NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth  | model 50.7% fair 53.9% edge -3.2 | Lean Minnesota Wild [NEUTRAL] | xG 3.16-3.49; UTA G: Karel Vejmelka (Confirmed); MIN G: Jesper Wallstedt (Confirmed); raw model 44.8%, anchored 35% to market, slate scale 1.13
-      why: Expected goals 3.16-3.49 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed). Raw model 45% home, anchored 35% toward the market: Minnesota Wild 49% versus 46% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
 (models last refreshed: 2026-10-28T00:29:41+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 12, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 6})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-28T01:10Z | KRONOS Minnesota Wild 3.5 @ Utah Mammoth 3.2 | market total 6.5 | gap total +0.1 (0.08), home win 51% vs 54%
-      no gap large enough to be a mispricing | xG 3.16-3.49; Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed)
 NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 3.0 @ Anaheim Ducks 4.3 | market total 6.5 | gap total +0.8 (0.42), home win 67% vs 66%
       no gap large enough to be a mispricing | xG 4.27-3.03; Lukas Dostal (Confirmed) / goalie unconfirmed (team avg)
 NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.1 @ Vegas Golden Knights 3.4 | market total 6.5 | gap total +0.0 (0.01), home win 58% vs 59%
@@ -125,46 +118,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.97->2.01 (pinnacle)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 3.01->3.12 (pinnacle)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.42->1.4 (pinnacle)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.81->1.88 (pinnacle)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.1->2.03 (pinnacle)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.87->1.82 (betrivers)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.93->2.0 (betrivers)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.4->1.38 (betrivers)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.78->1.82 (betrivers)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.08->2.02 (betrivers)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.8->3.0 (betmgm)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.45->1.4 (betmgm)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.77->1.85 (betmgm)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->1.98 (betmgm)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.87->1.83 (espnbet)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.95->2.0 (espnbet)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.85->3.0 (espnbet)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->2.0 (espnbet)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.91->1.85 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.94->2.02 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.89->3.11 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.44->1.39 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.8->1.88 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.1->2.0 (lowvig)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.91->1.85 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.94->2.02 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.89->3.11 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.44->1.39 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.8->1.88 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.1->2.0 (betonlineag)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.9->3.05 (draftkings)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.43->1.4 (draftkings)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.8->1.85 (draftkings)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->1.98 (draftkings)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Under 6.5->6.5 1.87->1.83 (fanatics)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 1.95->2.0 (fanatics)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Utah Mammoth -1.5->-1.5 2.85->3.0 (fanatics)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.43->1.39 (fanatics)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.77->1.83 (fanatics)
-2026-10-28T00:58:14+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.1->2.0 (fanatics)
+2026-10-28T01:06:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.81->1.87 (williamhill_us)
+2026-10-28T01:06:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.05->1.98 (williamhill_us)
+2026-10-28T01:06:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 2.0->1.91 (espnbet)
+2026-10-28T01:06:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth None->None 1.83->1.87 (fanatics)
+2026-10-28T01:06:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | h2h  Minnesota Wild None->None 2.0->1.95 (fanatics)
+2026-10-28T01:06:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | totals  Over 6.5->6.5 2.0->1.96 (fanduel)
+2026-10-28T01:06:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | spreads  Minnesota Wild 1.5->1.5 1.4->1.38 (fanduel)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Under 2.5->2.5 1.82->1.69 (pinnacle)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Over 2.5->2.5 1.92->2.09 (pinnacle)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Under 1.5->2.5 1.71->1.17 (espnbet)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Over 1.5->2.5 2.1->4.4 (espnbet)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Under 0.5->1.5 3.9->1.71 (espnbet)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Over 0.5->1.5 1.21->2.1 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Vincent Trocheck Under 2.5->0.5 1.24->4.2 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Mikhail Sergachev Under 3.5->1.5 1.13->2.4 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Mikhail Sergachev Over 3.5->1.5 5.0->1.53 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Under 3.5->1.5 1.31->3.1 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Clayton Keller Over 3.5->1.5 3.25->1.33 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Nick Schmaltz Under 3.5->1.5 1.21->2.6 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Nick Schmaltz Over 3.5->1.5 3.9->1.45 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Dylan Guenther Over 3.5->4.5 2.35->4.0 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Dylan Guenther Over 2.5->3.5 1.56->2.35 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Dylan Guenther Under 4.5->2.5 1.21->2.35 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Dylan Guenther Over 4.5->2.5 3.9->1.56 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kirill Kaprizov Under 4.5->2.5 1.27->2.35 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kirill Kaprizov Over 4.5->2.5 3.5->1.56 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Matt Boldy Under 4.5->2.5 1.25->2.4 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Jared Spurgeon Under 0.5->1.5 1.38->1.02 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Jared Spurgeon Over 0.5->1.5 2.9->13.0 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Matt Boldy Under 0.5->1.5 2.65->1.33 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Matt Boldy Over 0.5->1.5 1.45->3.1 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Dylan Guenther Under 1.5->0.5 1.2->2.3 (espnbet)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Dylan Guenther Over 1.5->0.5 4.25->1.62 (espnbet)
+2026-10-28T01:05:16+00:00 Move NHL Minnesota Wild @ Utah Mammoth | player_points Joel Eriksson Ek Under 1.5->0.5 1.2->2.15 (espnbet)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Under 1.5->1.5 1.61->1.65 (betonlineag)
+2026-10-28T01:05:16+00:00 Steam NHL Minnesota Wild @ Utah Mammoth | player_shots_on_goal Kailer Yamamoto Over 1.5->1.5 2.26->2.18 (betonlineag)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Jared Spurgeon Under 0.5->0.5 1.36->1.38 (betonlineag)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Jared Spurgeon Over 0.5->0.5 3.04->2.95 (betonlineag)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Matt Boldy Under 0.5->1.5 2.63->1.39 (betonlineag)
+2026-10-28T01:05:16+00:00 Sharp NHL Minnesota Wild @ Utah Mammoth | player_points Matt Boldy Over 0.5->1.5 1.46->2.9 (betonlineag)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -348,8 +341,8 @@ NHL 2026-10-28T00:11:00Z Los Angeles Kings @ Chicago Blackhawks  id=74a990b939cd
 NHL 2026-10-28T01:10:00Z Minnesota Wild @ Utah Mammoth  id=fc98fb73985d5caecdfffd4cb0f4d3ed
    ML: Minnesota Wild  2.03 (open 2.11, best 2.05) / Utah Mammoth  1.88 (open 1.8, best 1.88)
    SPREAD: Minnesota Wild 1.5 1.4 (open 1.5 1.42, best 1.4) / Utah Mammoth -1.5 3.12 (open -1.5 2.99, best 3.12)
-   TOTAL: Over 6.5 2.01 (open 6.5 1.97, best 2.02) / Under 6.5 1.88 (open 6.5 1.9, best 1.88)
-   moves: {'Move': 33, 'Sharp': 13, 'Steam': 77}
+   TOTAL: Over 6.5 2.01 (open 6.5 1.97, best 2.02) / Under 6.5 1.88 (open 6.5 1.9, best 1.91)
+   moves: {'Move': 60, 'Sharp': 29, 'Steam': 90}
 NHL 2026-10-28T02:10:00Z Vancouver Canucks @ Anaheim Ducks  id=5f16cb74336431221c132f05c0e31d04
    ML: Anaheim Ducks  1.49 (open 1.48, best 1.49) / Vancouver Canucks  2.79 (open 2.81, best 2.8)
    SPREAD: Anaheim Ducks -1.5 2.19 (open -1.5 2.2, best 2.19) / Vancouver Canucks 1.5 1.73 (open 1.5 1.72, best 1.77)
