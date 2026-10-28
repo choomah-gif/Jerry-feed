@@ -679,11 +679,14 @@ class Desk:
             # game-line quotes at all gets one pull regardless of the prop floor
             if soonest <= BASELINE_HOURS * 60:
                 ids = [e["event_id"] for e in evs if (parse(e["commence"]) - now).total_seconds() <= BASELINE_HOURS * 3600]
-                have = con.execute(f"""select count(*) from last_quote where player='' and market='h2h'
-                                       and event_id in ({",".join("?" * len(ids))})""", ids).fetchone()[0] if ids else 1
-                if have == 0:
+                # count GAMES with a fresh (last 12h) game line, not quote rows: on 2026-10-28 one NBA game
+                # still had yesterday's quotes, the guard saw "covered", and 11 games went unpriced all day
+                fresh = iso(now - timedelta(hours=12))
+                covered = con.execute(f"""select count(distinct event_id) from last_quote where player='' and market='h2h'
+                                          and ts>? and event_id in ({",".join("?" * len(ids))})""", (fresh, *ids)).fetchone()[0] if ids else 0
+                if ids and covered < 0.5 * len(ids):
                     floor = 0
-                    meta_set(con, f"starved_{sport}", iso(now))
+                    meta_set(con, f"starved_{sport}", f"{iso(now)} {covered}/{len(ids)} games priced")
             if self._due(con, f"tape_{sport}", every, now) and self.can_spend(con, cost, now, floor=floor):
                 try:
                     self.pull_featured(con, sport, now)
