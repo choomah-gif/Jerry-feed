@@ -1315,9 +1315,22 @@ NFL_PROP_COLUMN = {
 }
 
 
+
+_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def _strip_suffix(n):
+    """'paul reed jr' -> 'paul reed'. The odds feed and ESPN disagree on suffixes (2026-10-28:
+    'Paul Reed Jr' vs 'Paul Reed' meant the role-change rule never found his history)."""
+    parts = n.split()
+    while len(parts) > 2 and parts[-1] in _SUFFIXES:
+        parts = parts[:-1]
+    return " ".join(parts)
+
+
 def _norm(s):
-    """Match the desk's own normaliser so the two agree on what a name is."""
-    return re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " ")).strip()
+    """Match the desk's own normaliser so the two agree on what a name is (suffixes dropped)."""
+    return _strip_suffix(re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " ")).strip())
 
 
 def _initial_last(s):
@@ -1652,8 +1665,21 @@ def _get_json(url, timeout=25):
         return json.loads(r.read().decode("utf-8"))
 
 
+
+_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def _strip_suffix(n):
+    """'paul reed jr' -> 'paul reed'. The odds feed and ESPN disagree on suffixes (2026-10-28:
+    'Paul Reed Jr' vs 'Paul Reed' meant the role-change rule never found his history)."""
+    parts = n.split()
+    while len(parts) > 2 and parts[-1] in _SUFFIXES:
+        parts = parts[:-1]
+    return " ".join(parts)
+
+
 def _norm(s):
-    return re.sub(r"[^a-z ]", "", str(s).lower().replace(".", " ").replace("-", " ")).strip()
+    return _strip_suffix(re.sub(r"[^a-z ]", "", " ".join(str(s).lower().replace(".", " ").replace("-", " ").split())).strip())
 
 
 def _team_key(name):
@@ -1931,14 +1957,18 @@ def grade_props(con, sport, now_iso, lookback_days=3, limit=400):
 
 def player_team(con, sport, player):
     _ensure(con)
-    r = con.execute("select team from player_team where sport=? and player_norm=?", (sport, _norm(player))).fetchone()
+    pn = _norm(player)
+    r = con.execute("select team from player_team where sport=? and player_norm=?", (sport, pn)).fetchone()
     if r:
         return r[0]
     il = _initial_last(player)
-    for row in con.execute("select player_norm, team from player_team where sport=?", (sport,)):
-        if _initial_last(row[0]) == il:
+    best = None
+    for row in con.execute("select player_norm, team, seen_ts from player_team where sport=? order by seen_ts desc", (sport,)):
+        if _norm(row[0]) == pn:          # keys stored before suffixes were dropped
             return row[1]
-    return None
+        if best is None and _initial_last(row[0]) == il:
+            best = row[1]
+    return best
 
 
 NBA_MIN_MINUTES = 12.0     # below this a rotation player's counting-stat line is mostly noise
@@ -1971,7 +2001,7 @@ def active_status(con, sport, player):
     pn, il = _norm(player), _initial_last(player)
     row = None
     for r in con.execute("select player_norm, stats from box_lines where sport=? and source_id=?", (sport, last)):
-        if r[0] == pn or _initial_last(r[0]) == il:
+        if r[0] == pn or _norm(r[0]) == pn or _initial_last(r[0]) == il:
             row = r
             break
     if not row:
@@ -2079,7 +2109,7 @@ def _recent_lines(con, sport, player, n=6):
     out = []
     for gd, st, pnorm in con.execute("""select gr.game_date, bl.stats, bl.player_norm from box_lines bl join game_results gr
                                          using(sport, source_id) where bl.sport=? order by gr.game_date desc""", (sport,)):
-        if pnorm == pn or _initial_last(pnorm) == il:
+        if pnorm == pn or _norm(pnorm) == pn or _initial_last(pnorm) == il:
             try:
                 out.append(json.loads(st))
             except Exception:
