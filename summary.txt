@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T06:02:10+00:00)
-credits left 1455 | budget/day 281 | spent today 0 | reset in 3.75d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T06:12:11+00:00)
+credits left 1455 | budget/day 282 | spent today 0 | reset in 3.74d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -13,11 +13,11 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 409, "clv_pp_avg": -1.3, "beat_close_pct": 0.308, "graded": 384, "record": "180-204-0", "units": -21.08, "roi": -0.0559, "roi_90ci_by_game": [-0.1608, 0.0541, 46]}
+all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 384, "record": "180-204-0", "units": -21.08, "roi": -0.0559, "roi_90ci_by_game": [-0.1608, 0.0541, 46]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 107, "closed": 64, "clv_pp_avg": -0.02, "beat_close_pct": 0.656, "graded": 95, "record": "57-38-0", "units": 13.81, "roi": 0.1454, "roi_90ci_by_game": [-0.0058, 0.2939, 17]}
+  NBA props (price edge): {"n": 107, "closed": 71, "clv_pp_avg": 0.08, "beat_close_pct": 0.676, "graded": 95, "record": "57-38-0", "units": 13.81, "roi": 0.1454, "roi_90ci_by_game": [-0.0058, 0.2939, 17]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -33,17 +33,17 @@ all: {"n": 528, "closed": 409, "clv_pp_avg": -1.3, "beat_close_pct": 0.308, "gra
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 84 | CLV 0.46 | beat close 0.774 | 33-40-0 | -12.39u | ROI -0.1697
+  price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 33-40-0 | -12.39u | ROI -0.1697
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 17 | CLV 0.55 | beat close 0.923 | 6-9-0 | -3.88u | ROI -0.2587
-  price edge 2-4%: n 53 | CLV 0.95 | beat close 0.838 | 21-26-0 | -9.95u | ROI -0.2117
-  price edge 4-6%: n 7 | CLV 0.88 | beat close 0.6 | 2-3-0 | -1.28u | ROI -0.256
+  price edge 0-2%: n 17 | CLV 0.52 | beat close 0.929 | 6-9-0 | -3.88u | ROI -0.2587
+  price edge 2-4%: n 53 | CLV 0.95 | beat close 0.833 | 21-26-0 | -9.95u | ROI -0.2117
+  price edge 4-6%: n 7 | CLV 1.11 | beat close 0.667 | 2-3-0 | -1.28u | ROI -0.256
   price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
  by hours before start when logged:
-  1-6h: n 36 | CLV 1.01 | beat close 0.821 | 13-17-0 | -6.15u | ROI -0.205
+  1-6h: n 36 | CLV 0.92 | beat close 0.8 | 13-17-0 | -6.15u | ROI -0.205
   6-24h: n 9 | CLV -4.1 | beat close 0.889 | 2-4-0 | -2.66u | ROI -0.4433
-  <1h: n 42 | CLV -0.3 | beat close 0.679 | 18-19-0 | -3.58u | ROI -0.0968
+  <1h: n 42 | CLV -0.02 | beat close 0.727 | 18-19-0 | -3.58u | ROI -0.0968
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 
@@ -82,8 +82,8 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 16-24 | ROI -27.2%
-[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 71% | CLV +0.06pp | 7-8 | ROI -17.4%
-[AGAINST SHARP · THIN MARKET] 17 bets | beat close 75% | CLV +0.11pp | 7-8 | ROI -10.8%
+[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 7-8 | ROI -17.4%
+[AGAINST SHARP · THIN MARKET] 17 bets | beat close 77% | CLV +0.28pp | 7-8 | ROI -10.8%
 [NEUTRAL] 11 bets | beat close 86% | CLV +0.84pp | 6-2 | ROI +48.6%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 0-2 | ROI -100.0%
@@ -276,16 +276,6 @@ NBA 2026-12-26T03:40:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc491
    ML: Denver Nuggets  1.69 (open 1.69, best 1.79) / Golden State Warriors  2.25 (open 2.25, best 2.3)
    SPREAD: Denver Nuggets -4.0 1.99 (open -4.0 1.99, best 1.99) / Golden State Warriors 4.0 1.9 (open 4.0 1.9, best 1.9)
    TOTAL: Over 239.0 1.93 (open 239.0 1.93, best 1.93) / Under 239.0 1.93 (open 239.0 1.93, best 1.93)
-NHL 2026-10-28T02:10:00Z Vancouver Canucks @ Anaheim Ducks  id=5f16cb74336431221c132f05c0e31d04
-   ML: Anaheim Ducks  1.47 (open 1.48, best 1.48) / Vancouver Canucks  2.87 (open 2.81, best 2.87)
-   SPREAD: Anaheim Ducks -1.5 2.15 (open -1.5 2.2, best 2.2) / Vancouver Canucks 1.5 1.77 (open 1.5 1.72, best 1.77)
-   TOTAL: Over 6.5 1.78 (open 6.5 1.83, best 1.8) / Under 6.5 2.15 (open 6.5 2.05, best 2.2)
-   moves: {'Move': 89, 'Sharp': 21, 'Steam': 110}
-NHL 2026-10-28T02:10:00Z Ottawa Senators @ Vegas Golden Knights  id=66690f3994b21af39301701a52df1d66
-   ML: Ottawa Senators  2.43 (open 2.32, best 2.54) / Vegas Golden Knights  1.63 (open 1.67, best 1.63)
-   SPREAD: Ottawa Senators 1.5 1.55 (open 1.5 1.52, best 1.59) / Vegas Golden Knights -1.5 2.59 (open -1.5 2.65, best 2.59)
-   TOTAL: Over 6.5 2.0 (open 6.5 1.93, best 2.0) / Under 6.5 1.88 (open 6.5 1.94, best 1.95)
-   moves: {'Move': 62, 'Sharp': 35, 'Steam': 98}
 NHL 2026-10-28T02:40:00Z Buffalo Sabres @ San Jose Sharks  id=288b3a1e5241bd3885295af9aab801ca
    ML: Buffalo Sabres  1.68 (open 1.74, best 1.69) / San Jose Sharks  2.32 (open 2.2, best 2.34)
    SPREAD: Buffalo Sabres -1.5 2.66 (open -1.5 2.78, best 2.66) / San Jose Sharks 1.5 1.53 (open 1.5 1.48, best 1.57)
