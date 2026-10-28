@@ -1115,6 +1115,10 @@ def finalize_call(con, event_id, market, call, player="", model_prob=None, fair_
         yes_f = None if fair_prob is None else (fair_prob if outcome == "Yes" else 1 - fair_prob)
         pct = f" — market {yes_f:.0%}, KRONOS {yes_m:.0%}" if yes_m is not None and yes_f is not None else ""
         return "AVOID Yes", f"Avoid: {player} to score a TD{pct}. Overpriced to score — not a bet; keep him out of parlays."
+    # a spread row is stored under one team's line; picking the other team flips its sign
+    # (2026-10-27: a Montreal pick printed as -1.5 when the Canadiens side was +1.5)
+    if market == "spreads" and line is not None and outcome is not None and sel is not None and sel != outcome:
+        line = -float(line)
     if sel and not bettable(con, event_id, market, sel, player):
         return "Sit (not offered at your books)", plain_pick(market, sel, player, line, "Not offered", mp, fp)
     return call, plain_pick(market, sel, player, line, tag, mp, fp)
@@ -1798,6 +1802,27 @@ def nhl_box(game_id):
 
 # ------------------------------------------------------------ ingest + grade
 
+
+def box_complete(sport, box, g):
+    """(ok, reason). Players' points (NBA) or goals (NHL) must reconcile with the final score.
+
+    NHL allows the winner one goal short: a shootout winner is credited to the team, not a player.
+    """
+    if not box or len(box) < 2:
+        return False, "fewer than two teams in box"
+    key = "pts" if sport == "NBA" else "goals"
+    finals = {_team_key(g["home"]): g["hs"], _team_key(g["away"]): g["as"]}
+    for team, lines in box.items():
+        tk = _team_key(team)
+        if tk not in finals:
+            return False, f"unexpected team {team}"
+        tot = sum(float(l.get(key) or 0) for l in lines)
+        diff = finals[tk] - tot
+        allow = 1 if (sport == "NHL" and finals[tk] > min(finals.values())) else 0
+        if diff < 0 or diff > allow:
+            return False, f"{team}: players sum to {tot:.0f}, team scored {finals[tk]}"
+    return True, ""
+
 def ingest_day(con, sport, day, now_iso):
     """Pull every completed game for a date, store results, box lines and roster entries."""
     _ensure(con)
@@ -1813,6 +1838,14 @@ def ingest_day(con, sport, day, now_iso):
                 box, poss = nhl_box(g["id"]), None
         except Exception as e:                       # noqa: BLE001
             con.execute("insert or replace into meta(k,v) values(?,?)", (f"feed_error_{sport}", f"{now_iso} {g['id']} {str(e)[:120]}"))
+            continue
+        # Completeness check (2026-10-28): a box score whose players don't add up to the team's
+        # score is missing players. Grading from it turns real results into fake voids, as the
+        # manual grade did for Paul Reed (22 pts) and Tage Thompson. Hold the game; retry next cycle.
+        ok_box, why_box = box_complete(sport, box, g)
+        if not ok_box:
+            con.execute("insert or replace into meta(k,v) values(?,?)",
+                        (f"feed_incomplete_{sport}_{g['id']}", f"{now_iso} {g['away']} @ {g['home']}: {why_box}"))
             continue
         con.execute("insert or replace into game_results values(?,?,?,?,?,?,?,?,?)",
                     (sport, day, g["home"], g["away"], g["hs"], g["as"], poss, g["id"], now_iso))
@@ -1986,6 +2019,130 @@ def nfl_player_team_from_frame(con, df, now_iso):
     return n
 
 
+
+ESPN_NHL = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl"
+OUT_STATUSES = ("out", "suspension", "suspended", "injured reserve", "ir")
+DOUBT_STATUSES = ("doubtful", "questionable", "day-to-day", "game time decision", "gtd")
+
+
+def ingest_injuries(con, sport, now_iso):
+    """Today's injury report into table `injuries`. Shapes are parsed defensively; anything
+    unexpected is recorded in meta 'injuries_error_<sport>' rather than guessed."""
+    _ensure(con)
+    con.execute("""create table if not exists injuries(sport text, player_norm text, player text, team text,
+                   status text, detail text, ts text, primary key(sport, player_norm))""")
+    base = ESPN_NBA if sport == "NBA" else ESPN_NHL
+    data = _get_json(f"{base}/injuries")
+    teams = data.get("injuries") or data.get("teams") or []
+    n = 0
+    con.execute("delete from injuries where sport=?", (sport,))
+    for t in teams:
+        tname = (t.get("team") or {}).get("displayName") or t.get("displayName") or ""
+        for inj in t.get("injuries", []) or []:
+            ath = inj.get("athlete") or {}
+            name = ath.get("displayName") or ath.get("fullName") or ""
+            status = str(inj.get("status") or (inj.get("type") or {}).get("description") or "").strip()
+            if not name or not status:
+                continue
+            detail = str(inj.get("shortComment") or inj.get("longComment") or "")[:160]
+            team = tname or ((ath.get("team") or {}).get("displayName") or "")
+            con.execute("insert or replace into injuries values(?,?,?,?,?,?,?)",
+                        (sport, _norm(name), name, team, status, detail, now_iso))
+            n += 1
+    con.commit()
+    return n
+
+
+def injury_status(con, sport, player):
+    """'out', 'doubtful' (incl. questionable / day-to-day) or None."""
+    try:
+        r = con.execute("select status from injuries where sport=? and player_norm=?", (sport, _norm(player))).fetchone()
+    except Exception:
+        return None
+    if not r:
+        return None
+    s = str(r[0]).lower()
+    if any(x in s for x in OUT_STATUSES):
+        return "out"
+    if any(x in s for x in DOUBT_STATUSES):
+        return "doubtful"
+    return None
+
+
+# ---------- C. minutes-and-role projection (NBA) / per-game rate (NHL) ----------
+PROJ_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m",
+             "player_shots_on_goal": "sog", "player_goals": "goals"}
+
+
+def _recent_lines(con, sport, player, n=6):
+    pn, il = _norm(player), _initial_last(player)
+    out = []
+    for gd, st, pnorm in con.execute("""select gr.game_date, bl.stats, bl.player_norm from box_lines bl join game_results gr
+                                         using(sport, source_id) where bl.sport=? order by gr.game_date desc""", (sport,)):
+        if pnorm == pn or _initial_last(pnorm) == il:
+            try:
+                out.append(json.loads(st))
+            except Exception:
+                continue
+            if len(out) >= n:
+                break
+    return out
+
+
+def prop_check(con, sport, player, market, selection, line):
+    """Does the player's recent role support this side? Returns dict:
+       proj, p_side, verdict ('agrees' | 'neutral' | 'disagrees' | None), games, minutes, role_change(bool), note.
+
+    NBA: recency-weighted minutes x per-minute rate. NHL: recency-weighted per-game rate.
+    role_change = the line sits far above what this player's recent role produces — the market is
+    pricing news (a new starter, a teammate out) that recent box scores can't see. Built after
+    Paul Reed: 12.5-point line on a ~4-point role, the Under looked like value, he started and scored 22.
+    """
+    stat = PROJ_STAT.get(market)
+    res = {"proj": None, "p_side": None, "verdict": None, "games": 0, "minutes": None, "role_change": False, "note": ""}
+    if not stat or line is None:
+        return res
+    lines = [l for l in _recent_lines(con, sport, player) if l.get("played")]
+    res["games"] = len(lines)
+    if len(lines) < 3:
+        res["note"] = f"only {len(lines)} recent games on file"
+        return res
+    w = [0.8 ** i for i in range(len(lines))]
+    vals = [float(l.get(stat) or 0) for l in lines]
+    per_game = sum(v * wi for v, wi in zip(vals, w)) / sum(w)
+    if sport == "NBA":
+        mins = [float(l.get("min") or 0) for l in lines]
+        m = sum(x * wi for x, wi in zip(mins, w)) / sum(w)
+        tot_min = sum(mins)
+        rate = sum(vals) / tot_min if tot_min > 0 else 0.0
+        proj = m * rate
+        res["minutes"] = round(m, 1)
+    else:
+        proj = per_game
+    res["proj"] = round(proj, 2)
+    L = float(line)
+    if per_game > 0 and L >= max(1.6 * per_game, per_game + 4.0) and stat == "pts":
+        res["role_change"] = True
+    elif per_game > 0 and L >= max(1.6 * per_game, per_game + 2.0) and stat in ("reb", "ast", "sog"):
+        res["role_change"] = True
+    # count stats ~ Poisson-ish; points ~ normal with sd ~ 0.35 * mean
+    import math as _m
+    if stat == "pts":
+        sd = max(0.35 * proj, 2.5)
+        z = (L + 0.5 - proj) / sd if abs(L - round(L)) < 1e-9 else (L - proj) / sd
+        p_over = 1 - 0.5 * (1 + _m.erf(z / _m.sqrt(2)))
+    else:
+        lam = max(proj, 0.05); k = int(_m.floor(L))
+        cdf = sum(_m.exp(-lam) * lam ** i / _m.factorial(i) for i in range(k + 1))
+        p_over = 1 - cdf
+    sel = (selection or "").lower()
+    p_side = p_over if sel in ("over", "yes") else 1 - p_over
+    res["p_side"] = round(p_side, 3)
+    res["verdict"] = "agrees" if p_side >= 0.53 else "disagrees" if p_side < 0.47 else "neutral"
+    res["note"] = (f"recent role: {res['minutes']} min, " if res["minutes"] is not None else "recent role: ") + \
+                  f"{per_game:.1f} {stat}/game -> proj {proj:.1f} vs line {L:g}"
+    return res
+
 SEASON_START = {"NBA": (10, 15), "NHL": (10, 1)}   # (month, day): safely before opening night
 
 
@@ -2008,11 +2165,16 @@ def run(con, now, sports=("NBA", "NHL"), days_back=2):
             for k in range(span, -1, -1):
                 day = (now - timedelta(days=k)).strftime("%Y-%m-%d")
                 got += ingest_day(con, sp, day, now.isoformat(timespec="seconds"))
+            try:
+                inj_n = ingest_injuries(con, sp, now.isoformat(timespec="seconds"))
+            except Exception as _e:                      # noqa: BLE001
+                inj_n = f"error {str(_e)[:60]}"
+                con.execute("insert or replace into meta(k,v) values(?,?)", (f"injuries_error_{sp}", f"{now.isoformat(timespec='seconds')} {str(_e)[:140]}"))
             g = grade_props(con, sp, now.isoformat(timespec="seconds"))
             if not done:
                 con.execute("insert or replace into meta(k,v) values(?,?)", (key, f"{now.isoformat(timespec='seconds')} {got} games over {span} days"))
                 con.commit()
-            rep[sp] = {"games_ingested": got, "backfill_days": span if not done else 0, **g}
+            rep[sp] = {"games_ingested": got, "backfill_days": span if not done else 0, "injuries": inj_n, **g}
         except Exception as e:                           # noqa: BLE001
             rep[sp] = {"error": str(e)[:160]}
             try:
@@ -2840,7 +3002,7 @@ def push_source():
         return "no FEED_TOKEN set"
     here = os.path.dirname(os.path.abspath(__file__))
     done = []
-    for f in ("jerry.py", "jerry_live.py", "jerry_desk.py", "boot.py", "JERRY_PROMPT.md"):
+    for f in ("jerry.py", "jerry_live.py", "jerry_desk.py", "boot.py", "JERRY_PROMPT.md", "JERRY PROMPT.md"):
         fp = os.path.join(here, f)
         if os.path.exists(fp):
             _put(f"src/{f}", open(fp, encoding="utf-8").read(), token, f"source {f}")
