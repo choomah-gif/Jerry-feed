@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T22:28:05+00:00)
-credits left 1325 | budget/day 302 | spent today 130 | reset in 3.06d | backfill days {'NHL': 5}
+KRONOS DESK SUMMARY  (generated 2026-10-28T22:35:51+00:00)
+credits left 1313 | budget/day 299 | spent today 142 | reset in 3.06d | backfill days {'NHL': 5}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 368 settled (18 void), 52 pending | results on file: NBA 70, NHL 190 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 369 settled (18 void), 51 pending | results on file: NBA 70, NHL 190 | 43 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,125 +12,204 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 543 rows
-all: {"n": 543, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 411, "record": "201-209-1", "units": -11.47, "roi": -0.0294, "roi_90ci_by_game": [-0.1334, 0.0845, 47]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 571 rows
+all: {"n": 571, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 412, "record": "201-210-1", "units": -12.47, "roi": -0.0319, "roi_90ci_by_game": [-0.1352, 0.0812, 47]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": -0.35, "roi": -0.175, "roi_90ci_by_game": null}
+  NBA moneyline (price edge): {"n": 3, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": -0.35, "roi": -0.175, "roi_90ci_by_game": null}
   NBA props (price edge): {"n": 114, "closed": 71, "clv_pp_avg": 0.08, "beat_close_pct": 0.676, "graded": 102, "record": "64-38-0", "units": 20.25, "roi": 0.1985, "roi_90ci_by_game": [0.0423, 0.3607, 18]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
-  NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 0.63, "beat_close_pct": 0.694, "graded": 34, "record": "12-22-0", "units": -4.94, "roi": -0.1453, "roi_90ci_by_game": [-0.4443, 0.1024, 12]}
+  NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 0.63, "beat_close_pct": 0.694, "graded": 35, "record": "12-23-0", "units": -5.94, "roi": -0.1697, "roi_90ci_by_game": [-0.471, 0.0797, 12]}
   NFL spread (model): {"n": 26, "closed": 13, "clv_pp_avg": -1.73, "beat_close_pct": 0.077, "graded": 13, "record": "9-4-0", "units": 4.91, "roi": 0.3777, "roi_90ci_by_game": [-0.08, 0.8162, 13]}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
+  NFL total (model): {"n": 53, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 7, "closed": 5, "clv_pp_avg": 0.11, "beat_close_pct": 0.4, "graded": 5, "record": "4-1-0", "units": 1.88, "roi": 0.752, "roi_90ci_by_game": null}
   NHL props (price edge): {"n": 66, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 64, "record": "27-37-0", "units": -13.85, "roi": -0.2164, "roi_90ci_by_game": [-0.3301, -0.0662, 16]}
   NHL spread (model): {"n": 4, "closed": 3, "clv_pp_avg": -18.16, "beat_close_pct": 0.0, "graded": 3, "record": "3-0-0", "units": 0.71, "roi": 0.4733, "roi_90ci_by_game": null}
-  NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.69, "roi": 0.69, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 18, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 14, "record": "6-7-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL spread (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.69, "roi": 0.69, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 29, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 14, "record": "6-7-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
-  nhl-v3-goaliejson-2026-10-26: n 10 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
-  pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-169-1 | -6.8u | ROI -0.0221
+  nfl-v3-anchor25-qbstatus-2026-10-26: n 15 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  nhl-v3-goaliejson-2026-10-26: n 21 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
+  pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-170-1 | -7.8u | ROI -0.0252
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
-  price-v4-consensus-projection-2026-10-28: n 8 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price-v4-consensus-projection-2026-10-28: n 10 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 4 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
   model 4-6%: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 0-2%: n 20 | CLV 0.52 | beat close 0.929 | 7-9-0 | -2.99u | ROI -0.1869
-  price edge 2-4%: n 57 | CLV 0.95 | beat close 0.833 | 26-26-0 | -5.42u | ROI -0.1042
+  price edge 2-4%: n 58 | CLV 0.95 | beat close 0.833 | 26-26-0 | -5.42u | ROI -0.1042
   price edge 4-6%: n 8 | CLV 1.11 | beat close 0.667 | 3-3-0 | -0.26u | ROI -0.0433
-  price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
+  price edge 6%+: n 8 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
  by hours before start when logged:
   1-6h: n 45 | CLV 0.92 | beat close 0.8 | 15-17-0 | -4.38u | ROI -0.1369
+  24h+: n 27 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   6-24h: n 15 | CLV -4.1 | beat close 0.889 | 5-4-0 | -1.38u | ROI -0.184
-  <1h: n 42 | CLV -0.02 | beat close 0.727 | 23-19-0 | 1.09u | ROI 0.026
+  <1h: n 43 | CLV -0.02 | beat close 0.727 | 23-19-0 | 1.09u | ROI 0.026
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
+NBA 2026-10-28T23:10Z Philadelphia 76ers @ Indiana Pacers | h2h  Philadelphia 76ers  | fanduel 1.79 vs fair 71.5% | EV +28.0% | [NEUTRAL] [CONSENSUS 9 BOOKS]
 NBA 2026-10-29T02:40Z Los Angeles Lakers @ Los Angeles Clippers | player_assists Kris Dunn Over 4.5 | fanduel 2.04 vs fair 51.8% | EV +5.8% | [NEUTRAL] [CONSENSUS 7 BOOKS · PROJECTION AGREES (73%)]
 NBA 2026-10-28T23:40Z Orlando Magic @ Toronto Raptors | player_points Anthony Black Under 14.5 | draftkings 1.97 vs fair 52.0% | EV +2.5% | [AGAINST SHARP · THIN MARKET] [CONSENSUS 5 BOOKS · QUESTIONABLE · NO PROJECTION]
 NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | player_shots_on_goal Colton Dach Under 1.5 | draftkings 1.74 vs fair 58.8% | EV +2.3% | [NEUTRAL] [PROJECTION AGREES (55%)]
-NBA 2026-10-28T23:10Z Charlotte Hornets @ Detroit Pistons | player_points Paul Reed Jr Under 13.5 | draftkings 1.79 vs fair 57.1% | EV +2.2% | [SHARP · THIN MARKET] [MINUTES UNVERIFIED · NO PROJECTION]
+NHL 2026-10-29T23:10Z Utah Mammoth @ Pittsburgh Penguins | spreads  Pittsburgh Penguins 1.5 | fanduel 1.52 vs fair 67.3% | EV +2.3% | [NEUTRAL]
+NBA 2026-10-28T23:10Z Charlotte Hornets @ Detroit Pistons | player_points Paul Reed Jr Under 13.5 | draftkings 1.79 vs fair 57.1% | EV +2.2% | [SHARP · THIN MARKET] [PROJECTION AGREES (60%)]
 NBA 2026-10-28T23:10Z Charlotte Hornets @ Detroit Pistons | player_assists Daniss Jenkins Over 3.5 | fanduel 2.0 vs fair 51.1% | EV +2.2% | [NEUTRAL] [CONSENSUS 4 BOOKS · PROJECTION AGREES (65%)]
 NBA 2026-10-28T23:10Z Washington Wizards @ Cleveland Cavaliers | player_assists Jaylon Tyson Over 2.5 | fanduel 2.46 vs fair 41.4% | EV +1.8% | [SHARP · THIN MARKET] [CONSENSUS 5 BOOKS · PROJECTION AGREES (70%)]
-NBA 2026-10-29T00:10Z Houston Rockets @ Milwaukee Bucks | player_threes Jabari Smith Jr Under 2.5 | draftkings 1.62 vs fair 62.8% | EV +1.7% | [NEUTRAL] [CONSENSUS 6 BOOKS · PROJECTION AGREES (89%)]
+NBA 2026-10-29T00:10Z Houston Rockets @ Milwaukee Bucks | player_threes Jabari Smith Jr Under 2.5 | draftkings 1.62 vs fair 62.8% | EV +1.7% | [NEUTRAL] [CONSENSUS 6 BOOKS · PROJECTION AGREES (72%)]
 NBA 2026-10-29T00:10Z Denver Nuggets @ New Orleans Pelicans | player_assists Saddiq Bey Under 1.5 | fanduel 1.93 vs fair 52.7% | EV +1.7% | [NEUTRAL] [CONSENSUS 4 BOOKS · PROJECTION AGREES (55%)]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 67% vs market 59%
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 67.3% fair 58.5% edge +8.8 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs lowvig; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.37, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP)) and home edge. Makes Tampa Bay Rays 67% versus 59% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [NEUTRAL]: no sharp or public signal yet.
+MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 67% vs market 58%
+MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 67.3% fair 58.2% edge +9.0 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
+      why: Negative-binomial runs model: Milwaukee Brewers 3.37, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP)) and home edge. Makes Tampa Bay Rays 67% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 6.0 against. Caution: sharp money has moved the other way.
 MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 49% vs market 43%
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 48.9% fair 42.7% edge +6.2 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs lowvig; MLB model unvalidated, capped at Lean
+MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 48.9% fair 42.9% edge +6.0 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
       why: Negative-binomial runs model: Milwaukee Brewers 3.37, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP)) and home edge. Makes Tampa Bay Rays 49% versus 43% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [NEUTRAL]: no sharp or public signal yet.
-NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | >> Lean: Calgary Flames +1.5 — KRONOS 61% vs market 56%
-NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | spreads  Edmonton Oilers -1.5 | model 39.0% fair 44.1% edge -5.1 | Lean Calgary Flames [NEUTRAL] | xG 3.34-3.17; EDM G: Tristan Jarry (Confirmed); CGY G: Devin Cooley (Confirmed); raw model 29.6%, anchored 35% to market, slate scale 1.10
-      why:  Market read [NEUTRAL]: no sharp or public signal yet.
-NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | >> Lean: Calgary Flames to win — KRONOS 38% vs market 33%
-NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | h2h  Edmonton Oilers  | model 61.8% fair 66.6% edge -4.9 | Lean Calgary Flames [NEUTRAL] | xG 3.34-3.17; EDM G: Tristan Jarry (Confirmed); CGY G: Devin Cooley (Confirmed); raw model 52.7%, anchored 35% to market, slate scale 1.10
-      why: Expected goals 3.34-3.17 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Tristan Jarry (Confirmed) / Devin Cooley (Confirmed). Raw model 53% home, anchored 35% toward the market: Calgary Flames 38% versus 33% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
-NHL 2026-10-29T01:10Z New Jersey Devils @ Colorado Avalanche | >> Lean: New Jersey Devils to win — KRONOS 42% vs market 39%
-NHL 2026-10-29T01:10Z New Jersey Devils @ Colorado Avalanche | h2h  Colorado Avalanche  | model 58.1% fair 61.2% edge -3.1 | Lean New Jersey Devils [NEUTRAL] | xG 3.49-3.34; COL G: Mackenzie Blackwood (Confirmed); NJD G: Jake Allen (Confirmed); B2B NJD; raw model 52.3%, anchored 35% to market, slate scale 1.10
-      why: Expected goals 3.49-3.34 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Mackenzie Blackwood (Confirmed) / Jake Allen (Confirmed). Raw model 52% home, anchored 35% toward the market: New Jersey Devils 42% versus 39% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-28T22:06:36+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 7, "CARD": 2, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 92, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 130, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 0})
+NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | >> Lean: Calgary Flames +1.5 — KRONOS 63% vs market 58%
+NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | spreads  Edmonton Oilers -1.5 | model 37.5% fair 41.8% edge -4.3 | Lean Calgary Flames [SHARP] | xG 3.33-3.16; EDM G: Tristan Jarry (Confirmed); CGY G: Devin Cooley (Confirmed); raw model 29.5%, anchored 35% to market, slate scale 1.10
+      why:  Market read [SHARP]: pinnacle has moved toward it since open; sharp/steam alerts 17.9 for, 0.0 against. Sharp money agrees.
+NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | >> Lean: Calgary Flames to win — KRONOS 41% vs market 37%
+NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | h2h  Edmonton Oilers  | model 59.1% fair 62.5% edge -3.4 | Lean Calgary Flames [SHARP] | xG 3.33-3.16; EDM G: Tristan Jarry (Confirmed); CGY G: Devin Cooley (Confirmed); raw model 52.7%, anchored 35% to market, slate scale 1.10
+      why: Expected goals 3.33-3.16 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Tristan Jarry (Confirmed) / Devin Cooley (Confirmed). Raw model 53% home, anchored 35% toward the market: Calgary Flames 41% versus 37% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [SHARP]: pinnacle has moved toward it since open; sharp/steam alerts 19.9 for, 0.0 against. Sharp money agrees.
+(models last refreshed: 2026-10-28T22:34:50+00:00 {"NFL": 174, "NFL_PROPS": 0, "NHL": 90, "UFC": 0, "PRICE": 10, "CARD": 2, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 39, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 90, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 129, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 72})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-28T23:40Z | KRONOS Philadelphia Flyers 2.6 @ Washington Capitals 3.9 | market total 6.0 | gap total +0.5 (0.24), home win 68% vs 68%
-      no gap large enough to be a mispricing | xG 3.85-2.61; Logan Thompson (, unconfirmed) / Joseph Woll (Confirmed)
-MLB 2026-10-29T00:10Z | KRONOS Milwaukee Brewers 3.4 @ Tampa Bay Rays 3.2 | market total 6.5 | gap total +0.1 (0.03)
+NBA 2026-10-28T23:10Z | KRONOS Philadelphia 76ers 114.1 @ Indiana Pacers 116.2 | market 120.5-113.0 | gap margin +9.7 (0.97), total -3.2 (0.23)
+      gap Indiana Pacers spreads 0.97 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 5/5
+NBA 2026-10-28T23:10Z | KRONOS Miami Heat 108.2 @ Atlanta Hawks 124.7 | market 119.5-122.0 | gap margin +13.9 (1.39), total -8.6 (0.61)
+      gap Atlanta Hawks spreads 1.39 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 5/5
+NBA 2026-10-28T23:10Z | KRONOS Washington Wizards 114.1 @ Cleveland Cavaliers 117.1 | market 115.5-125.0 | gap margin -6.5 (0.65), total -9.3 (0.66)
+      no gap large enough to be a mispricing | ridge ratings; games 3/5
+NBA 2026-10-28T23:10Z | KRONOS Charlotte Hornets 108.3 @ Detroit Pistons 118.2 | market 102.8-110.2 | gap margin +2.4 (0.24), total +13.4 (0.96)
+      gap Over totals 0.96 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 5/5
+NHL 2026-10-28T23:40Z | KRONOS Philadelphia Flyers 2.6 @ Washington Capitals 3.8 | market total 6.0 | gap total +0.4 (0.23), home win 69% vs 69%
+      no gap large enough to be a mispricing | xG 3.84-2.60; Logan Thompson (, unconfirmed) / Joseph Woll (Confirmed)
+NBA 2026-10-28T23:40Z | KRONOS Orlando Magic 112.6 @ Toronto Raptors 118.4 | market 110.0-114.5 | gap margin +1.3 (0.13), total +6.5 (0.46)
+      no gap large enough to be a mispricing | ridge ratings; games 5/4
+MLB 2026-10-29T00:10Z | KRONOS Milwaukee Brewers 3.4 @ Tampa Bay Rays 3.2 | market total 6.0 | gap total +0.6 (0.18)
       no gap large enough to be a mispricing | runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; postseason x0.88; SP Jacob Misiorowski @ Drew Rasmussen
-NHL 2026-10-29T00:40Z | KRONOS Calgary Flames 3.2 @ Edmonton Oilers 3.3 | market total 6.5 | gap total +0.0 (0.00), home win 62% vs 67%
-      no gap large enough to be a mispricing | xG 3.34-3.17; Tristan Jarry (Confirmed) / Devin Cooley (Confirmed)
-NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.3 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.18), home win 58% vs 61%
-      no gap large enough to be a mispricing | xG 3.49-3.34; Mackenzie Blackwood (Confirmed) / Jake Allen (Confirmed)
-NHL 2026-10-29T02:10Z | KRONOS Toronto Maple Leafs 3.3 @ Seattle Kraken 3.4 | market total 6.5 | gap total +0.2 (0.10), home win 49% vs 48%
-      no gap large enough to be a mispricing | xG 3.38-3.30; Philipp Grubauer (Likely, unconfirmed) / Sergei Bobrovsky (Confirmed)
-NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
+NBA 2026-10-29T00:10Z | KRONOS Golden State Warriors 113.0 @ Minnesota Timberwolves 120.1 | market 111.8-115.8 | gap margin +3.1 (0.31), total +5.6 (0.40)
+      no gap large enough to be a mispricing | ridge ratings; games 5/5
+NBA 2026-10-29T00:10Z | KRONOS Houston Rockets 119.7 @ Milwaukee Bucks 112.9 | market 117.0-109.0 | gap margin +1.2 (0.12), total +6.6 (0.47)
+      no gap large enough to be a mispricing | ridge ratings; games 5/5
+NBA 2026-10-29T00:10Z | KRONOS New York Knicks 115.8 @ Chicago Bulls 114.3 | market 119.2-112.2 | gap margin +5.6 (0.56), total -1.4 (0.10)
+      no gap large enough to be a mispricing | ridge ratings; games 5/5
+NBA 2026-10-29T00:10Z | KRONOS Denver Nuggets 115.8 @ New Orleans Pelicans 118.0 | market 122.8-118.2 | gap margin +6.8 (0.68), total -7.2 (0.52)
+      no gap large enough to be a mispricing | ridge ratings; games 4/4
+NHL 2026-10-29T00:40Z | KRONOS Calgary Flames 3.2 @ Edmonton Oilers 3.3 | market total 6.5 | gap total -0.0 (0.00), home win 59% vs 63%
+      no gap large enough to be a mispricing | xG 3.33-3.16; Tristan Jarry (Confirmed) / Devin Cooley (Confirmed)
+NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.3 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.17), home win 56% vs 58%
+      no gap large enough to be a mispricing | xG 3.48-3.34; Mackenzie Blackwood (Confirmed) / Jake Allen (Confirmed)
+NBA 2026-10-29T01:10Z | KRONOS San Antonio Spurs 117.1 @ Utah Jazz 113.4 | market 123.8-109.8 | gap margin +10.4 (1.04), total -3.0 (0.21)
+      gap Utah Jazz spreads 1.04 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 5/5
+NBA 2026-10-29T01:40Z | KRONOS Oklahoma City Thunder 114.0 @ Dallas Mavericks 112.7 | market 116.8-110.8 | gap margin +4.8 (0.47), total -0.9 (0.06)
+      no gap large enough to be a mispricing | ridge ratings; games 5/5
+NHL 2026-10-29T02:10Z | KRONOS Toronto Maple Leafs 3.3 @ Seattle Kraken 3.4 | market total 6.5 | gap total +0.2 (0.09), home win 47% vs 45%
+      no gap large enough to be a mispricing | xG 3.38-3.29; Philipp Grubauer (Likely, unconfirmed) / Sergei Bobrovsky (Confirmed)
+NBA 2026-10-29T02:40Z | KRONOS Los Angeles Lakers 115.0 @ Los Angeles Clippers 117.7 | market 111.8-112.8 | gap margin +1.6 (0.16), total +8.2 (0.58)
+      no gap large enough to be a mispricing | ridge ratings; games 3/5
+NHL 2026-10-29T23:10Z | KRONOS Columbus Blue Jackets 2.9 @ Carolina Hurricanes 3.6 | market total 6.0 | gap total +0.5 (0.26), home win 67% vs 70%
+      no gap large enough to be a mispricing | xG 3.62-2.86; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-29T23:10Z | KRONOS Utah Mammoth 3.5 @ Pittsburgh Penguins 3.7 | market total 6.5 | gap total +0.6 (0.33), home win 49% vs 46%
+      no gap large enough to be a mispricing | xG 3.67-3.45; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-29T23:10Z | KRONOS Winnipeg Jets 2.9 @ Tampa Bay Lightning 3.6 | market total 6.0 | gap total +0.5 (0.24), home win 66% vs 69%
+      no gap large enough to be a mispricing | xG 3.60-2.85; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-29T23:40Z | KRONOS Chicago Blackhawks 2.5 @ Detroit Red Wings 3.8 | market total 6.0 | gap total +0.3 (0.18), home win 65% vs 62%
+      no gap large enough to be a mispricing | xG 3.82-2.51; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T00:10Z | KRONOS Boston Bruins 3.5 @ St Louis Blues 2.7 | market total 6.0 | gap total +0.3 (0.14), home win 46% vs 51%
+      no gap large enough to be a mispricing | xG 2.72-3.55; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T00:10Z | KRONOS Montréal Canadiens 2.5 @ Dallas Stars 3.2 | market total 6.0 | gap total -0.3 (0.15), home win 61% vs 60%
+      no gap large enough to be a mispricing | xG 3.20-2.51; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T00:10Z | KRONOS New York Islanders 2.7 @ Minnesota Wild 3.1 | market total 5.5 | gap total +0.3 (0.17), home win 62% vs 64%
+      no gap large enough to be a mispricing | xG 3.15-2.68; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T00:10Z | KRONOS Washington Capitals 3.4 @ Nashville Predators 3.1 | market total 6.5 | gap total -0.1 (0.03), home win 48% vs 50%
+      no gap large enough to be a mispricing | xG 3.07-3.37; goalie unconfirmed (team avg) / Logan Thompson (, unconfirmed)
+NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 22.4 @ Green Bay Packers 26.1 | market 21.8-25.8 | gap margin -0.4 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.9 @ Dallas Cowboys 29.3 | market 23.6-29.9 | gap margin -0.8 (0.08), total -0.3 (0.04)
+NHL 2026-10-30T02:10Z | KRONOS Buffalo Sabres 3.3 @ Anaheim Ducks 3.4 | market total 6.5 | gap total +0.1 (0.08), home win 47% vs 44%
+      no gap large enough to be a mispricing | xG 3.38-3.26; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T02:10Z | KRONOS Ottawa Senators 3.1 @ Los Angeles Kings 2.8 | market total 6.0 | gap total -0.1 (0.04), home win 47% vs 49%
+      no gap large enough to be a mispricing | xG 2.77-3.15; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NHL 2026-10-30T02:10Z | KRONOS Vancouver Canucks 2.8 @ San Jose Sharks 3.9 | market total 6.5 | gap total +0.2 (0.12), home win 64% vs 63%
+      no gap large enough to be a mispricing | xG 3.90-2.84; goalie unconfirmed (team avg) / goalie unconfirmed (team avg)
+NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.8 @ Dallas Cowboys 30.5 | market 23.5-31.0 | gap margin -0.8 (0.09), total -0.1 (0.01)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Atlanta Falcons 23.0 @ Tampa Bay Buccaneers 22.7 | market 21.5-23.5 | gap margin -2.3 (0.24), total +0.7 (0.08)
+NFL 2026-11-01T18:00Z | KRONOS Atlanta Falcons 22.7 @ Tampa Bay Buccaneers 23.0 | market 21.2-23.8 | gap margin -2.2 (0.24), total +0.8 (0.08)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj -2.0 margin -1.0 total; TB: starting QB Jalon Daniels missed last game, status UNVERIFIED — no report yet (+2.0)
-NFL 2026-11-01T18:00Z | KRONOS Baltimore Ravens 25.5 @ Buffalo Bills 29.1 | market 25.0-28.5 | gap margin +0.0 (0.00), total +1.1 (0.12)
+NFL 2026-11-01T18:00Z | KRONOS Baltimore Ravens 25.8 @ Buffalo Bills 29.3 | market 25.2-28.8 | gap margin -0.0 (0.00), total +1.2 (0.13)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Tennessee Titans 18.7 @ Cincinnati Bengals 29.4 | market 18.2-28.8 | gap margin +0.2 (0.02), total +1.1 (0.12)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Cleveland Browns 17.9 @ Pittsburgh Steelers 22.3 | market 17.8-21.8 | gap margin +0.5 (0.05), total +0.7 (0.08)
+NFL 2026-11-01T18:00Z | KRONOS Cleveland Browns 17.5 @ Pittsburgh Steelers 21.6 | market 17.5-21.0 | gap margin +0.6 (0.06), total +0.5 (0.06)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Minnesota Vikings 21.2 @ Detroit Lions 25.4 | market 21.5-24.5 | gap margin +1.3 (0.13), total +0.6 (0.07)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Indianapolis Colts 20.3 @ Jacksonville Jaguars 28.3 | market 19.5-27.0 | gap margin +0.5 (0.06), total +2.1 (0.23)
+NFL 2026-11-01T18:00Z | KRONOS Indianapolis Colts 18.8 @ Jacksonville Jaguars 29.9 | market 18.0-28.5 | gap margin +0.6 (0.07), total +2.3 (0.25)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Las Vegas Raiders 22.2 @ New York Jets 22.8 | market 21.8-22.8 | gap margin -0.4 (0.04), total +0.6 (0.06)
+NFL 2026-11-01T18:00Z | KRONOS Las Vegas Raiders 22.8 @ New York Jets 23.4 | market 22.2-23.2 | gap margin -0.5 (0.05), total +0.7 (0.08)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T21:05Z | KRONOS Los Angeles Chargers 18.3 @ Los Angeles Rams 26.1 | market 18.2-25.8 | gap margin +0.3 (0.03), total +0.3 (0.04)
+NFL 2026-11-01T21:05Z | KRONOS Los Angeles Chargers 19.1 @ Los Angeles Rams 26.3 | market 19.0-26.0 | gap margin +0.2 (0.02), total +0.4 (0.05)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T21:25Z | KRONOS Kansas City Chiefs 21.8 @ Denver Broncos 20.5 | market 21.5-20.0 | gap margin +0.2 (0.02), total +0.8 (0.09)
+NFL 2026-11-01T21:25Z | KRONOS Kansas City Chiefs 21.2 @ Denver Broncos 20.0 | market 21.0-19.5 | gap margin +0.3 (0.03), total +0.7 (0.08)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T21:25Z | KRONOS New England Patriots 25.8 @ Miami Dolphins 17.4 | market 26.0-18.5 | gap margin -0.8 (0.09), total -1.2 (0.14)
+NFL 2026-11-01T21:25Z | KRONOS New England Patriots 25.6 @ Miami Dolphins 17.7 | market 25.8-18.8 | gap margin -0.8 (0.09), total -1.2 (0.13)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 18.7 @ Washington Commanders 22.9 | market 18.5-22.0 | gap margin +0.7 (0.07), total +1.0 (0.11)
+NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 17.7 @ Washington Commanders 23.9 | market 17.5-23.0 | gap margin +0.7 (0.08), total +1.1 (0.12)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | market 21.5-25.0 | gap margin -0.4 (0.05), total +1.7 (0.18)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-06T01:15Z | KRONOS Jacksonville Jaguars 23.1 @ Baltimore Ravens 26.2 | market 22.8-25.8 | gap margin +0.1 (0.01), total +0.7 (0.08)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T14:30Z | KRONOS Cincinnati Bengals 27.1 @ Atlanta Falcons 23.3 | market 26.2-23.2 | gap margin -0.8 (0.08), total +1.0 (0.11)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS Denver Broncos 23.8 @ Carolina Panthers 21.7 | market 23.6-21.1 | gap margin +0.5 (0.05), total +0.8 (0.08)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS Cleveland Browns 20.5 @ New Orleans Saints 23.7 | market 20.1-22.6 | gap margin +0.6 (0.07), total +1.4 (0.16)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS Dallas Cowboys 28.2 @ Indianapolis Colts 22.3 | market 27.6-23.4 | gap margin -1.7 (0.18), total -0.5 (0.06)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS Detroit Lions 28.0 @ Miami Dolphins 19.4 | market 27.8-20.8 | gap margin -1.6 (0.17), total -1.1 (0.13)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS New York Jets 17.3 @ Kansas City Chiefs 27.6 | market 17.0-26.5 | gap margin +0.8 (0.09), total +1.3 (0.15)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS Los Angeles Rams 27.4 @ Washington Commanders 21.5 | market 27.0-21.5 | gap margin -0.5 (0.05), total +0.4 (0.04)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T18:00Z | KRONOS New York Giants 18.5 @ Philadelphia Eagles 18.5 | market 20.5-19.0 | gap margin +1.6 (0.16), total -2.5 (0.27)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +2.0 margin -1.0 total; NYG: starting QB Jameis Winston missed last game, status UNVERIFIED — no report yet (+2.0)
+NFL 2026-11-08T21:05Z | KRONOS Houston Texans 23.3 @ Los Angeles Chargers 18.9 | market 23.0-19.5 | gap margin -0.9 (0.10), total -0.3 (0.04)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T21:05Z | KRONOS Las Vegas Raiders 20.1 @ San Francisco 49ers 30.1 | market 19.5-29.0 | gap margin +0.5 (0.06), total +1.7 (0.19)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T21:25Z | KRONOS Arizona Cardinals 17.7 @ Seattle Seahawks 28.4 | market 16.8-27.8 | gap margin -0.4 (0.04), total +1.6 (0.17)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-08T21:25Z | KRONOS Green Bay Packers 21.8 @ New England Patriots 24.8 | market 21.8-24.8 | gap margin -0.1 (0.01), total +0.1 (0.01)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-09T01:20Z | KRONOS Tampa Bay Buccaneers 20.6 @ Chicago Bears 28.8 | market 21.2-27.2 | gap margin +2.2 (0.23), total +0.9 (0.10)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +2.0 margin -1.0 total; TB: starting QB Jalon Daniels missed last game, status UNVERIFIED — no report yet (+2.0)
+NFL 2026-11-10T01:15Z | KRONOS Buffalo Bills 26.2 @ Minnesota Vikings 22.2 | market 25.0-22.5 | gap margin -1.4 (0.15), total +0.9 (0.10)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 20-24 | ROI -15.9%
+[NEUTRAL] 21 bets | beat close 86% | CLV +0.84pp | 7-2 | ROI +52.2%
 [SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 9-8 | ROI -6.5%
-[NEUTRAL] 19 bets | beat close 86% | CLV +0.84pp | 7-2 | ROI +52.2%
 [AGAINST SHARP · THIN MARKET] 18 bets | beat close 77% | CLV +0.28pp | 8-8 | ROI -3.8%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 5-2 | ROI +32.9%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 2-2 | ROI -42.3%
 [SHARP · THIN MARKET] 3 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T22:06:33+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T22:06:33+00:00 wp-json 4 posts
+   table: 2026-10-28T22:34:45+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T22:34:45+00:00 wp-json 4 posts
 
 KRONOS CARD (shadow; chosen by rule: shrunk EV, consensus price, projection agrees, verified minutes, <=2 per game, <=60% one direction; locks 90 min before start):
 #1 NBA Charlotte Hornets @ Detroit Pistons | Daniss Jenkins Over 3.5 player_assists | fanduel 2.0 | score 0.01062 | pending | edge still live | CONSENSUS 4 BOOKS · PROJECTION AGREES (65%)
 #2 NBA Washington Wizards @ Cleveland Cavaliers | Jaylon Tyson Over 2.5 player_assists | fanduel 2.46 | score 0.00853 | pending | edge still live | CONSENSUS 5 BOOKS · PROJECTION AGREES (70%)
+#3 NBA Philadelphia 76ers @ Indiana Pacers |  Philadelphia 76ers  h2h | fanduel 1.79 | score 0.0277 | pending | edge still live | CONSENSUS 9 BOOKS
+#4 NBA Charlotte Hornets @ Detroit Pistons | Paul Reed Jr Under 13.5 player_points | draftkings 1.79 | score 0.01077 | pending | edge still live | PROJECTION AGREES (60%)
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 2 games | margin KRONOS None vs market None | total KRONOS 1.79 vs market 2.0
@@ -139,163 +218,199 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 13 games | margin KRONOS None vs market None | total KRONOS 2.08 vs market 2.15
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Under 1.5->1.5 2.0->2.1 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Over 1.5->1.5 1.75->1.69 (pinnacle)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Ryan Leonard Over 1.5->1.5 1.68->1.65 (pinnacle)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Tuch Under 2.5->2.5 1.7->1.78 (pinnacle)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Tuch Over 2.5->2.5 2.07->1.97 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_points Dylan Strome Under 0.5->0.5 2.45->2.3 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_points Dylan Strome Over 0.5->0.5 1.51->1.57 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_points Cole Hutson Under 0.5->0.5 1.74->1.68 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_points Cole Hutson Over 0.5->0.5 2.0->2.12 (pinnacle)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_points Alex Tuch Under 0.5->0.5 1.98->1.94 (pinnacle)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Under 1.5->2.5 2.0->1.3 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Over 1.5->2.5 1.77->3.3 (espnbet)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Under 0.5->1.5 4.8->2.0 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Over 0.5->1.5 1.14->1.77 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Tyson Foerster Under 2.5->0.5 1.29->4.8 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Aliaksei Protas Under 2.5->0.5 1.3->5.0 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Under 1.5->2.5 1.77->1.2 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Over 1.5->2.5 2.0->4.0 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Under 0.5->1.5 4.2->1.77 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Over 0.5->1.5 1.18->2.0 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Under 2.5->0.5 1.21->4.2 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Alex Bump Over 2.5->0.5 3.9->1.18 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Christian Dvorak Under 1.5->2.5 1.65->1.15 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Christian Dvorak Over 1.5->2.5 2.2->4.6 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Christian Dvorak Under 0.5->1.5 3.8->1.65 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Christian Dvorak Over 0.5->1.5 1.22->2.2 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Boone Jenner Under 1.5->2.5 2.0->1.3 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Boone Jenner Under 0.5->1.5 5.0->2.0 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Cole Hutson Under 1.5->2.5 1.87->1.27 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Cole Hutson Over 1.5->2.5 1.87->3.5 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Cole Hutson Under 0.5->1.5 4.2->1.87 (espnbet)
-2026-10-28T22:10:45+00:00 Sharp NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Cole Hutson Over 0.5->1.5 1.18->1.87 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Cole Hutson Under 2.5->0.5 1.29->4.2 (espnbet)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Trevor Zegras Under 2.5->3.5 1.36->1.11 (espnbet)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Trevor Zegras Over 2.5->3.5 3.0->5.5 (espnbet)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Trevor Zegras Under 1.5->2.5 2.2->1.36 (espnbet)
-2026-10-28T22:10:45+00:00 Steam NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Trevor Zegras Over 1.5->2.5 1.65->3.0 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Porter Martone Under 1.5->2.5 2.0->1.31 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Porter Martone Over 1.5->2.5 1.77->3.25 (espnbet)
-2026-10-28T22:10:45+00:00 Move NHL Philadelphia Flyers @ Washington Capitals | player_shots_on_goal Porter Martone Under 0.5->1.5 4.8->2.0 (espnbet)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 3.05->2.86 (pinnacle)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.41->1.47 (pinnacle)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.87->1.77 (pinnacle)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.02->2.17 (pinnacle)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 2.85->2.75 (espnbet)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.4->1.47 (espnbet)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.83->1.77 (espnbet)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.0->2.1 (espnbet)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 3.1->2.75 (betrivers)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.36->1.44 (betrivers)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.88->1.75 (betrivers)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 1.94->2.12 (betrivers)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 2.9->2.8 (betmgm)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.83->1.74 (betmgm)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.0->2.15 (betmgm)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | totals  Under 6.5->6.5 1.96->2.0 (fanduel)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 2.98->2.68 (fanduel)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.38->1.48 (fanduel)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.83->1.73 (fanduel)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.0->2.14 (fanduel)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | totals  Under 6.5->6.5 2.0->2.05 (williamhill_us)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.85->1.73 (williamhill_us)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.0->2.17 (williamhill_us)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | totals  Under 6.5->6.5 1.99->2.07 (betonlineag)
+2026-10-28T22:33:15+00:00 Sharp NHL Toronto Maple Leafs @ Seattle Kraken | totals  Over 6.5->6.5 1.87->1.81 (betonlineag)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 3.07->2.74 (betonlineag)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.4->1.5 (betonlineag)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.85->1.76 (betonlineag)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.03->2.16 (betonlineag)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | totals  Under 6.5->6.5 1.99->2.07 (lowvig)
+2026-10-28T22:33:15+00:00 Sharp NHL Toronto Maple Leafs @ Seattle Kraken | totals  Over 6.5->6.5 1.87->1.81 (lowvig)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 3.07->2.74 (lowvig)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.4->1.5 (lowvig)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.85->1.76 (lowvig)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.03->2.16 (lowvig)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | totals  Under 6.5->6.5 2.0->2.05 (fanatics)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Toronto Maple Leafs -1.5->-1.5 3.0->2.75 (fanatics)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | spreads  Seattle Kraken 1.5->1.5 1.39->1.45 (fanatics)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Toronto Maple Leafs None->None 1.83->1.71 (fanatics)
+2026-10-28T22:33:15+00:00 Steam NHL Toronto Maple Leafs @ Seattle Kraken | h2h  Seattle Kraken None->None 2.0->2.15 (fanatics)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
-   ML: Carolina Panthers  2.76 (open 2.76, best 2.8) / Green Bay Packers  1.5 (open 1.5, best 1.51)
-   SPREAD: Carolina Panthers 4.5 1.85 (open 4.5 1.85, best 1.89) / Green Bay Packers -4.5 2.05 (open -4.5 2.05, best 2.05)
-   TOTAL: Over 47.0 1.83 (open 47.0 1.83, best 1.83) / Under 47.0 2.03 (open 47.0 2.03, best 2.03)
-   moves: {'Move': 8, 'Steam': 24}
+   ML: Carolina Panthers  2.71 (open 2.76, best 2.71) / Green Bay Packers  1.51 (open 1.5, best 1.54)
+   SPREAD: Carolina Panthers 4.0 1.88 (open 4.5 1.85, best 1.91) / Green Bay Packers -4.0 2.01 (open -4.5 2.05, best 2.01)
+   TOTAL: Over 47.5 1.93 (open 47.0 1.83, best 1.98) / Under 47.5 1.91 (open 47.0 2.03, best 1.93)
+   moves: {'Move': 17, 'Sharp': 2, 'Steam': 54}
 NFL 2026-11-01T18:00:00Z Arizona Cardinals @ Dallas Cowboys  id=9255ca8f32aea590d00aa57de79f6bb6
-   ML: Arizona Cardinals  3.35 (open 3.5, best 3.4) / Dallas Cowboys  1.34 (open 1.31, best 1.36)
-   SPREAD: Arizona Cardinals 6.0 2.05 (open 6.0 1.95, best 2.05) / Dallas Cowboys -6.0 1.86 (open -6.0 1.95, best 1.88)
-   TOTAL: Over 54.0 1.88 (open 52.5 1.93, best 1.88) / Under 54.0 1.98 (open 52.5 1.93, best 1.98)
-   moves: {'Move': 8, 'Sharp': 4, 'Steam': 12}
+   ML: Arizona Cardinals  3.66 (open 3.66, best 3.75) / Dallas Cowboys  1.31 (open 1.31, best 1.32)
+   SPREAD: Arizona Cardinals 7.5 1.81 (open 7.5 1.81, best 1.81) / Dallas Cowboys -7.5 2.09 (open -7.5 2.09, best 2.09)
+   TOTAL: Over 54.5 1.93 (open 54.5 1.93, best 1.93) / Under 54.5 1.93 (open 54.5 1.93, best 1.96)
+   moves: {'Move': 20, 'Sharp': 4, 'Steam': 42}
 NFL 2026-11-01T18:00:00Z Atlanta Falcons @ Tampa Bay Buccaneers  id=921859689f5f8b3b8b1caf4248bdb1ec
-   ML: Atlanta Falcons  2.17 (open 2.17, best 2.17) / Tampa Bay Buccaneers  1.76 (open 1.76, best 1.82)
-   SPREAD: Atlanta Falcons 2.0 1.95 (open 2.0 1.95, best 1.95) / Tampa Bay Buccaneers -2.0 1.93 (open -2.0 1.93, best 1.93)
-   TOTAL: Over 45.0 1.93 (open 45.0 1.93, best 1.98) / Under 45.0 1.93 (open 45.0 1.93, best 1.93)
-   moves: {'Move': 18, 'Sharp': 6, 'Steam': 11}
+   ML: Atlanta Falcons  2.25 (open 2.17, best 2.25) / Tampa Bay Buccaneers  1.71 (open 1.76, best 1.74)
+   SPREAD: Atlanta Falcons 2.5 1.97 (open 2.0 1.95, best 1.97) / Tampa Bay Buccaneers -2.5 1.92 (open -2.0 1.93, best 1.94)
+   TOTAL: Over 45.0 1.93 (open 45.0 1.93, best 1.97) / Under 45.0 1.92 (open 45.0 1.93, best 1.92)
+   moves: {'Move': 24, 'Sharp': 6, 'Steam': 43}
 NFL 2026-11-01T18:00:00Z Baltimore Ravens @ Buffalo Bills  id=c93c421e5fa46031a43162d111d981d0
-   ML: Baltimore Ravens  2.56 (open 2.49, best 2.56) / Buffalo Bills  1.53 (open 1.57, best 1.57)
-   SPREAD: Baltimore Ravens 3.5 1.85 (open 3.0 2.1, best 1.85) / Buffalo Bills -3.5 2.07 (open -3.0 1.83, best 2.07)
-   TOTAL: Over 53.0 1.88 (open 52.5 1.88, best 1.88) / Under 53.0 1.98 (open 52.5 1.98, best 1.98)
-   moves: {'Move': 4, 'Steam': 22}
+   ML: Baltimore Ravens  2.56 (open 2.56, best 2.56) / Buffalo Bills  1.56 (open 1.56, best 1.57)
+   SPREAD: Baltimore Ravens 3.5 1.84 (open 3.5 1.84, best 1.84) / Buffalo Bills -3.5 2.06 (open -3.5 2.06, best 2.06)
+   TOTAL: Over 54.0 1.92 (open 54.0 1.92, best 1.92) / Under 54.0 1.93 (open 54.0 1.93, best 1.98)
+   moves: {'Move': 4, 'Steam': 52}
 NFL 2026-11-01T18:00:00Z Tennessee Titans @ Cincinnati Bengals  id=9c5d8f57e0ba0fbd9ef436c1f0898f99
-   ML: Cincinnati Bengals  1.18 (open 1.18, best 1.18) / Tennessee Titans  5.21 (open 5.21, best 5.75)
-   SPREAD: Cincinnati Bengals -10.5 1.93 (open -10.5 1.93, best 1.93) / Tennessee Titans 10.5 1.95 (open 10.5 1.95, best 1.95)
-   TOTAL: Over 47.0 1.93 (open 47.0 1.93, best 1.93) / Under 47.0 1.93 (open 47.0 1.93, best 1.98)
-   moves: {'Sharp': 6, 'Steam': 12}
+   ML: Cincinnati Bengals  1.19 (open 1.18, best 1.19) / Tennessee Titans  5.14 (open 5.21, best 5.5)
+   SPREAD: Cincinnati Bengals -10.5 1.97 (open -10.5 1.93, best 2.0) / Tennessee Titans 10.5 1.91 (open 10.5 1.95, best 1.91)
+   TOTAL: Over 47.0 2.0 (open 47.0 1.93, best 2.0) / Under 47.0 1.86 (open 47.0 1.93, best 1.86)
+   moves: {'Move': 4, 'Sharp': 6, 'Steam': 44}
 NFL 2026-11-01T18:00:00Z Cleveland Browns @ Pittsburgh Steelers  id=ab5ab731ab655bd6308bc7a922275518
-   ML: Cleveland Browns  2.67 (open 2.67, best 2.75) / Pittsburgh Steelers  1.52 (open 1.52, best 1.56)
-   SPREAD: Cleveland Browns 4.0 1.88 (open 4.0 1.88, best 1.91) / Pittsburgh Steelers -4.0 2.02 (open -4.0 2.02, best 2.02)
-   TOTAL: Over 39.5 2.04 (open 39.5 2.03, best 2.04) / Under 39.5 1.82 (open 39.5 1.83, best 1.82)
-   moves: {'Move': 13}
+   ML: Cleveland Browns  2.66 (open 2.67, best 2.66) / Pittsburgh Steelers  1.53 (open 1.52, best 1.54)
+   SPREAD: Cleveland Browns 3.5 1.9 (open 4.0 1.88, best 1.91) / Pittsburgh Steelers -3.5 1.99 (open -4.0 2.02, best 1.99)
+   TOTAL: Over 38.5 1.85 (open 39.5 2.03, best 1.85) / Under 38.5 2.01 (open 39.5 1.83, best 2.01)
+   moves: {'Move': 19, 'Sharp': 2, 'Steam': 34}
 NFL 2026-11-01T18:00:00Z Minnesota Vikings @ Detroit Lions  id=52e7ee9c42525e6deec02da32dc2fad8
-   ML: Detroit Lions  1.58 (open 1.59, best 1.62) / Minnesota Vikings  2.51 (open 2.49, best 2.51)
-   SPREAD: Detroit Lions -3.0 1.88 (open -3.0 1.89, best 1.98) / Minnesota Vikings 3.0 2.01 (open 3.0 1.99, best 2.07)
-   TOTAL: Over 46.0 1.93 (open 46.0 1.93, best 1.93) / Under 46.0 1.93 (open 46.0 1.93, best 1.93)
-   moves: {'Move': 2, 'Sharp': 6, 'Steam': 12}
+   ML: Detroit Lions  1.55 (open 1.59, best 1.59) / Minnesota Vikings  2.59 (open 2.49, best 2.6)
+   SPREAD: Detroit Lions -3.0 1.83 (open -3.0 1.89, best 1.85) / Minnesota Vikings 3.0 2.07 (open 3.0 1.99, best 2.07)
+   TOTAL: Over 46.0 1.97 (open 46.0 1.93, best 1.97) / Under 46.0 1.88 (open 46.0 1.93, best 1.93)
+   moves: {'Move': 2, 'Sharp': 6, 'Steam': 62}
 NFL 2026-11-01T18:00:00Z Indianapolis Colts @ Jacksonville Jaguars  id=159dbf0253dd2038eda2212f84387f0c
-   ML: Indianapolis Colts  4.17 (open 4.17, best 4.5) / Jacksonville Jaguars  1.26 (open 1.26, best 1.26)
-   SPREAD: Indianapolis Colts 7.5 1.99 (open 7.5 1.99, best 1.99) / Jacksonville Jaguars -7.5 1.9 (open -7.5 1.9, best 1.94)
-   TOTAL: Over 46.5 1.92 (open 46.5 1.92, best 1.92) / Under 46.5 1.93 (open 46.5 1.93, best 1.95)
-   moves: {'Move': 2, 'Steam': 12}
+   ML: Indianapolis Colts  4.72 (open 4.17, best 4.85) / Jacksonville Jaguars  1.21 (open 1.26, best 1.21)
+   SPREAD: Indianapolis Colts 10.5 1.87 (open 7.5 1.99, best 1.87) / Jacksonville Jaguars -10.5 2.02 (open -7.5 1.9, best 2.02)
+   TOTAL: Over 46.5 1.96 (open 46.5 1.92, best 1.96) / Under 46.5 1.89 (open 46.5 1.93, best 1.93)
+   moves: {'Move': 2, 'Steam': 59}
 NFL 2026-11-01T18:00:00Z Las Vegas Raiders @ New York Jets  id=98f1b121b793977434c046e76c707145
-   ML: Las Vegas Raiders  1.94 (open 1.94, best 1.97) / New York Jets  1.94 (open 1.94, best 1.94)
-   SPREAD: Las Vegas Raiders 1.0 1.88 (open 1.0 1.88, best 1.89) / New York Jets -1.0 2.01 (open -1.0 2.01, best 2.01)
-   TOTAL: Over 44.5 1.93 (open 44.5 1.93, best 1.95) / Under 44.5 1.93 (open 44.5 1.93, best 1.93)
-   moves: {'Move': 4, 'Steam': 12}
+   ML: Las Vegas Raiders  2.06 (open 1.94, best 2.06) / New York Jets  1.84 (open 1.94, best 1.84)
+   SPREAD: Las Vegas Raiders 1.0 1.98 (open 1.0 1.88, best 1.98) / New York Jets -1.0 1.91 (open -1.0 2.01, best 1.91)
+   TOTAL: Over 45.5 1.91 (open 44.5 1.93, best 1.95) / Under 45.5 1.94 (open 44.5 1.93, best 1.95)
+   moves: {'Move': 4, 'Steam': 56}
 NFL 2026-11-01T21:05:00Z Los Angeles Chargers @ Los Angeles Rams  id=2ff84d3f6053d083c8c0a5bebf7cdd4c
-   ML: Los Angeles Chargers  3.86 (open 3.86, best 3.95) / Los Angeles Rams  1.29 (open 1.29, best 1.31)
-   SPREAD: Los Angeles Chargers 7.5 1.83 (open 7.5 1.83, best 1.89) / Los Angeles Rams -7.5 2.07 (open -7.5 2.07, best 2.07)
-   TOTAL: Over 44.0 2.02 (open 44.0 2.02, best 2.02) / Under 44.0 1.84 (open 44.0 1.84, best 1.84)
-   moves: {'Move': 20}
+   ML: Los Angeles Chargers  3.58 (open 3.86, best 3.58) / Los Angeles Rams  1.32 (open 1.29, best 1.36)
+   SPREAD: Los Angeles Chargers 7.0 1.82 (open 7.5 1.83, best 1.82) / Los Angeles Rams -7.0 2.08 (open -7.5 2.07, best 2.08)
+   TOTAL: Over 45.0 1.92 (open 44.0 2.02, best 1.93) / Under 45.0 1.93 (open 44.0 1.84, best 1.93)
+   moves: {'Move': 20, 'Sharp': 4, 'Steam': 46}
 NFL 2026-11-01T21:25:00Z Kansas City Chiefs @ Denver Broncos  id=f2a036d5edf483a277880014861e78ad
-   ML: Denver Broncos  2.08 (open 2.06, best 2.08) / Kansas City Chiefs  1.79 (open 1.8, best 1.83)
-   SPREAD: Denver Broncos 1.5 1.98 (open 1.5 1.98, best 1.98) / Kansas City Chiefs -1.5 1.93 (open -1.5 1.93, best 1.95)
-   TOTAL: Over 42.5 1.93 (open 42.5 1.93, best 1.93) / Under 42.5 1.93 (open 42.5 1.93, best 1.93)
-   moves: {'Move': 8}
+   ML: Denver Broncos  2.07 (open 2.07, best 2.07) / Kansas City Chiefs  1.83 (open 1.83, best 1.85)
+   SPREAD: Denver Broncos 1.5 1.92 (open 1.5 1.92, best 1.92) / Kansas City Chiefs -1.5 1.97 (open -1.5 1.97, best 1.97)
+   TOTAL: Over 40.5 1.93 (open 40.5 1.93, best 1.95) / Under 40.5 1.92 (open 40.5 1.92, best 1.95)
+   moves: {'Move': 11, 'Sharp': 6, 'Steam': 16}
 NFL 2026-11-01T21:25:00Z New England Patriots @ Miami Dolphins  id=05405af79752f5e742cdf50b61f6745e
-   ML: Miami Dolphins  3.87 (open 3.87, best 4.3) / New England Patriots  1.29 (open 1.29, best 1.29)
-   SPREAD: Miami Dolphins 7.5 1.87 (open 7.5 1.87, best 1.93) / New England Patriots -7.5 2.02 (open -7.5 2.02, best 2.02)
-   TOTAL: Over 44.5 1.93 (open 44.5 1.93, best 1.93) / Under 44.5 1.92 (open 44.5 1.92, best 1.93)
-   moves: {'Move': 8, 'Steam': 20}
+   ML: Miami Dolphins  3.7 (open 3.87, best 3.74) / New England Patriots  1.31 (open 1.29, best 1.32)
+   SPREAD: Miami Dolphins 7.0 1.9 (open 7.5 1.87, best 1.93) / New England Patriots -7.0 1.99 (open -7.5 2.02, best 1.99)
+   TOTAL: Over 44.5 2.03 (open 44.5 1.93, best 2.03) / Under 44.5 1.83 (open 44.5 1.92, best 1.88)
+   moves: {'Move': 8, 'Steam': 68}
 NFL 2026-11-02T01:20:00Z Philadelphia Eagles @ Washington Commanders  id=b9c60db63b1a19ad319f24b33c0defe8
-   ML: Philadelphia Eagles  2.61 (open 2.63, best 2.7) / Washington Commanders  1.52 (open 1.52, best 1.54)
-   SPREAD: Philadelphia Eagles 3.5 1.95 (open 4.0 1.95, best 1.98) / Washington Commanders -3.5 1.95 (open -4.0 1.95, best 1.95)
-   TOTAL: Over 41.0 1.98 (open 41.0 1.93, best 1.98) / Under 41.0 1.88 (open 41.0 1.93, best 1.88)
-   moves: {'Sharp': 4, 'Steam': 8}
+   ML: Philadelphia Eagles  3.13 (open 3.13, best 3.2) / Washington Commanders  1.4 (open 1.4, best 1.44)
+   SPREAD: Philadelphia Eagles 5.5 1.99 (open 5.5 1.99, best 2.0) / Washington Commanders -5.5 1.9 (open -5.5 1.9, best 1.91)
+   TOTAL: Over 40.5 1.97 (open 40.5 1.97, best 2.0) / Under 40.5 1.88 (open 40.5 1.88, best 1.91)
+   moves: {'Move': 12, 'Sharp': 4, 'Steam': 36}
 NFL 2026-11-03T01:20:00Z Chicago Bears @ Seattle Seahawks  id=7d664fbcd39350e559d83c0068ba7169
-   ML: Chicago Bears  2.59 (open 2.59, best 2.59) / Seattle Seahawks  1.55 (open 1.55, best 1.59)
-   SPREAD: Chicago Bears 3.5 1.86 (open 3.5 1.86, best 1.86) / Seattle Seahawks -3.5 2.03 (open -3.5 2.03, best 2.03)
-   TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.92 (open 46.5 1.92, best 1.95)
-   moves: {'Move': 20}
+   ML: Chicago Bears  2.55 (open 2.59, best 2.55) / Seattle Seahawks  1.56 (open 1.55, best 1.6)
+   SPREAD: Chicago Bears 3.5 1.83 (open 3.5 1.86, best 1.83) / Seattle Seahawks -3.5 2.07 (open -3.5 2.03, best 2.07)
+   TOTAL: Over 46.5 1.93 (open 46.5 1.93, best 1.93) / Under 46.5 1.93 (open 46.5 1.92, best 1.95)
+   moves: {'Move': 20, 'Sharp': 5}
 NFL 2026-11-06T01:15:00Z Jacksonville Jaguars @ Baltimore Ravens  id=c75744790b7acf6260c78ba5e739c0e5
-   ML: 
+   ML: Baltimore Ravens  1.65 (open 1.65, best 1.65) / Jacksonville Jaguars  2.3 (open 2.3, best 2.36)
+   SPREAD: Baltimore Ravens -3.0 1.99 (open -3.0 1.99, best 1.99) / Jacksonville Jaguars 3.0 1.92 (open 3.0 1.92, best 1.92)
+   TOTAL: Over 49.0 1.93 (open 49.0 1.93, best 1.93) / Under 49.0 1.93 (open 49.0 1.93, best 1.93)
 NFL 2026-11-08T14:30:00Z Cincinnati Bengals @ Atlanta Falcons  id=dc56d980f527ffeef89940133b211b13
-   ML: 
+   ML: Atlanta Falcons  2.44 (open 2.44, best 2.46) / Cincinnati Bengals  1.59 (open 1.59, best 1.59)
+   SPREAD: Atlanta Falcons 2.5 2.09 (open 2.5 2.09, best 2.09) / Cincinnati Bengals -2.5 1.83 (open -2.5 1.83, best 1.83)
+   TOTAL: Over 50.5 1.93 (open 50.5 1.93, best 1.93) / Under 50.5 1.93 (open 50.5 1.93, best 1.93)
 NFL 2026-11-08T18:00:00Z Denver Broncos @ Carolina Panthers  id=014282b888c741b7d70c857c09f40aa7
-   ML: 
+   ML: Carolina Panthers  2.14 (open 2.14, best 2.18) / Denver Broncos  1.75 (open 1.75, best 1.75)
+   SPREAD: Carolina Panthers 2.5 2.0 (open 2.5 2.0, best 2.0) / Denver Broncos -2.5 1.91 (open -2.5 1.91, best 1.91)
+   TOTAL: Over 45.0 1.93 (open 45.0 1.93, best 1.93) / Under 45.0 1.93 (open 45.0 1.93, best 1.93)
 NFL 2026-11-08T18:00:00Z Cleveland Browns @ New Orleans Saints  id=e571bab6736f9338130a78a4f75c3231
-   ML: 
+   ML: Cleveland Browns  2.19 (open 2.19, best 2.24) / New Orleans Saints  1.71 (open 1.71, best 1.74)
+   SPREAD: Cleveland Browns 2.5 2.0 (open 2.5 2.0, best 2.0) / New Orleans Saints -2.5 1.91 (open -2.5 1.91, best 1.91)
+   TOTAL: Over 43.0 1.93 (open 43.0 1.93, best 1.93) / Under 43.0 1.93 (open 43.0 1.93, best 1.93)
 NFL 2026-11-08T18:00:00Z Dallas Cowboys @ Indianapolis Colts  id=415fc42e72888c63e82f7bce24c65391
-   ML: 
+   ML: Dallas Cowboys  1.48 (open 1.48, best 1.48) / Indianapolis Colts  2.73 (open 2.73, best 2.84)
+   SPREAD: Dallas Cowboys -4.0 1.91 (open -4.0 1.91, best 1.91) / Indianapolis Colts 4.0 2.0 (open 4.0 2.0, best 2.0)
+   TOTAL: Over 51.0 1.93 (open 51.0 1.93, best 1.93) / Under 51.0 1.93 (open 51.0 1.93, best 1.93)
 NFL 2026-11-08T18:00:00Z Detroit Lions @ Miami Dolphins  id=44d8c37868b700e90f816db7c5df5cdd
-   ML: 
+   ML: Detroit Lions  1.26 (open 1.26, best 1.28) / Miami Dolphins  4.05 (open 4.05, best 4.5)
+   SPREAD: Detroit Lions -7.0 1.91 (open -7.0 1.91, best 1.91) / Miami Dolphins 7.0 2.0 (open 7.0 2.0, best 2.0)
+   TOTAL: Over 49.0 1.93 (open 49.0 1.93, best 1.93) / Under 49.0 1.93 (open 49.0 1.93, best 1.93)
 NBA 2026-10-28T23:10:00Z Philadelphia 76ers @ Indiana Pacers  id=5997ee5c9fbdc53f9c86732b02f58158
-   ML: Indiana Pacers  2.1 (open 2.05, best 2.1) / Philadelphia 76ers  1.77 (open 1.8, best 1.79)
-   SPREAD: Indiana Pacers 1.5 1.95 (open 1.5 1.95, best 1.98) / Philadelphia 76ers -1.5 1.87 (open -1.5 1.87, best 1.87)
-   TOTAL: Over 238.5 1.91 (open 237.5 1.87, best 1.91) / Under 238.5 1.91 (open 237.5 1.95, best 1.91)
-   moves: {'Move': 55, 'Sharp': 31, 'Steam': 288}
+   ML: Indiana Pacers  3.28 (open 3.28, best 3.35) / Philadelphia 76ers  1.38 (open 1.38, best 1.79)
+   SPREAD: Indiana Pacers 7.5 1.94 (open 7.5 1.94, best 1.95) / Philadelphia 76ers -7.5 1.96 (open -7.5 1.96, best 1.96)
+   TOTAL: Over 233.5 1.89 (open 233.5 1.89, best 1.89) / Under 233.5 1.99 (open 233.5 1.99, best 1.99)
+   moves: {'Move': 83, 'Sharp': 31, 'Steam': 288}
 NBA 2026-10-28T23:10:00Z Miami Heat @ Atlanta Hawks  id=cc7f8bc2a4554b89f2a35abad3a633ef
-   ML: 
+   ML: Atlanta Hawks  1.74 (open 1.74, best 1.74) / Miami Heat  2.23 (open 2.23, best 2.25)
+   SPREAD: Atlanta Hawks -2.5 1.96 (open -2.5 1.96, best 1.96) / Miami Heat 2.5 1.94 (open 2.5 1.94, best 1.95)
+   TOTAL: Over 241.5 1.91 (open 241.5 1.91, best 1.91) / Under 241.5 1.98 (open 241.5 1.98, best 1.98)
    moves: {'Move': 51, 'Sharp': 39, 'Steam': 126}
 NBA 2026-10-28T23:10:00Z Washington Wizards @ Cleveland Cavaliers  id=f2a1271ffcfd7c85f51640ebff3b7ddd
-   ML: 
+   ML: Cleveland Cavaliers  1.27 (open 1.27, best 1.27) / Washington Wizards  4.13 (open 4.13, best 4.21)
+   SPREAD: Cleveland Cavaliers -9.5 1.91 (open -9.5 1.91, best 1.95) / Washington Wizards 9.5 2.0 (open 9.5 2.0, best 2.0)
+   TOTAL: Over 240.5 2.03 (open 240.5 2.03, best 2.03) / Under 240.5 1.86 (open 240.5 1.86, best 1.93)
    moves: {'Move': 52, 'Sharp': 28, 'Steam': 245}
 NBA 2026-10-28T23:10:00Z Charlotte Hornets @ Detroit Pistons  id=7f5287957f506fbf705e198215fa952b
-   ML: 
+   ML: Charlotte Hornets  3.35 (open 3.35, best 3.35) / Detroit Pistons  1.37 (open 1.37, best 1.37)
+   SPREAD: Charlotte Hornets 7.5 1.93 (open 7.5 1.93, best 1.95) / Detroit Pistons -7.5 1.97 (open -7.5 1.97, best 1.97)
+   TOTAL: Over 213.0 1.97 (open 213.0 1.97, best 1.97) / Under 213.0 1.92 (open 213.0 1.92, best 1.92)
    moves: {'Move': 30, 'Sharp': 10, 'Steam': 180}
 NBA 2026-10-28T23:40:00Z Orlando Magic @ Toronto Raptors  id=67550840fbe9bb9c550d3d4958e259ea
-   ML: 
+   ML: Orlando Magic  2.61 (open 2.61, best 2.63) / Toronto Raptors  1.55 (open 1.55, best 1.55)
+   SPREAD: Orlando Magic 4.5 1.99 (open 4.5 1.99, best 1.99) / Toronto Raptors -4.5 1.92 (open -4.5 1.92, best 1.92)
+   TOTAL: Over 224.5 1.9 (open 224.5 1.9, best 1.91) / Under 224.5 1.99 (open 224.5 1.99, best 1.99)
    moves: {'Move': 74, 'Sharp': 32, 'Steam': 149}
 NBA 2026-10-29T00:10:00Z Golden State Warriors @ Minnesota Timberwolves  id=c6d62b9457cbd8517860e222f1d4f953
-   ML: 
+   ML: Golden State Warriors  2.44 (open 2.44, best 2.46) / Minnesota Timberwolves  1.62 (open 1.62, best 1.65)
+   SPREAD: Golden State Warriors 4.0 1.93 (open 4.0 1.93, best 1.95) / Minnesota Timberwolves -4.0 1.97 (open -4.0 1.97, best 1.97)
+   TOTAL: Over 227.5 1.91 (open 227.5 1.91, best 1.96) / Under 227.5 1.98 (open 227.5 1.98, best 1.98)
 NBA 2026-10-29T00:10:00Z Houston Rockets @ Milwaukee Bucks  id=83ca338f605b5664b7b1da34c19a0222
-   ML: 
+   ML: Houston Rockets  1.3 (open 1.3, best 1.33) / Milwaukee Bucks  3.86 (open 3.86, best 3.86)
+   SPREAD: Houston Rockets -8.0 1.9 (open -8.0 1.9, best 1.93) / Milwaukee Bucks 8.0 2.01 (open 8.0 2.01, best 2.01)
+   TOTAL: Over 226.0 1.89 (open 226.0 1.89, best 1.91) / Under 226.0 2.0 (open 226.0 2.0, best 2.0)
 NBA 2026-10-29T00:10:00Z New York Knicks @ Chicago Bulls  id=7b9e02686c886a54c9a91dd3f3879326
-   ML: 
+   ML: Chicago Bulls  3.35 (open 3.35, best 3.35) / New York Knicks  1.37 (open 1.37, best 1.37)
+   SPREAD: Chicago Bulls 7.0 2.02 (open 7.0 2.02, best 2.02) / New York Knicks -7.0 1.89 (open -7.0 1.89, best 1.89)
+   TOTAL: Over 231.5 1.88 (open 231.5 1.88, best 1.88) / Under 231.5 2.01 (open 231.5 2.01, best 2.01)
 NBA 2026-10-29T00:10:00Z Denver Nuggets @ New Orleans Pelicans  id=782d6ce7f65b592ad1c43d2f4e53cc82
-   ML: 
+   ML: Denver Nuggets  1.6 (open 1.6, best 1.6) / New Orleans Pelicans  2.51 (open 2.51, best 2.55)
+   SPREAD: Denver Nuggets -4.5 1.97 (open -4.5 1.97, best 1.97) / New Orleans Pelicans 4.5 1.93 (open 4.5 1.93, best 1.94)
+   TOTAL: Over 241.0 1.94 (open 241.0 1.94, best 1.97) / Under 241.0 1.94 (open 241.0 1.94, best 1.94)
 NBA 2026-10-29T01:10:00Z San Antonio Spurs @ Utah Jazz  id=e74d54621abaed183e569394f935c362
-   ML: 
+   ML: San Antonio Spurs  1.14 (open 1.14, best 1.15) / Utah Jazz  6.27 (open 6.27, best 7.0)
+   SPREAD: San Antonio Spurs -14.0 1.92 (open -14.0 1.92, best 1.92) / Utah Jazz 14.0 1.97 (open 14.0 1.97, best 1.97)
+   TOTAL: Over 233.5 1.93 (open 233.5 1.93, best 1.93) / Under 233.5 1.93 (open 233.5 1.93, best 1.93)
 NBA 2026-10-29T01:40:00Z Oklahoma City Thunder @ Dallas Mavericks  id=1e3ca91e27ded6e4b4bb35aabb67b505
-   ML: 
+   ML: Dallas Mavericks  2.75 (open 2.75, best 2.75) / Oklahoma City Thunder  1.5 (open 1.5, best 1.5)
+   SPREAD: Dallas Mavericks 6.0 1.9 (open 6.0 1.9, best 1.9) / Oklahoma City Thunder -6.0 1.99 (open -6.0 1.99, best 1.99)
+   TOTAL: Over 227.5 1.89 (open 227.5 1.89, best 1.93) / Under 227.5 1.98 (open 227.5 1.98, best 1.98)
 NBA 2026-10-29T02:40:00Z Los Angeles Lakers @ Los Angeles Clippers  id=6e8a41f3aeff105b0e10766515517d5e
-   ML: 
+   ML: Los Angeles Clippers  1.94 (open 1.94, best 1.94) / Los Angeles Lakers  1.96 (open 1.96, best 2.0)
+   SPREAD: Los Angeles Clippers -1.0 1.99 (open -1.0 1.99, best 1.99) / Los Angeles Lakers 1.0 1.92 (open 1.0 1.92, best 1.94)
+   TOTAL: Over 224.5 1.93 (open 224.5 1.93, best 1.93) / Under 224.5 1.96 (open 224.5 1.96, best 1.96)
 NBA 2026-10-30T02:10:00Z Memphis Grizzlies @ Portland Trail Blazers  id=ba667ca1b0b042f0661cb9d9af56c165
-   ML: 
+   ML: Memphis Grizzlies  3.4 (open 3.4, best 3.4) / Portland Trail Blazers  1.34 (open 1.34, best 1.34)
+   SPREAD: Memphis Grizzlies 7.5 1.94 (open 7.5 1.94, best 1.95) / Portland Trail Blazers -7.5 1.94 (open -7.5 1.94, best 1.94)
+   TOTAL: Over 234.5 1.93 (open 234.5 1.93, best 1.93) / Under 234.5 1.93 (open 234.5 1.93, best 1.93)
 NBA 2026-11-26T00:40:00Z Minnesota Timberwolves @ Oklahoma City Thunder  id=07421d1675d6bc51bb5fa91f84a09eb3
    ML: 
 NBA 2026-12-25T17:10:00Z San Antonio Spurs @ New York Knicks  id=a6555e8b7252dfb32f1817fc8c59ad83
@@ -310,58 +425,87 @@ NBA 2026-12-25T22:10:00Z Philadelphia 76ers @ Los Angeles Lakers  id=dfd908bad3a
    ML: Los Angeles Lakers  1.91 (open 1.91, best 1.91) / Philadelphia 76ers  1.91 (open 1.91, best 2.0)
    SPREAD: Los Angeles Lakers -1.5 1.9 (open -1.5 1.9, best 1.95) / Philadelphia 76ers 1.5 1.99 (open 1.5 1.99, best 1.99)
    TOTAL: Over 235.0 1.93 (open 235.0 1.93, best 1.93) / Under 235.0 1.93 (open 235.0 1.93, best 1.93)
+   moves: {'Move': 4}
 NBA 2026-12-26T01:10:00Z Oklahoma City Thunder @ Minnesota Timberwolves  id=2b7218aa25cf98318a40e6f2469a5c5d
-   ML: 
+   ML: Minnesota Timberwolves  2.4 (open 2.4, best 2.45) / Oklahoma City Thunder  1.61 (open 1.61, best 1.61)
+   SPREAD: Minnesota Timberwolves 4.5 1.87 (open 4.5 1.87, best 1.91) / Oklahoma City Thunder -4.5 1.95 (open -4.5 1.95, best 1.95)
+   TOTAL: Over 233.5 1.91 (open 233.5 1.91, best 1.91) / Under 233.5 1.91 (open 233.5 1.91, best 1.91)
 NBA 2026-12-26T03:40:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc49135f2759709e55af0c4c6
-   ML: Denver Nuggets  1.69 (open 1.69, best 1.79) / Golden State Warriors  2.25 (open 2.25, best 2.3)
+   ML: Denver Nuggets  1.67 (open 1.69, best 1.79) / Golden State Warriors  2.3 (open 2.25, best 2.36)
    SPREAD: Denver Nuggets -4.0 1.99 (open -4.0 1.99, best 1.99) / Golden State Warriors 4.0 1.9 (open 4.0 1.9, best 1.9)
    TOTAL: Over 239.0 1.93 (open 239.0 1.93, best 1.93) / Under 239.0 1.93 (open 239.0 1.93, best 1.93)
-NHL 2026-10-28T23:40:00Z Philadelphia Flyers @ Washington Capitals  id=46dec80debcc79de4c248a0edd4f8d74
-   ML: Philadelphia Flyers  2.95 (open 2.95, best 2.97) / Washington Capitals  1.44 (open 1.44, best 1.47)
-   SPREAD: Philadelphia Flyers 1.5 1.78 (open 1.5 1.78, best 1.8) / Washington Capitals -1.5 2.12 (open -1.5 2.12, best 2.16)
-   TOTAL: Over 6.0 1.86 (open 6.0 1.86, best 1.86) / Under 6.0 2.02 (open 6.0 2.02, best 2.04)
-   moves: {'Move': 92, 'Sharp': 25, 'Steam': 87}
-NHL 2026-10-29T00:40:00Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242da6a96468d61f9
-   ML: Calgary Flames  2.83 (open 2.83, best 2.83) / Edmonton Oilers  1.47 (open 1.47, best 1.48)
-   SPREAD: Calgary Flames 1.5 1.74 (open 1.5 1.74, best 1.77) / Edmonton Oilers -1.5 2.18 (open -1.5 2.18, best 2.2)
-   TOTAL: Over 6.5 1.88 (open 6.5 1.88, best 1.9) / Under 6.5 1.99 (open 6.5 1.99, best 2.0)
-NHL 2026-10-29T01:10:00Z New Jersey Devils @ Colorado Avalanche  id=dad41ac378a6c36e1be03122f7f34470
-   ML: Colorado Avalanche  1.6 (open 1.6, best 1.6) / New Jersey Devils  2.47 (open 2.47, best 2.55)
-   SPREAD: Colorado Avalanche -1.5 2.5 (open -1.5 2.5, best 2.5) / New Jersey Devils 1.5 1.57 (open 1.5 1.57, best 1.62)
-   TOTAL: Over 6.5 2.02 (open 6.5 2.02, best 2.05) / Under 6.5 1.86 (open 6.5 1.86, best 1.86)
-NHL 2026-10-29T02:10:00Z Toronto Maple Leafs @ Seattle Kraken  id=f7510932dec00855b611e3685080819c
-   ML: Seattle Kraken  2.02 (open 2.02, best 2.03) / Toronto Maple Leafs  1.87 (open 1.87, best 1.88)
-   SPREAD: Seattle Kraken 1.5 1.41 (open 1.5 1.41, best 1.43) / Toronto Maple Leafs -1.5 3.05 (open -1.5 3.05, best 3.1)
-   TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.87) / Under 6.5 2.05 (open 6.5 2.05, best 2.05)
-NHL 2026-10-29T23:10:00Z Columbus Blue Jackets @ Carolina Hurricanes  id=05a8ed51399342594c33ae0faa0f9027
-   ML: 
-NHL 2026-10-29T23:10:00Z Utah Mammoth @ Pittsburgh Penguins  id=b8f3c483149e46a5f7c24ea941be8649
-   ML: 
-NHL 2026-10-29T23:10:00Z Winnipeg Jets @ Tampa Bay Lightning  id=f27b209b3ed34a6dfb27f1670ffa514f
-   ML: 
-NHL 2026-10-29T23:40:00Z Chicago Blackhawks @ Detroit Red Wings  id=35f166bc5dbb833315fe376ae27e63a3
-   ML: 
-NHL 2026-10-30T00:10:00Z Boston Bruins @ St Louis Blues  id=0320215ff7055c9c04ecefa36a8c36cb
-   ML: 
-NHL 2026-10-30T00:10:00Z Montréal Canadiens @ Dallas Stars  id=2f65119127127c0185cf3bdc236a00f2
-   ML: 
-NHL 2026-10-30T00:10:00Z New York Islanders @ Minnesota Wild  id=5020318cfd7098bd38fae6c907029f0f
-   ML: 
-NHL 2026-10-30T00:10:00Z Washington Capitals @ Nashville Predators  id=923b47df7869b8b2c5d758b7f21d4b4a
-   ML: 
-NHL 2026-10-30T02:10:00Z Buffalo Sabres @ Anaheim Ducks  id=c8abddd6d4a9c96f45dcdd287f392537
-   ML: 
-NHL 2026-10-30T02:10:00Z Ottawa Senators @ Los Angeles Kings  id=ed751626a7b1f47888222319fec01199
-   ML: 
-NHL 2026-10-30T02:10:00Z Vancouver Canucks @ San Jose Sharks  id=b07a2b3d9d717c9eb693422aef404555
-   ML: 
-MLB 2026-10-29T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=99d7f299f7f7feb7980daeeee5f238a9
-   ML: Milwaukee Brewers  1.71 (open 1.71, best 1.74) / Tampa Bay Rays  2.27 (open 2.27, best 2.27)
-   SPREAD: Milwaukee Brewers -1.5 2.32 (open -1.5 2.32, best 2.33) / Tampa Bay Rays 1.5 1.67 (open 1.5 1.67, best 1.67)
-   TOTAL: Over 6.5 1.85 (open 6.5 1.85, best 1.88) / Under 6.5 2.03 (open 6.5 2.03, best 2.03)
    moves: {'Move': 4}
+NHL 2026-10-28T23:40:00Z Philadelphia Flyers @ Washington Capitals  id=46dec80debcc79de4c248a0edd4f8d74
+   ML: Philadelphia Flyers  3.09 (open 2.95, best 3.09) / Washington Capitals  1.42 (open 1.44, best 1.43)
+   SPREAD: Philadelphia Flyers 1.5 1.83 (open 1.5 1.78, best 1.83) / Washington Capitals -1.5 2.07 (open -1.5 2.12, best 2.1)
+   TOTAL: Over 6.0 2.0 (open 6.0 1.86, best 2.05) / Under 6.0 1.88 (open 6.0 2.02, best 1.95)
+   moves: {'Move': 92, 'Sharp': 25, 'Steam': 117}
+NHL 2026-10-29T00:40:00Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242da6a96468d61f9
+   ML: Calgary Flames  2.57 (open 2.83, best 2.63) / Edmonton Oilers  1.57 (open 1.47, best 1.57)
+   SPREAD: Calgary Flames 1.5 1.68 (open 1.5 1.74, best 1.69) / Edmonton Oilers -1.5 2.31 (open -1.5 2.18, best 2.31)
+   TOTAL: Over 6.5 1.89 (open 6.5 1.88, best 1.89) / Under 6.5 1.99 (open 6.5 1.99, best 2.05)
+   moves: {'Move': 4, 'Steam': 38}
+NHL 2026-10-29T01:10:00Z New Jersey Devils @ Colorado Avalanche  id=dad41ac378a6c36e1be03122f7f34470
+   ML: Colorado Avalanche  1.7 (open 1.6, best 1.7) / New Jersey Devils  2.29 (open 2.47, best 2.29)
+   SPREAD: Colorado Avalanche -1.5 2.64 (open -1.5 2.5, best 2.7) / New Jersey Devils 1.5 1.53 (open 1.5 1.57, best 1.53)
+   TOTAL: Over 6.5 2.02 (open 6.5 2.02, best 2.02) / Under 6.5 1.87 (open 6.5 1.86, best 1.9)
+   moves: {'Steam': 49}
+NHL 2026-10-29T02:10:00Z Toronto Maple Leafs @ Seattle Kraken  id=f7510932dec00855b611e3685080819c
+   ML: Seattle Kraken  2.17 (open 2.02, best 2.17) / Toronto Maple Leafs  1.77 (open 1.87, best 1.77)
+   SPREAD: Seattle Kraken 1.5 1.47 (open 1.5 1.41, best 1.5) / Toronto Maple Leafs -1.5 2.86 (open -1.5 3.05, best 2.86)
+   TOTAL: Over 6.5 1.83 (open 6.5 1.83, best 1.83) / Under 6.5 2.07 (open 6.5 2.05, best 2.07)
+   moves: {'Sharp': 2, 'Steam': 42}
+NHL 2026-10-29T23:10:00Z Columbus Blue Jackets @ Carolina Hurricanes  id=05a8ed51399342594c33ae0faa0f9027
+   ML: Carolina Hurricanes  1.41 (open 1.41, best 1.45) / Columbus Blue Jackets  3.08 (open 3.08, best 3.08)
+   SPREAD: Carolina Hurricanes -1.5 2.07 (open -1.5 2.07, best 2.16) / Columbus Blue Jackets 1.5 1.82 (open 1.5 1.82, best 1.85)
+   TOTAL: Over 6.0 1.9 (open 6.0 1.9, best 1.91) / Under 6.0 1.97 (open 6.0 1.97, best 1.98)
+NHL 2026-10-29T23:10:00Z Utah Mammoth @ Pittsburgh Penguins  id=b8f3c483149e46a5f7c24ea941be8649
+   ML: Pittsburgh Penguins  2.11 (open 2.11, best 2.16) / Utah Mammoth  1.8 (open 1.8, best 1.8)
+   SPREAD: Pittsburgh Penguins 1.5 1.45 (open 1.5 1.45, best 1.52) / Utah Mammoth -1.5 2.86 (open -1.5 2.86, best 2.86)
+   TOTAL: Over 6.5 1.76 (open 6.5 1.76, best 1.77) / Under 6.5 2.14 (open 6.5 2.14, best 2.17)
+NHL 2026-10-29T23:10:00Z Winnipeg Jets @ Tampa Bay Lightning  id=f27b209b3ed34a6dfb27f1670ffa514f
+   ML: Tampa Bay Lightning  1.43 (open 1.43, best 1.43) / Winnipeg Jets  3.0 (open 3.0, best 3.0)
+   SPREAD: Tampa Bay Lightning -1.5 2.13 (open -1.5 2.13, best 2.13) / Winnipeg Jets 1.5 1.77 (open 1.5 1.77, best 1.83)
+   TOTAL: Over 6.0 1.93 (open 6.0 1.93, best 1.93) / Under 6.0 1.94 (open 6.0 1.94, best 1.94)
+NHL 2026-10-29T23:40:00Z Chicago Blackhawks @ Detroit Red Wings  id=35f166bc5dbb833315fe376ae27e63a3
+   ML: Chicago Blackhawks  2.54 (open 2.54, best 2.55) / Detroit Red Wings  1.57 (open 1.57, best 1.6)
+   SPREAD: Chicago Blackhawks 1.5 1.57 (open 1.5 1.57, best 1.62) / Detroit Red Wings -1.5 2.5 (open -1.5 2.5, best 2.53)
+   TOTAL: Over 6.0 1.93 (open 6.0 1.93, best 1.94) / Under 6.0 1.93 (open 6.0 1.93, best 1.95)
+NHL 2026-10-30T00:10:00Z Boston Bruins @ St Louis Blues  id=0320215ff7055c9c04ecefa36a8c36cb
+   ML: Boston Bruins  1.99 (open 1.99, best 1.99) / St Louis Blues  1.9 (open 1.9, best 1.91)
+   SPREAD: Boston Bruins 1.5 1.37 (open 1.5 1.37, best 1.38) / St Louis Blues -1.5 3.27 (open -1.5 3.27, best 3.27)
+   TOTAL: Over 6.0 1.99 (open 6.0 1.99, best 2.04) / Under 6.0 1.88 (open 6.0 1.88, best 1.88)
+NHL 2026-10-30T00:10:00Z Montréal Canadiens @ Dallas Stars  id=2f65119127127c0185cf3bdc236a00f2
+   ML: Dallas Stars  1.63 (open 1.63, best 1.65) / Montréal Canadiens  2.4 (open 2.4, best 2.4)
+   SPREAD: Dallas Stars -1.5 2.62 (open -1.5 2.62, best 2.7) / Montréal Canadiens 1.5 1.53 (open 1.5 1.53, best 1.57)
+   TOTAL: Over 6.0 1.93 (open 6.0 1.93, best 1.94) / Under 6.0 1.93 (open 6.0 1.93, best 1.95)
+NHL 2026-10-30T00:10:00Z New York Islanders @ Minnesota Wild  id=5020318cfd7098bd38fae6c907029f0f
+   ML: Minnesota Wild  1.53 (open 1.53, best 1.54) / New York Islanders  2.64 (open 2.64, best 2.64)
+   SPREAD: Minnesota Wild -1.5 2.41 (open -1.5 2.41, best 2.45) / New York Islanders 1.5 1.61 (open 1.5 1.61, best 1.65)
+   TOTAL: Over 5.5 1.85 (open 5.5 1.85, best 1.85) / Under 5.5 2.03 (open 5.5 2.03, best 2.05)
+NHL 2026-10-30T00:10:00Z Washington Capitals @ Nashville Predators  id=923b47df7869b8b2c5d758b7f21d4b4a
+   ML: Nashville Predators  1.94 (open 1.94, best 1.95) / Washington Capitals  1.93 (open 1.93, best 1.95)
+   SPREAD: Nashville Predators 1.5 1.4 (open 1.5 1.4, best 1.41) / Washington Capitals -1.5 2.98 (open -1.5 2.98, best 3.2)
+   TOTAL: Over 6.0 1.85 (open 6.0 1.85, best 1.85) / Under 6.0 2.02 (open 6.0 2.02, best 2.02)
+NHL 2026-10-30T02:10:00Z Buffalo Sabres @ Anaheim Ducks  id=c8abddd6d4a9c96f45dcdd287f392537
+   ML: Anaheim Ducks  2.18 (open 2.18, best 2.18) / Buffalo Sabres  1.75 (open 1.75, best 1.78)
+   SPREAD: Anaheim Ducks 1.5 1.47 (open 1.5 1.47, best 1.48) / Buffalo Sabres -1.5 2.79 (open -1.5 2.79, best 2.85)
+   TOTAL: Over 6.5 1.81 (open 6.5 1.81, best 1.88) / Under 6.5 2.08 (open 6.5 2.08, best 2.1)
+NHL 2026-10-30T02:10:00Z Ottawa Senators @ Los Angeles Kings  id=ed751626a7b1f47888222319fec01199
+   ML: Los Angeles Kings  1.98 (open 1.98, best 1.98) / Ottawa Senators  1.91 (open 1.91, best 1.92)
+   SPREAD: Los Angeles Kings 1.5 1.37 (open 1.5 1.37, best 1.38) / Ottawa Senators -1.5 3.27 (open -1.5 3.27, best 3.35)
+   TOTAL: Over 6.0 1.98 (open 6.0 1.98, best 1.98) / Under 6.0 1.88 (open 6.0 1.88, best 1.88)
+NHL 2026-10-30T02:10:00Z Vancouver Canucks @ San Jose Sharks  id=b07a2b3d9d717c9eb693422aef404555
+   ML: San Jose Sharks  1.55 (open 1.55, best 1.55) / Vancouver Canucks  2.6 (open 2.6, best 2.67)
+   SPREAD: San Jose Sharks -1.5 2.31 (open -1.5 2.31, best 2.35) / Vancouver Canucks 1.5 1.66 (open 1.5 1.66, best 1.71)
+   TOTAL: Over 6.5 1.79 (open 6.5 1.79, best 1.82) / Under 6.5 2.11 (open 6.5 2.11, best 2.13)
+MLB 2026-10-29T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=99d7f299f7f7feb7980daeeee5f238a9
+   ML: Milwaukee Brewers  1.72 (open 1.72, best 1.72) / Tampa Bay Rays  2.27 (open 2.27, best 2.28)
+   SPREAD: Milwaukee Brewers -1.5 2.31 (open -1.5 2.31, best 2.32) / Tampa Bay Rays 1.5 1.68 (open 1.5 1.68, best 1.7)
+   TOTAL: Over 6.0 1.88 (open 6.0 1.88, best 1.88) / Under 6.0 2.02 (open 6.0 2.02, best 2.02)
+   moves: {'Move': 8, 'Steam': 21}
 
-QUARANTINE (42 unresolved player/market pairs; these bets are unsettled, not lost):
+QUARANTINE (41 unresolved player/market pairs; these bets are unsettled, not lost):
   George Pickens | player_anytime_td | player name did not resolve x2
   Tyler Goodson | player_rush_yds | player name did not resolve x2
   AJ Dillon | player_rush_yds | player name did not resolve
@@ -375,7 +519,6 @@ QUARANTINE (42 unresolved player/market pairs; these bets are unsettled, not los
   CeeDee Lamb | player_anytime_td | player name did not resolve
   CeeDee Lamb | player_reception_yds | player name did not resolve
   CeeDee Lamb | player_receptions | player name did not resolve
-  Chris Godwin | player_receptions | player name did not resolve
   Dak Prescott | player_anytime_td | player name did not resolve
   Dak Prescott | player_pass_yds | player name did not resolve
   Dak Prescott | player_rush_yds | player name did not resolve
