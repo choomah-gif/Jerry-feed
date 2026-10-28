@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T16:57:15+00:00)
-credits left 1412 | budget/day 307 | spent today 43 | reset in 3.29d | backfill days {'NHL': 5}
+KRONOS DESK SUMMARY  (generated 2026-10-28T17:07:17+00:00)
+credits left 1412 | budget/day 308 | spent today 43 | reset in 3.29d | backfill days {'NHL': 5}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
@@ -51,7 +51,7 @@ MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and 
 MLB 2026-10-29T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 61% vs market 59%
 MLB 2026-10-29T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 61.5% fair 58.5% edge +3.0 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.87 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ TBD (n/a FIP); vs lowvig; MLB model unvalidated, capped at Lean
       why: Negative-binomial runs model: Milwaukee Brewers 3.87, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ TBD (n/a FIP)) and home edge. Makes Tampa Bay Rays 61% versus 59% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-28T16:06:07+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 95, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 132, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 0})
+(models last refreshed: 2026-10-28T17:06:13+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 94, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 132, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-28T23:40Z | KRONOS Philadelphia Flyers 2.6 @ Washington Capitals 3.8 | market total 6.0 | gap total +0.4 (0.24), home win 68% vs 68%
@@ -59,9 +59,9 @@ NHL 2026-10-28T23:40Z | KRONOS Philadelphia Flyers 2.6 @ Washington Capitals 3.8
 MLB 2026-10-29T00:00Z | KRONOS Milwaukee Brewers 3.9 @ Tampa Bay Rays 3.2 | market total 6.5 | gap total +0.6 (0.18)
       no gap large enough to be a mispricing | runs Milwaukee Brewers 3.87 / Tampa Bay Rays 3.24; postseason x0.88; SP Jacob Misiorowski @ TBD
 NHL 2026-10-29T00:40Z | KRONOS Calgary Flames 3.2 @ Edmonton Oilers 3.3 | market total 6.5 | gap total -0.0 (0.00), home win 62% vs 67%
-      no gap large enough to be a mispricing | xG 3.33-3.16; Tristan Jarry (, unconfirmed) / Devin Cooley (, unconfirmed)
+      no gap large enough to be a mispricing | xG 3.33-3.16; Tristan Jarry (, unconfirmed) / Devin Cooley (Confirmed)
 NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.3 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.17), home win 58% vs 61%
-      no gap large enough to be a mispricing | xG 3.49-3.34; Mackenzie Blackwood (, unconfirmed) / Jake Allen (Confirmed)
+      no gap large enough to be a mispricing | xG 3.49-3.34; Mackenzie Blackwood (Likely, unconfirmed) / Jake Allen (Confirmed)
 NHL 2026-10-29T02:10Z | KRONOS Toronto Maple Leafs 3.3 @ Seattle Kraken 3.4 | market total 6.5 | gap total +0.2 (0.11), home win 49% vs 48%
       no gap large enough to be a mispricing | xG 3.41-3.29; Philipp Grubauer (, unconfirmed) / Anthony Stolarz (, unconfirmed)
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
@@ -103,8 +103,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T16:06:01+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T16:06:01+00:00 wp-json 9 posts
+   table: 2026-10-28T17:06:07+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T17:06:07+00:00 wp-json 8 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 2 games | margin KRONOS None vs market None | total KRONOS 1.79 vs market 2.0
