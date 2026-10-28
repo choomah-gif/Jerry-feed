@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T01:21:27+00:00)
-credits left 1486 | budget/day 275 | spent today 324 | reset in 3.94d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T01:31:29+00:00)
+credits left 1486 | budget/day 276 | spent today 324 | reset in 3.94d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -58,15 +58,15 @@ NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebou
 NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal Cutter Gauthier Under 3.5 | draftkings 2.2 vs fair 46.2% | EV +1.6% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-(models last refreshed: 2026-10-28T00:29:41+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 12, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 6})
+(models last refreshed: 2026-10-28T01:29:45+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 18, "UFC": 0, "PRICE": 10, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 6})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 3.0 @ Anaheim Ducks 4.3 | market total 6.5 | gap total +0.8 (0.42), home win 67% vs 66%
       no gap large enough to be a mispricing | xG 4.27-3.03; Lukas Dostal (Confirmed) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.1 @ Vegas Golden Knights 3.4 | market total 6.5 | gap total +0.0 (0.01), home win 58% vs 59%
-      no gap large enough to be a mispricing | xG 3.43-3.09; Adin Hill (Confirmed) / Jonas Johansson (Confirmed)
-NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.5 @ San Jose Sharks 3.1 | market total 6.5 | gap total +0.1 (0.07), home win 44% vs 43%
-      no gap large enough to be a mispricing | xG 3.15-3.48; Yaroslav Askarov (Confirmed) / Colten Ellis (Likely, unconfirmed)
+NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.1 @ Vegas Golden Knights 3.4 | market total 6.5 | gap total +0.0 (0.02), home win 58% vs 59%
+      no gap large enough to be a mispricing | xG 3.44-3.10; Adin Hill (Confirmed) / Jonas Johansson (Confirmed)
+NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.5 @ San Jose Sharks 3.2 | market total 6.5 | gap total +0.1 (0.07), home win 44% vs 43%
+      no gap large enough to be a mispricing | xG 3.16-3.48; Yaroslav Askarov (Confirmed) / Colten Ellis (Likely, unconfirmed)
 NBA 2026-10-28T03:10Z | KRONOS Portland Trail Blazers 116.0 @ Los Angeles Lakers 116.8 | market 117.0-119.5 | gap margin -1.7 (0.17), total -3.7 (0.26)
       no gap large enough to be a mispricing | ridge ratings; games 4/3
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
@@ -108,8 +108,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [SHARP · THIN MARKET] 1 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T00:29:38+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T00:29:38+00:00 wp-json 5 posts
+   table: 2026-10-28T01:29:41+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T01:29:41+00:00 wp-json 5 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
