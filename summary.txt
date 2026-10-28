@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T20:37:49+00:00)
-credits left 1352 | budget/day 303 | spent today 103 | reset in 3.14d | backfill days {'NHL': 5}
+KRONOS DESK SUMMARY  (generated 2026-10-28T20:47:50+00:00)
+credits left 1348 | budget/day 303 | spent today 107 | reset in 3.13d | backfill days {'NHL': 5}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 368 settled (18 void), 47 pending | results on file: NBA 70, NHL 190 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 368 settled (18 void), 48 pending | results on file: NBA 70, NHL 190 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,12 +12,12 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 538 rows
-all: {"n": 538, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 411, "record": "201-209-1", "units": -11.47, "roi": -0.0294, "roi_90ci_by_game": [-0.1334, 0.0845, 47]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 539 rows
+all: {"n": 539, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 411, "record": "201-209-1", "units": -11.47, "roi": -0.0294, "roi_90ci_by_game": [-0.1334, 0.0845, 47]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": -0.35, "roi": -0.175, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 109, "closed": 71, "clv_pp_avg": 0.08, "beat_close_pct": 0.676, "graded": 102, "record": "64-38-0", "units": 20.25, "roi": 0.1985, "roi_90ci_by_game": [0.0423, 0.3607, 18]}
+  NBA props (price edge): {"n": 110, "closed": 71, "clv_pp_avg": 0.08, "beat_close_pct": 0.676, "graded": 102, "record": "64-38-0", "units": 20.25, "roi": 0.1985, "roi_90ci_by_game": [0.0423, 0.3607, 18]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -34,20 +34,21 @@ all: {"n": 538, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "gr
   nhl-v3-goaliejson-2026-10-26: n 10 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
   pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-169-1 | -6.8u | ROI -0.0221
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
-  price-v4-consensus-projection-2026-10-28: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price-v4-consensus-projection-2026-10-28: n 4 | CLV None | beat close None | 0-0-0 | 0u | ROI None
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 4 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
   model 4-6%: n 2 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 0-2%: n 19 | CLV 0.52 | beat close 0.929 | 7-9-0 | -2.99u | ROI -0.1869
   price edge 2-4%: n 54 | CLV 0.95 | beat close 0.833 | 26-26-0 | -5.42u | ROI -0.1042
-  price edge 4-6%: n 7 | CLV 1.11 | beat close 0.667 | 3-3-0 | -0.26u | ROI -0.0433
+  price edge 4-6%: n 8 | CLV 1.11 | beat close 0.667 | 3-3-0 | -0.26u | ROI -0.0433
   price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
  by hours before start when logged:
-  1-6h: n 40 | CLV 0.92 | beat close 0.8 | 15-17-0 | -4.38u | ROI -0.1369
+  1-6h: n 41 | CLV 0.92 | beat close 0.8 | 15-17-0 | -4.38u | ROI -0.1369
   6-24h: n 15 | CLV -4.1 | beat close 0.889 | 5-4-0 | -1.38u | ROI -0.184
   <1h: n 42 | CLV -0.02 | beat close 0.727 | 23-19-0 | 1.09u | ROI 0.026
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
+NBA 2026-10-29T02:40Z Los Angeles Lakers @ Los Angeles Clippers | player_assists Kris Dunn Over 4.5 | fanduel 2.04 vs fair 51.8% | EV +5.8% | [NEUTRAL] [CONSENSUS 7 BOOKS · PROJECTION AGREES (73%)]
 NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | player_shots_on_goal Colton Dach Under 1.5 | draftkings 1.74 vs fair 58.8% | EV +2.3% | [NEUTRAL] [PROJECTION AGREES (55%)]
 NBA 2026-10-29T00:10Z Houston Rockets @ Milwaukee Bucks | player_threes Jabari Smith Jr Under 2.5 | draftkings 1.62 vs fair 62.8% | EV +1.7% | [NEUTRAL] [CONSENSUS 6 BOOKS · PROJECTION AGREES (89%)]
 NBA 2026-10-29T00:10Z Denver Nuggets @ New Orleans Pelicans | player_assists Saddiq Bey Under 1.5 | fanduel 1.93 vs fair 52.7% | EV +1.7% | [NEUTRAL] [CONSENSUS 4 BOOKS · PROJECTION AGREES (55%)]
@@ -113,7 +114,7 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 20-24 | ROI -15.9%
 [SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 9-8 | ROI -6.5%
-[NEUTRAL] 17 bets | beat close 86% | CLV +0.84pp | 7-2 | ROI +52.2%
+[NEUTRAL] 18 bets | beat close 86% | CLV +0.84pp | 7-2 | ROI +52.2%
 [AGAINST SHARP · THIN MARKET] 17 bets | beat close 77% | CLV +0.28pp | 8-8 | ROI -3.8%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 5-2 | ROI +32.9%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 2-2 | ROI -42.3%
