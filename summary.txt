@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T02:51:40+00:00)
-credits left 1465 | budget/day 274 | spent today 345 | reset in 3.88d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T03:01:42+00:00)
+credits left 1462 | budget/day 274 | spent today 348 | reset in 3.87d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -13,9 +13,9 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 523 rows
-all: {"n": 523, "closed": 352, "clv_pp_avg": -1.37, "beat_close_pct": 0.261, "graded": 330, "record": "155-175-0", "units": -13.04, "roi": -0.0404, "roi_90ci_by_game": [-0.1577, 0.0909, 35]}
-  MLB batter_hits (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  MLB batter_total_bases (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+all: {"n": 523, "closed": 365, "clv_pp_avg": -1.38, "beat_close_pct": 0.255, "graded": 330, "record": "155-175-0", "units": -13.04, "roi": -0.0404, "roi_90ci_by_game": [-0.1577, 0.0909, 35]}
+  MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NBA props (price edge): {"n": 102, "closed": 53, "clv_pp_avg": -0.15, "beat_close_pct": 0.642, "graded": 73, "record": "43-30-0", "units": 9.82, "roi": 0.1345, "roi_90ci_by_game": [-0.046, 0.3205, 15]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
@@ -25,23 +25,23 @@ all: {"n": 523, "closed": 352, "clv_pp_avg": -1.37, "beat_close_pct": 0.261, "gr
   NFL spread (model): {"n": 26, "closed": 13, "clv_pp_avg": -1.73, "beat_close_pct": 0.077, "graded": 13, "record": "9-4-0", "units": 4.91, "roi": 0.3777, "roi_90ci_by_game": [-0.08, 0.8162, 13]}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
-  NHL moneyline (model): {"n": 5, "closed": 1, "clv_pp_avg": -1.07, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
+  NHL moneyline (model): {"n": 5, "closed": 3, "clv_pp_avg": -1.4, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
   NHL props (price edge): {"n": 65, "closed": 26, "clv_pp_avg": 0.53, "beat_close_pct": 0.769, "graded": 32, "record": "16-16-0", "units": -1.82, "roi": -0.0569, "roi_90ci_by_game": null}
-  NHL spread (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 14, "closed": 4, "clv_pp_avg": -2.46, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL spread (model): {"n": 3, "closed": 2, "clv_pp_avg": -2.02, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 14, "closed": 10, "clv_pp_avg": -2.31, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 79 | CLV 0.16 | beat close 0.75 | 8-11-0 | -4.35u | ROI -0.2289
+  pre-version (before 2026-10-26): n 441 | CLV -1.49 | beat close 0.218 | 147-164-0 | -8.69u | ROI -0.0286
+  price-v3-activegate-2026-10-27: n 79 | CLV 0.15 | beat close 0.731 | 8-11-0 | -4.35u | ROI -0.2289
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   price edge 0-2%: n 17 | CLV 0.94 | beat close 1.0 | 2-5-0 | -3.26u | ROI -0.4657
-  price edge 2-4%: n 49 | CLV 0.82 | beat close 0.769 | 5-6-0 | -2.04u | ROI -0.1855
-  price edge 4-6%: n 6 | CLV 3.1 | beat close 1.0 | 1-0-0 | 0.95u | ROI 0.95
+  price edge 2-4%: n 49 | CLV 0.87 | beat close 0.786 | 5-6-0 | -2.04u | ROI -0.1855
+  price edge 4-6%: n 6 | CLV 1.58 | beat close 0.667 | 1-0-0 | 0.95u | ROI 0.95
   price edge 6%+: n 7 | CLV -6.2 | beat close 0.0 | 0-0-0 | 0u | ROI None
  by hours before start when logged:
-  1-6h: n 36 | CLV 1.3 | beat close 0.909 | 4-5-0 | -1.62u | ROI -0.18
+  1-6h: n 36 | CLV 1.11 | beat close 0.846 | 4-5-0 | -1.62u | ROI -0.18
   6-24h: n 9 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   <1h: n 37 | CLV -0.8 | beat close 0.615 | 4-6-0 | -2.73u | ROI -0.273
 
@@ -85,9 +85,9 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 43 bets | beat close 75% | CLV +0.27pp | 3-6 | ROI -39.1%
+[FADE PUBLIC] 43 bets | beat close 69% | CLV +0.14pp | 3-6 | ROI -39.1%
 [SHARP · FADE PUBLIC · THIN MARKET] 17 bets | beat close 67% | CLV -0.27pp | 2-3 | ROI -35.2%
-[AGAINST SHARP · THIN MARKET] 16 bets | beat close 80% | CLV -0.37pp | 2-2 | ROI -6.2%
+[AGAINST SHARP · THIN MARKET] 16 bets | beat close 83% | CLV -0.05pp | 2-2 | ROI -6.2%
 [NEUTRAL] 11 bets | beat close 83% | CLV +0.91pp | 5-2 | ROI +44.6%
 [SHARP] 7 bets | beat close 75% | CLV +1.13pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
@@ -104,46 +104,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Under 1.5->1.5 1.94->1.88 (pinnacle)
-2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Over 1.5->1.5 1.8->1.86 (pinnacle)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5->3.5 1.7->1.74 (pinnacle)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Over 3.5->3.5 2.08->2.02 (pinnacle)
-2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Macklin Celebrini Under 3.5->3.5 1.71->1.76 (pinnacle)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Macklin Celebrini Over 3.5->3.5 2.06->1.99 (pinnacle)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jack Quinn Under 2.5->2.5 1.74->1.78 (pinnacle)
-2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Under 0.5->0.5 2.39->2.3 (pinnacle)
-2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5->0.5 1.54->1.57 (pinnacle)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Doan Under 1.5->2.5 2.05->1.33 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Doan Over 1.5->2.5 1.65->2.95 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Kiefer Sherwood Under 1.5->1.5 1.95->2.05 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Kiefer Sherwood Over 1.5->1.5 1.71->1.67 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Mattias Samuelsson Over 1.5->1.5 2.3->2.4 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Norris Under 1.5->1.5 1.71->1.74 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Norris Over 1.5->1.5 1.95->1.91 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Collin Graf Under 1.5->1.5 1.61->1.69 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Collin Graf Over 1.5->1.5 2.15->2.0 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Olen Zellweger Under 1.5->1.5 2.1->2.15 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Under 1.5->1.5 1.91->2.05 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Over 1.5->1.5 1.74->1.65 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jason Zucker Under 1.5->1.5 1.91->2.0 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jason Zucker Over 1.5->1.5 1.74->1.69 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Rasmus Dahlin Under 2.5->2.5 1.83->1.91 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Rasmus Dahlin Over 2.5->2.5 1.83->1.74 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Darnell Nurse Under 1.5->1.5 2.15->2.1 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5->3.5 1.65->1.69 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Over 3.5->3.5 2.05->2.0 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Mason Marchment Under 1.5->1.5 2.1->2.15 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Owen Power Under 1.5->1.5 1.83->1.91 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Owen Power Over 1.5->1.5 1.83->1.74 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Mattias Samuelsson Under 0.5->0.5 1.4->1.45 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Mattias Samuelsson Over 0.5->0.5 2.8->2.65 (betmgm)
-2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Konsta Helenius Under 0.5->0.5 1.54->1.57 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Collin Graf Under 0.5->0.5 1.48->1.53 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Collin Graf Over 0.5->0.5 2.5->2.4 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Jacob Trouba Under 0.5->0.5 1.43->1.48 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Jacob Trouba Over 0.5->0.5 2.7->2.55 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Under 0.5->0.5 2.05->2.35 (betmgm)
-2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5->0.5 1.71->1.54 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 235.5->234.5 1.91->1.95 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 235.5->234.5 1.91->1.87 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->1.5 1.91->1.83 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-1.5 1.91->2.0 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->1.95 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.71->1.87 (espnbet)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->234.0 1.91->1.91 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->234.0 1.91->1.91 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->1.5 1.95->1.91 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-1.5 1.87->1.91 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->2.0 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.69->1.83 (fanatics)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 235.5->234.5 1.89->1.89 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 235.5->234.5 1.93->1.93 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->1.5 1.91->1.87 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-1.5 1.91->1.95 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->1.95 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.7->1.87 (draftkings)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->233.5 1.93->1.99 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->233.5 1.93->1.9 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->2.0 2.0->1.88 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-2.0 1.88->2.03 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.26->2.01 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.7->1.9 (pinnacle)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->234.5 1.91->1.87 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->234.5 1.91->1.95 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 2.5->1.5 1.95->1.87 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -2.5->-1.5 1.87->1.95 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.2->1.98 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.69->1.85 (betmgm)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 237.5->236.5 1.87->1.94 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 237.5->236.5 1.94->1.87 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 1.5->0.5 2.02->1.91 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -1.5->-0.5 1.81->1.91 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Portland Trail Blazers None->None 2.18->1.91 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | h2h  Los Angeles Lakers None->None 1.7->1.91 (betrivers)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Under 236.5->235.0 1.91->1.91 (williamhill_us)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | totals  Over 236.5->235.0 1.91->1.91 (williamhill_us)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Portland Trail Blazers 3.0->1.5 1.91->1.87 (williamhill_us)
+2026-10-28T02:58:37+00:00 Steam NBA Portland Trail Blazers @ Los Angeles Lakers | spreads  Los Angeles Lakers -3.0->-1.5 1.91->1.95 (williamhill_us)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -244,10 +244,10 @@ NBA 2026-10-28T00:15:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74c
    TOTAL: Over 232.0 1.86 (open 229.0 1.88, best 1.86) / Under 232.0 2.03 (open 229.0 1.99, best 2.03)
    moves: {'Move': 169, 'Sharp': 44, 'Steam': 263}
 NBA 2026-10-28T03:10:00Z Portland Trail Blazers @ Los Angeles Lakers  id=82afe4e028b0fbbd9f6cf92697bec6fc
-   ML: Los Angeles Lakers  1.7 (open 1.66, best 1.72) / Portland Trail Blazers  2.26 (open 2.33, best 2.27)
-   SPREAD: Los Angeles Lakers -2.5 1.88 (open -3.5 1.98, best 1.91) / Portland Trail Blazers 2.5 2.0 (open 3.5 1.91, best 2.0)
-   TOTAL: Over 236.5 1.93 (open 237.5 2.01, best 1.93) / Under 236.5 1.93 (open 237.5 1.86, best 1.93)
-   moves: {'Move': 23, 'Sharp': 10, 'Steam': 19}
+   ML: Los Angeles Lakers  1.9 (open 1.66, best 1.91) / Portland Trail Blazers  2.01 (open 2.33, best 2.02)
+   SPREAD: Los Angeles Lakers -2.0 2.03 (open -3.5 1.98, best 2.03) / Portland Trail Blazers 2.0 1.88 (open 3.5 1.91, best 1.88)
+   TOTAL: Over 233.5 1.9 (open 237.5 2.01, best 1.91) / Under 233.5 1.99 (open 237.5 1.86, best 1.99)
+   moves: {'Move': 23, 'Sharp': 10, 'Steam': 79}
 NBA 2026-10-28T23:10:00Z Philadelphia 76ers @ Indiana Pacers  id=5997ee5c9fbdc53f9c86732b02f58158
    ML: Indiana Pacers  2.1 (open 2.05, best 2.1) / Philadelphia 76ers  1.77 (open 1.8, best 1.79)
    SPREAD: Indiana Pacers 1.5 1.95 (open 1.5 1.95, best 1.98) / Philadelphia 76ers -1.5 1.87 (open -1.5 1.87, best 1.87)
