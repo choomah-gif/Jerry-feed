@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T05:22:03+00:00)
-credits left 1455 | budget/day 279 | spent today 0 | reset in 3.78d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T05:32:05+00:00)
+credits left 1455 | budget/day 280 | spent today 0 | reset in 3.77d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 346 settled (18 void), 66 pending | results on file: NBA 69, NHL 187 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 361 settled (18 void), 51 pending | results on file: NBA 69, NHL 190 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -13,7 +13,7 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 408, "clv_pp_avg": -1.29, "beat_close_pct": 0.309, "graded": 369, "record": "176-193-0", "units": -13.33, "roi": -0.0368, "roi_90ci_by_game": [-0.147, 0.0763, 43]}
+all: {"n": 528, "closed": 409, "clv_pp_avg": -1.3, "beat_close_pct": 0.308, "graded": 384, "record": "180-204-0", "units": -21.08, "roi": -0.0559, "roi_90ci_by_game": [-0.1608, 0.0541, 46]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
@@ -26,29 +26,29 @@ all: {"n": 528, "closed": 408, "clv_pp_avg": -1.29, "beat_close_pct": 0.309, "gr
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 5, "closed": 5, "clv_pp_avg": 0.11, "beat_close_pct": 0.4, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 65, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 49, "record": "23-26-0", "units": -6.1, "roi": -0.1245, "roi_90ci_by_game": [-0.2517, 0.0568, 13]}
+  NHL props (price edge): {"n": 65, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 64, "record": "27-37-0", "units": -13.85, "roi": -0.2164, "roi_90ci_by_game": [-0.3301, -0.0662, 16]}
   NHL spread (model): {"n": 3, "closed": 3, "clv_pp_avg": -18.16, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 14, "closed": 13, "clv_pp_avg": -2.12, "beat_close_pct": 0.077, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 14, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
-  pre-version (before 2026-10-26): n 441 | CLV -1.49 | beat close 0.222 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 84 | CLV 0.46 | beat close 0.774 | 29-29-0 | -4.64u | ROI -0.08
+  pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 147-164-0 | -8.69u | ROI -0.0286
+  price-v3-activegate-2026-10-27: n 84 | CLV 0.46 | beat close 0.774 | 33-40-0 | -12.39u | ROI -0.1697
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 17 | CLV 0.55 | beat close 0.923 | 6-7-0 | -1.88u | ROI -0.1446
-  price edge 2-4%: n 53 | CLV 0.95 | beat close 0.838 | 18-20-0 | -6.15u | ROI -0.1618
-  price edge 4-6%: n 7 | CLV 0.88 | beat close 0.6 | 2-0-0 | 1.72u | ROI 0.86
-  price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 3-2-0 | 1.67u | ROI 0.334
+  price edge 0-2%: n 17 | CLV 0.55 | beat close 0.923 | 6-9-0 | -3.88u | ROI -0.2587
+  price edge 2-4%: n 53 | CLV 0.95 | beat close 0.838 | 21-26-0 | -9.95u | ROI -0.2117
+  price edge 4-6%: n 7 | CLV 0.88 | beat close 0.6 | 2-3-0 | -1.28u | ROI -0.256
+  price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
  by hours before start when logged:
-  1-6h: n 36 | CLV 1.01 | beat close 0.821 | 12-15-0 | -5.3u | ROI -0.1963
-  6-24h: n 9 | CLV -4.1 | beat close 0.889 | 1-1-0 | -0.28u | ROI -0.14
-  <1h: n 42 | CLV -0.3 | beat close 0.679 | 16-13-0 | 0.94u | ROI 0.0324
+  1-6h: n 36 | CLV 1.01 | beat close 0.821 | 13-17-0 | -6.15u | ROI -0.205
+  6-24h: n 9 | CLV -4.1 | beat close 0.889 | 2-4-0 | -2.66u | ROI -0.4433
+  <1h: n 42 | CLV -0.3 | beat close 0.679 | 18-19-0 | -3.58u | ROI -0.0968
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-(models last refreshed: 2026-10-28T04:29:56+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 1, "backfill_days": 0, "graded": 2, "voided": 0, "quarantined": 1}}, "NBA": 0})
+(models last refreshed: 2026-10-28T05:30:01+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 3, "backfill_days": 0, "graded": 15, "voided": 0, "quarantined": 1}}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
@@ -81,17 +81,17 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 14-17 | ROI -18.3%
-[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 71% | CLV +0.06pp | 6-7 | ROI -20.5%
-[AGAINST SHARP · THIN MARKET] 17 bets | beat close 75% | CLV +0.11pp | 6-5 | ROI +8.6%
+[FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 16-24 | ROI -27.2%
+[SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 71% | CLV +0.06pp | 7-8 | ROI -17.4%
+[AGAINST SHARP · THIN MARKET] 17 bets | beat close 75% | CLV +0.11pp | 7-8 | ROI -10.8%
 [NEUTRAL] 11 bets | beat close 86% | CLV +0.84pp | 6-2 | ROI +48.6%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close 50% | CLV -23.03pp | 0-2 | ROI -100.0%
 [SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T04:29:53+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T04:29:53+00:00 wp-json 5 posts
+   table: 2026-10-28T05:29:56+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T05:29:56+00:00 wp-json 5 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
