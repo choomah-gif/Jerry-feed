@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T00:21:18+00:00)
-credits left 1495 | budget/day 275 | spent today 315 | reset in 3.99d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T00:31:20+00:00)
+credits left 1495 | budget/day 275 | spent today 315 | reset in 3.98d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -61,49 +61,49 @@ NHL 2026-10-28T02:10Z Vancouver Canucks @ Anaheim Ducks | player_shots_on_goal C
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | >> Lean: Minnesota Wild to win — KRONOS 49% vs market 46%
-NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth  | model 50.7% fair 53.9% edge -3.2 | Lean Minnesota Wild [NEUTRAL] | xG 3.06-3.38; UTA G: Karel Vejmelka (Confirmed); MIN G: Jesper Wallstedt (Confirmed); raw model 44.8%, anchored 35% to market, slate scale 1.10
-      why: Expected goals 3.06-3.38 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed). Raw model 45% home, anchored 35% toward the market: Minnesota Wild 49% versus 46% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
-(models last refreshed: 2026-10-27T23:29:38+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 60, "UFC": 0, "PRICE": 35, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 24})
+NHL 2026-10-28T01:10Z Minnesota Wild @ Utah Mammoth | h2h  Utah Mammoth  | model 50.7% fair 53.9% edge -3.2 | Lean Minnesota Wild [NEUTRAL] | xG 3.16-3.49; UTA G: Karel Vejmelka (Confirmed); MIN G: Jesper Wallstedt (Confirmed); raw model 44.8%, anchored 35% to market, slate scale 1.13
+      why: Expected goals 3.16-3.49 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed). Raw model 45% home, anchored 35% toward the market: Minnesota Wild 49% versus 46% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
+(models last refreshed: 2026-10-28T00:29:41+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 12, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 6})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-28T01:10Z | KRONOS Minnesota Wild 3.4 @ Utah Mammoth 3.1 | market total 6.5 | gap total -0.1 (0.03), home win 51% vs 54%
-      no gap large enough to be a mispricing | xG 3.06-3.38; Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed)
-NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 2.9 @ Anaheim Ducks 4.1 | market total 6.5 | gap total +0.6 (0.30), home win 67% vs 66%
-      no gap large enough to be a mispricing | xG 4.14-2.93; Lukas Dostal (Confirmed) / goalie unconfirmed (team avg)
-NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.0 @ Vegas Golden Knights 3.3 | market total 6.5 | gap total -0.2 (0.09), home win 58% vs 59%
-      no gap large enough to be a mispricing | xG 3.33-3.00; Adin Hill (Confirmed) / Jonas Johansson (Confirmed)
-NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.4 @ San Jose Sharks 3.0 | market total 6.5 | gap total -0.1 (0.04), home win 44% vs 43%
-      no gap large enough to be a mispricing | xG 3.05-3.37; Yaroslav Askarov (Confirmed) / Colten Ellis (Likely, unconfirmed)
+NHL 2026-10-28T01:10Z | KRONOS Minnesota Wild 3.5 @ Utah Mammoth 3.2 | market total 6.5 | gap total +0.1 (0.08), home win 51% vs 54%
+      no gap large enough to be a mispricing | xG 3.16-3.49; Karel Vejmelka (Confirmed) / Jesper Wallstedt (Confirmed)
+NHL 2026-10-28T02:10Z | KRONOS Vancouver Canucks 3.0 @ Anaheim Ducks 4.3 | market total 6.5 | gap total +0.8 (0.42), home win 67% vs 66%
+      no gap large enough to be a mispricing | xG 4.27-3.03; Lukas Dostal (Confirmed) / goalie unconfirmed (team avg)
+NHL 2026-10-28T02:10Z | KRONOS Ottawa Senators 3.1 @ Vegas Golden Knights 3.4 | market total 6.5 | gap total +0.0 (0.01), home win 58% vs 59%
+      no gap large enough to be a mispricing | xG 3.43-3.09; Adin Hill (Confirmed) / Jonas Johansson (Confirmed)
+NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.5 @ San Jose Sharks 3.1 | market total 6.5 | gap total +0.1 (0.07), home win 44% vs 43%
+      no gap large enough to be a mispricing | xG 3.15-3.48; Yaroslav Askarov (Confirmed) / Colten Ellis (Likely, unconfirmed)
 NBA 2026-10-28T03:10Z | KRONOS Portland Trail Blazers 116.0 @ Los Angeles Lakers 116.8 | market 117.0-119.5 | gap margin -1.7 (0.17), total -3.7 (0.26)
       no gap large enough to be a mispricing | ridge ratings; games 4/3
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.9 @ Dallas Cowboys 29.3 | market 23.6-29.9 | gap margin -0.8 (0.08), total -0.3 (0.04)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; DAL: 2 skill/OL out (+1.0); ARI: 2 skill/OL out (+1.0)
-NFL 2026-11-01T18:00Z | KRONOS Atlanta Falcons 22.0 @ Tampa Bay Buccaneers 24.7 | market 21.5-23.5 | gap margin +0.7 (0.08), total +1.7 (0.19)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; TB: 2 skill/OL out (+1.0); ATL: 4 skill/OL out (+2.0)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-01T18:00Z | KRONOS Atlanta Falcons 23.0 @ Tampa Bay Buccaneers 22.7 | market 21.5-23.5 | gap margin -2.3 (0.24), total +0.7 (0.08)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj -2.0 margin -1.0 total; TB: starting QB Jalon Daniels missed last game, status UNVERIFIED — no report yet (+2.0)
 NFL 2026-11-01T18:00Z | KRONOS Baltimore Ravens 25.5 @ Buffalo Bills 29.1 | market 25.0-28.5 | gap margin +0.0 (0.00), total +1.1 (0.12)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Tennessee Titans 18.7 @ Cincinnati Bengals 29.4 | market 18.2-28.8 | gap margin +0.2 (0.02), total +1.1 (0.12)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Cleveland Browns 17.9 @ Pittsburgh Steelers 22.3 | market 17.8-21.8 | gap margin +0.5 (0.05), total +0.7 (0.08)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; PIT: 1 skill/OL out (+0.5); CLE: 1 skill/OL out (+0.5)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Minnesota Vikings 21.2 @ Detroit Lions 25.4 | market 21.5-24.5 | gap margin +1.3 (0.13), total +0.6 (0.07)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T18:00Z | KRONOS Indianapolis Colts 19.8 @ Jacksonville Jaguars 28.8 | market 19.5-27.0 | gap margin +1.5 (0.16), total +2.1 (0.23)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; IND: 2 skill/OL out (+1.0)
-NFL 2026-11-01T18:00Z | KRONOS Las Vegas Raiders 22.0 @ New York Jets 23.1 | market 21.8-22.8 | gap margin +0.1 (0.01), total +0.6 (0.06)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.5 margin -0.0 total; NYJ: 1 skill/OL out (+0.5); LV: 2 skill/OL out (+1.0)
+NFL 2026-11-01T18:00Z | KRONOS Indianapolis Colts 20.3 @ Jacksonville Jaguars 28.3 | market 19.5-27.0 | gap margin +0.5 (0.06), total +2.1 (0.23)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-01T18:00Z | KRONOS Las Vegas Raiders 22.2 @ New York Jets 22.8 | market 21.8-22.8 | gap margin -0.4 (0.04), total +0.6 (0.06)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T21:05Z | KRONOS Los Angeles Chargers 18.3 @ Los Angeles Rams 26.1 | market 18.2-25.8 | gap margin +0.3 (0.03), total +0.3 (0.04)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
-NFL 2026-11-01T21:25Z | KRONOS Kansas City Chiefs 21.3 @ Denver Broncos 21.0 | market 21.5-20.0 | gap margin +1.2 (0.12), total +0.8 (0.09)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; DEN: 1 skill/OL out (+0.5); KC: 3 skill/OL out (+1.5)
-NFL 2026-11-01T21:25Z | KRONOS New England Patriots 25.3 @ Miami Dolphins 17.9 | market 26.0-18.5 | gap margin +0.2 (0.02), total -1.2 (0.14)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; NE: 2 skill/OL out (+1.0)
-NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 18.2 @ Washington Commanders 23.4 | market 18.5-22.0 | gap margin +1.7 (0.18), total +1.0 (0.11)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +1.0 margin -0.0 total; PHI: starting QB Jalen Hurts missed last game, not on this week's report (presumed back); 2 skill/OL out (+
+NFL 2026-11-01T21:25Z | KRONOS Kansas City Chiefs 21.8 @ Denver Broncos 20.5 | market 21.5-20.0 | gap margin +0.2 (0.02), total +0.8 (0.09)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-01T21:25Z | KRONOS New England Patriots 25.8 @ Miami Dolphins 17.4 | market 26.0-18.5 | gap margin -0.8 (0.09), total -1.2 (0.14)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
+NFL 2026-11-02T01:20Z | KRONOS Philadelphia Eagles 18.7 @ Washington Commanders 22.9 | market 18.5-22.0 | gap margin +0.7 (0.07), total +1.0 (0.11)
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | market 21.5-25.0 | gap margin -0.4 (0.05), total +1.7 (0.18)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; SEA: 1 skill/OL out (+0.5); CHI: starting QB Tyson Bagent missed last game, not on this week's report (pres
+      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 41 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
@@ -115,8 +115,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [SHARP · THIN MARKET] 1 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-27T23:29:34+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-27T23:29:34+00:00 wp-json 5 posts
+   table: 2026-10-28T00:29:38+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T00:29:38+00:00 wp-json 5 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 1 games | margin KRONOS None vs market None | total KRONOS 3.01 vs market 4.0
@@ -254,12 +254,12 @@ NBA 2026-10-27T23:41:00Z Brooklyn Nets @ Boston Celtics  id=9ad8cc650802c0c5c3c2
    SPREAD: Boston Celtics -13.5 1.96 (open -12.0 1.95, best 1.96) / Brooklyn Nets 13.5 1.94 (open 12.0 1.93, best 1.94)
    TOTAL: Over 223.0 1.88 (open 221.5 1.91, best 1.88) / Under 223.0 2.02 (open 221.5 1.96, best 2.02)
    moves: {'Move': 240, 'Sharp': 59, 'Steam': 495}
-NBA 2026-10-28T00:10:00Z Detroit Pistons @ New York Knicks  id=bde272846214fd6cf197e14c278c12f2
+NBA 2026-10-28T00:13:00Z Detroit Pistons @ New York Knicks  id=bde272846214fd6cf197e14c278c12f2
    ML: Detroit Pistons  2.47 (open 2.4, best 2.52) / New York Knicks  1.62 (open 1.63, best 1.62)
    SPREAD: Detroit Pistons 4.0 1.95 (open 3.5 1.95, best 1.99) / New York Knicks -4.0 1.95 (open -3.5 1.93, best 1.95)
    TOTAL: Over 220.5 1.99 (open 219.0 2.01, best 1.99) / Under 220.5 1.89 (open 219.0 1.86, best 1.93)
    moves: {'Move': 201, 'Sharp': 63, 'Steam': 314}
-NBA 2026-10-28T00:10:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74cbbfd05008d0875455b
+NBA 2026-10-28T00:15:00Z Sacramento Kings @ San Antonio Spurs  id=7a640609d2c74cbbfd05008d0875455b
    ML: Sacramento Kings  11.3 (open 12.02, best 11.5) / San Antonio Spurs  1.07 (open 1.05, best 1.07)
    SPREAD: Sacramento Kings 19.0 1.93 (open 17.5 1.93, best 1.93) / San Antonio Spurs -19.0 1.97 (open -17.5 1.95, best 1.97)
    TOTAL: Over 232.0 1.86 (open 229.0 1.88, best 1.86) / Under 232.0 2.03 (open 229.0 1.99, best 2.03)
@@ -292,6 +292,8 @@ NBA 2026-10-29T00:10:00Z Denver Nuggets @ New Orleans Pelicans  id=782d6ce7f65b5
    ML: 
 NBA 2026-10-29T01:10:00Z San Antonio Spurs @ Utah Jazz  id=e74d54621abaed183e569394f935c362
    ML: 
+NBA 2026-10-29T01:40:00Z Oklahoma City Thunder @ Dallas Mavericks  id=1e3ca91e27ded6e4b4bb35aabb67b505
+   ML: 
 NBA 2026-10-29T02:40:00Z Los Angeles Lakers @ Los Angeles Clippers  id=6e8a41f3aeff105b0e10766515517d5e
    ML: 
 NBA 2026-12-25T17:10:00Z San Antonio Spurs @ New York Knicks  id=a6555e8b7252dfb32f1817fc8c59ad83
@@ -308,10 +310,6 @@ NBA 2026-12-25T22:10:00Z Philadelphia 76ers @ Los Angeles Lakers  id=dfd908bad3a
    TOTAL: Over 235.0 1.93 (open 235.0 1.93, best 1.93) / Under 235.0 1.93 (open 235.0 1.93, best 1.93)
 NBA 2026-12-26T01:10:00Z Oklahoma City Thunder @ Minnesota Timberwolves  id=2b7218aa25cf98318a40e6f2469a5c5d
    ML: 
-NBA 2026-12-26T03:40:00Z Denver Nuggets @ Golden State Warriors  id=85a2379bc49135f2759709e55af0c4c6
-   ML: Denver Nuggets  1.69 (open 1.69, best 1.79) / Golden State Warriors  2.25 (open 2.25, best 2.3)
-   SPREAD: Denver Nuggets -4.0 1.99 (open -4.0 1.99, best 1.99) / Golden State Warriors 4.0 1.9 (open 4.0 1.9, best 1.9)
-   TOTAL: Over 239.0 1.93 (open 239.0 1.93, best 1.93) / Under 239.0 1.93 (open 239.0 1.93, best 1.93)
 NHL 2026-10-27T23:10:00Z Columbus Blue Jackets @ Philadelphia Flyers  id=f1b86cba8c192fb71581b00443f4af8a
    ML: Columbus Blue Jackets  1.88 (open 1.83, best 1.88) / Philadelphia Flyers  2.04 (open 2.07, best 2.04)
    SPREAD: Columbus Blue Jackets -1.5 3.16 (open -1.5 3.12, best 3.16) / Philadelphia Flyers 1.5 1.4 (open 1.5 1.4, best 1.4)
