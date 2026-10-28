@@ -1032,7 +1032,7 @@ MODEL_VERSIONS = {
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v3-activegate-2026-10-27",
+    ("ANY", "price"): "price-v4-consensus-projection-2026-10-28",
 }
 
 
@@ -1197,6 +1197,41 @@ def paper_log(con, rows, now):
     return n
 
 
+
+CONSENSUS_W = {"pinnacle": 3.0, "lowvig": 2.0, "betonlineag": 2.0}
+
+
+def _consensus_fair(rows, outcome, line, exclude_book):
+    """De-vigged fair probability for `outcome` averaged across every book quoting both sides at
+    the same line, excluding the book offering the edge. Pinnacle weighs 3, other sharp books 2,
+    retail 1. Returns (fair, n_books) or (None, 0).
+
+    2026-10-28: Pinnacle alone is a weak referee on props (low limits, softer lines) — NFL price-edge
+    props beat Pinnacle's close 69% yet went 12-22 — so a prop edge must survive the whole market.
+    """
+    by_book = {}
+    for r in rows:
+        if r["book"] == exclude_book or not r["price"]:
+            continue
+        by_book.setdefault(r["book"], {})[r["outcome"]] = r
+    num = den = 0.0
+    n = 0
+    for bk, sides in by_book.items():
+        if outcome not in sides or len(sides) != 2:
+            continue
+        me = sides[outcome]
+        other = [v for k, v in sides.items() if k != outcome][0]
+        if line is not None:
+            if me["line"] is None or abs(float(me["line"]) - float(line)) > 1e-9:
+                continue
+        f = fair_two_way(me["price"], other["price"])
+        w = CONSENSUS_W.get(bk, 1.0)
+        num += f * w; den += w; n += 1
+    if n < 3 or den <= 0:
+        return None, n
+    return num / den, n
+
+
 def price_edges(con, now):
     """Soft-book prices that beat Pinnacle's de-vigged fair price: an edge that needs no model."""
     ensure_paper_schema(con)
@@ -1269,6 +1304,64 @@ def price_edges(con, now):
                         continue
                     activity = {"low": f"LOW MINUTES ({mins_:.0f} last game)" if mins_ is not None else "LOW MINUTES",
                                 "unknown": "MINUTES UNVERIFIED"}.get(st_)
+                # ---- 2026-10-28 checks: consensus price, injuries, role change, projection ----
+                tags = [activity] if activity else []
+                if evv >= PRICE_EDGE_MIN and not adj and market != "spreads":
+                    f_con, n_con = _consensus_fair(rows, r["outcome"], r["line"], r["book"])
+                    if f_con is not None:
+                        f_use = f_con
+                        evv = float(r["price"]) * f_use - 1
+                        tags.append(f"CONSENSUS {n_con} BOOKS")
+                        if evv < PRICE_EDGE_MIN:
+                            con.execute("insert or replace into meta(k,v) values(?,?)",
+                                        ("consensus_reject_last", f"{now.isoformat(timespec='seconds')} {player} {market} {r['outcome']}"))
+                            continue
+                if evv >= PRICE_EDGE_MIN and player and ev["sport"] in ("NBA", "NHL"):
+                    try:
+                        import jerry_feeds as _jf
+                        inj = _jf.injury_status(con, ev["sport"], player)
+                    except Exception:
+                        inj = None
+                    if inj == "out":
+                        continue
+                    if inj == "doubtful":
+                        tags.append("QUESTIONABLE")
+                    try:
+                        pc = _jf.prop_check(con, ev["sport"], player, market, r["outcome"], r["line"])
+                    except Exception:
+                        pc = {"verdict": None, "role_change": False}
+                    # A line far above the player's recent role is the market pricing news the box
+                    # scores can't see. Never fade it (Paul Reed U12.5, 2026-10-27: started, scored 22).
+                    if pc.get("role_change"):
+                        if r["outcome"] in ("Under", "No"):
+                            con.execute("insert or replace into meta(k,v) values(?,?)",
+                                        (f"role_change_skip_{player}"[:120], f"{now.isoformat(timespec='seconds')} {pc.get('note')}"))
+                            continue
+                        tags.append("ROLE CHANGE")
+                    elif pc.get("verdict") == "disagrees":
+                        con.execute("insert or replace into meta(k,v) values(?,?)",
+                                    (f"projection_skip_{player}"[:120], f"{now.isoformat(timespec='seconds')} {pc.get('note')}"))
+                        continue
+                    elif pc.get("verdict") == "agrees":
+                        tags.append(f"PROJECTION AGREES ({pc['p_side']:.0%})")
+                    elif pc.get("verdict") == "neutral":
+                        tags.append("PROJECTION NEUTRAL")
+                    else:
+                        tags.append("NO PROJECTION")
+                # line move since open on a prop: a large move is news, not a price to fade
+                if evv >= PRICE_EDGE_MIN and player and r["line"] is not None:
+                    o_ = con.execute("""select line from opens where event_id=? and market=? and outcome=? and player=?
+                                        and book in ('pinnacle','draftkings','fanduel') and line is not null limit 1""",
+                                     (ev["event_id"], market, r["outcome"], player)).fetchone()
+                    if o_ and o_[0] is not None:
+                        mv = float(r["line"]) - float(o_[0])
+                        big = abs(mv) >= max(1.0, 0.12 * abs(float(o_[0])))
+                        against = (mv > 0 and r["outcome"] in ("Under", "No")) or (mv < 0 and r["outcome"] in ("Over", "Yes"))
+                        if big and against:
+                            continue
+                        if big:
+                            tags.append(f"LINE MOVED {float(o_[0]):g}->{float(r['line']):g}")
+                activity = " · ".join(t for t in tags if t) or None
                 if evv >= PRICE_EDGE_MIN:
                     row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
                                price=r["price"], fair=round(f_use, 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
@@ -1277,7 +1370,10 @@ def price_edges(con, now):
                         _sig = jr.sharp_signal(con, ev["event_id"], market, r["outcome"], player)
                     except Exception:
                         _sig = None
-                    row["flag"] = _sig.get("label") if _sig else "NO READ"
+                    _lab = _sig.get("label") if _sig else "NO READ"
+                    # 'FADE PUBLIC' on a price edge measures the discount that *is* the edge — no information
+                    _lab = " · ".join(t for t in _lab.split(" · ") if t != "FADE PUBLIC") or "NEUTRAL"
+                    row["flag"] = _lab
                     row["flag_text"] = _sig.get("text") if _sig else ""
                     row["_sig"] = _sig
                     out.append(row)
@@ -1309,6 +1405,118 @@ def price_edges(con, now):
         n += 1
     return out, n
 
+
+
+# ----------------------------------------------------------------- KRONOS shadow card
+CARD_SIZE = 10
+CARD_MAX_PER_GAME = 2
+CARD_MAX_SAME_DIRECTION = 0.6
+CARD_LOCK_MIN = 90          # a pick locks 90 minutes before its start, from the freshest numbers
+CARD_PRIOR_N = 100          # shrink toward zero by n/(n+100): the biggest raw edges are the likeliest errors
+CARD_EXCLUDE = ("ROLE CHANGE", "MINUTES UNVERIFIED", "QUESTIONABLE", "NO PROJECTION", "STALE?")
+
+
+def _category_record(con, sport, is_prop):
+    q = """select count(*), sum(case when result in ('W','L','P') then pnl else 0 end),
+                  sum(case when result in ('W','L','P') then stake else 0 end)
+           from bets where paper=1 and sport=? and evidence_kind in ('price','price_adj') and result in ('W','L','P')
+           and market """ + ("like 'player_%'" if is_prop else "not like 'player_%'")
+    n, u, st = con.execute(q, (sport,)).fetchone()
+    return int(n or 0), (float(u) / float(st)) if st else None
+
+
+def build_card(con, now, edges):
+    """KRONOS's own nightly card, chosen by rule rather than by narrative, logged as a shadow so its
+    results can be compared with the full flat-stake price-edge ledger and with Claude's hand-built cards.
+
+    Rank = EV x n/(n+100) (category reliability), halved for a category losing money over 50+ graded.
+    Edges more than twice the night's median for their sport/market type are tagged STALE? and skipped —
+    on 2026-10-27 the two largest edges (Reed +7.0%, Shamet +6.9%) both lost.
+    """
+    try:
+        cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+        for c, t in (("card", "int"), ("card_rank", "int"), ("card_score", "real"), ("card_ts", "text"), ("card_tags", "text")):
+            if c not in cols:
+                con.execute(f"alter table bets add column {c} {t}")
+    except Exception:
+        pass
+    import statistics as _st
+    from zoneinfo import ZoneInfo as _Z
+    et = _Z("America/New_York")
+    today = now.astimezone(et).date()
+    cand = []
+    groups = {}
+    for e in edges:
+        groups.setdefault((e["sport"], str(e["market"]).startswith("player_")), []).append(e["ev"])
+    med = {k: _st.median(v) for k, v in groups.items() if v}
+    rel_cache = {}
+    seen = set()
+    for e in sorted(edges, key=lambda x: -x["ev"]):
+        key = (e["event_id"], e["market"], e["outcome"], e["player"])
+        if key in seen:
+            continue                      # one book per outcome: the best-priced one sorts first
+        seen.add(key)
+        try:
+            st = datetime.fromisoformat(str(e["commence"]).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if st.astimezone(et).date() != today or st <= now:
+            continue
+        tags = (e.get("activity") or "")
+        is_prop = str(e["market"]).startswith("player_")
+        m = med.get((e["sport"], is_prop))
+        if m and e["ev"] > 2 * m and len(groups[(e["sport"], is_prop)]) >= 5:
+            tags = (tags + " · STALE?").strip(" ·")
+        if any(x in tags for x in CARD_EXCLUDE):
+            continue
+        ck = (e["sport"], is_prop)
+        if ck not in rel_cache:
+            n, roi = _category_record(con, *ck)
+            # a small floor so an untested category still ranks by edge instead of tying at zero
+            r_ = (n + 10) / (n + 10 + CARD_PRIOR_N)
+            if n >= 50 and roi is not None and roi < 0:
+                r_ *= 0.5
+            rel_cache[ck] = r_
+        score = e["ev"] * rel_cache[ck]
+        cand.append((score, st, e, tags))
+    cand.sort(key=lambda c: -c[0])
+    locked = [dict(r) for r in con.execute("select * from bets where paper=1 and card=1 and substr(card_ts,1,10)>=?",
+                                            ((now - timedelta(hours=30)).date().isoformat(),))]
+    locked = [b for b in locked if datetime.fromisoformat(str(b["commence"]).replace("Z", "+00:00")).astimezone(et).date() == today]
+    per_game, dirs = {}, {"up": 0, "down": 0}
+    for b in locked:
+        per_game[b["event_id"]] = per_game.get(b["event_id"], 0) + 1
+        dirs["up" if b["selection"] in ("Over", "Yes") else "down"] += 1
+    slots = CARD_SIZE - len(locked)
+    picked = 0
+    for score, st, e, tags in cand:
+        if slots <= 0:
+            break
+        if per_game.get(e["event_id"], 0) >= CARD_MAX_PER_GAME:
+            continue
+        d = "up" if e["outcome"] in ("Over", "Yes") else "down"
+        total = sum(dirs.values()) + 1
+        if total >= 5 and (dirs[d] + 1) / total > CARD_MAX_SAME_DIRECTION:
+            continue
+        # rank among the whole remaining night, lock only when close to start
+        if (st - now).total_seconds() > CARD_LOCK_MIN * 60:
+            per_game[e["event_id"]] = per_game.get(e["event_id"], 0) + 1
+            dirs[d] += 1
+            slots -= 1                    # reserve its slot so later games can't crowd it out
+            continue
+        row = con.execute("""select id from bets where paper=1 and event_id=? and market=? and selection=? and player=?
+                             and note like 'price edge%' and (card is null or card=0) order by id desc limit 1""",
+                          (e["event_id"], e["market"], e["outcome"], e["player"])).fetchone()
+        if not row:
+            continue
+        con.execute("update bets set card=1, card_rank=?, card_score=?, card_ts=?, card_tags=? where id=?",
+                    (len(locked) + picked + 1, round(score, 5), now.isoformat(timespec="seconds"), tags, row[0]))
+        per_game[e["event_id"]] = per_game.get(e["event_id"], 0) + 1
+        dirs[d] += 1
+        slots -= 1
+        picked += 1
+    con.commit()
+    return picked
 
 def health_check(db_path, results):
     """After every model run: catch broken data before it reaches the board. Returns the list of problems."""
@@ -1407,6 +1615,10 @@ def refresh_all(db_path, sports=("NFL", "NFL_PROPS", "NHL", "UFC")):
     try:
         edges_, n_new = price_edges(con, now); con.commit()
         results["PRICE"] = len(edges_)
+        try:
+            results["CARD"] = build_card(con, now, edges_)
+        except Exception as _e:   # noqa: BLE001 - the shadow card must never block a refresh
+            results["CARD"] = f"error: {_e}"
     except Exception as e:
         con.rollback(); results["PRICE"] = f"error: {e}"; log(f"price edges failed: {e}")
     con.close()
