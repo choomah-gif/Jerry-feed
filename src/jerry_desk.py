@@ -200,7 +200,8 @@ def init_db():
                    ("corr_group", "text"), ("falsifier", "text"),
                    ("falsifier_fired", "int"), ("steelman", "text"),
                    ("stake_pre_corr", "real"), ("logged_call", "text"), ("sharp_flag", "text"),
-                   ("dk_bets_pct", "real"), ("dk_handle_pct", "real")):
+                   ("dk_bets_pct", "real"), ("dk_handle_pct", "real"), ("card", "int"), ("card_rank", "int"),
+                   ("card_score", "real"), ("card_ts", "text"), ("card_tags", "text")):
         if _c not in _betcols:
             con.execute(f"alter table bets add column {_c} {_t}")
     con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
@@ -705,6 +706,8 @@ class Desk:
         # 4b) auto-grade pending bets (scores endpoint, 2 credits per sport, only when something is due)
         try:
             self.auto_grade(con, now)
+            # a clean pass retires the old error, so the summary never shows a fixed problem as live
+            con.execute("delete from meta where k='error_grade'")
         except Exception as ex:
             meta_set(con, "error_grade", f"{iso(now)} {ex}"[:200])
 
@@ -1176,6 +1179,44 @@ class Desk:
                         f"   articles: {sm.get('splits_articles_source', 'not run')}"]
             except sqlite3.Error:
                 pass
+            # ---- KRONOS shadow card: rule-built, locked 90 min before start, flat 1u ----
+            try:
+                from zoneinfo import ZoneInfo as _Z
+                today = datetime.now(_Z("America/New_York")).date().isoformat()
+                card = con.execute("""select b.*, e.home, e.away from bets b join events e using(event_id)
+                                      where b.paper=1 and b.card=1 order by b.commence, b.card_rank""").fetchall()
+                tonight = [c for c in card if str(c["card_ts"] or "")[:10] >= (now_utc() - timedelta(hours=30)).date().isoformat()]
+                if tonight:
+                    out += ["", "KRONOS CARD (shadow; chosen by rule: shrunk EV, consensus price, projection agrees, verified minutes, "
+                                "<=2 per game, <=60% one direction; locks 90 min before start):"]
+                    live = {(v["event_id"], v["market"], v["outcome"], v["player"]) for v in con.execute(
+                        "select event_id, market, outcome, player from value_edges")}
+                    for c in tonight:
+                        still = "edge still live" if (c["event_id"], c["market"], c["selection"], c["player"]) in live else "edge gone at last refresh"
+                        out.append(f"#{c['card_rank']} {c['sport']} {c['away']} @ {c['home']} | {c['player'] or ''} {c['selection']} "
+                                   f"{'' if c['line'] is None else c['line']} {c['market']} | {c['book']} {c['price']} | score {c['card_score']} "
+                                   f"| {c['result']} | {still} | {c['card_tags'] or ''}")
+                sc = con.execute("""select
+                        sum(case when card=1 and result in ('W','L','P') then 1 else 0 end) cn,
+                        sum(case when card=1 and result='W' then 1 else 0 end) cw,
+                        sum(case when card=1 and result in ('W','L','P') then pnl else 0 end) cu,
+                        avg(case when card=1 then clv_pp end) cclv,
+                        sum(case when card=1 and clv_pp>0 then 1 else 0 end) cbc, sum(case when card=1 and clv_pp is not null then 1 else 0 end) cbn,
+                        sum(case when result in ('W','L','P') then 1 else 0 end) an,
+                        sum(case when result='W' then 1 else 0 end) aw,
+                        sum(case when result in ('W','L','P') then pnl else 0 end) au,
+                        avg(clv_pp) aclv,
+                        sum(case when clv_pp>0 then 1 else 0 end) abc, sum(case when clv_pp is not null then 1 else 0 end) abn
+                        from bets where paper=1 and evidence_kind in ('price','price_adj') and model_version like 'price-v4%'""").fetchone()
+                if sc and (sc["an"] or 0):
+                    def _f(n, w, u, clv, bc, bn):
+                        return (f"{w}-{(n or 0) - (w or 0)} | {(u or 0):+.2f}u ({(u or 0) / n:+.1%}) | CLV "
+                                f"{'n/a' if clv is None else f'{clv:+.2f}pp'} | beat close {'n/a' if not bn else f'{bc / bn:.0%}'}") if n else "no graded bets yet"
+                    out += ["", "SHADOW SCORECARD (price-v4 rules, flat 1u):",
+                            f"  KRONOS card : {_f(sc['cn'], sc['cw'], sc['cu'], sc['cclv'], sc['cbc'], sc['cbn'])}",
+                            f"  all edges   : {_f(sc['an'], sc['aw'], sc['au'], sc['aclv'], sc['abc'], sc['abn'])}"]
+            except Exception as _e:   # noqa: BLE001
+                out.append(f"(shadow card unavailable: {str(_e)[:100]})")
             g = jr.grade_spins(con)
             if g:
                 out += ["", "SPIN SCORECARD (mean absolute error on completed games; lower is better):"]
