@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T04:51:58+00:00)
-credits left 1455 | budget/day 278 | spent today 0 | reset in 3.8d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T05:02:00+00:00)
+credits left 1455 | budget/day 278 | spent today 0 | reset in 3.79d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
@@ -13,7 +13,7 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 398, "clv_pp_avg": -1.32, "beat_close_pct": 0.299, "graded": 369, "record": "176-193-0", "units": -13.33, "roi": -0.0368, "roi_90ci_by_game": [-0.147, 0.0763, 43]}
+all: {"n": 528, "closed": 400, "clv_pp_avg": -1.32, "beat_close_pct": 0.3, "graded": 369, "record": "176-193-0", "units": -13.33, "roi": -0.0368, "roi_90ci_by_game": [-0.147, 0.0763, 43]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
@@ -29,10 +29,10 @@ all: {"n": 528, "closed": 398, "clv_pp_avg": -1.32, "beat_close_pct": 0.299, "gr
   NHL props (price edge): {"n": 65, "closed": 43, "clv_pp_avg": 0.69, "beat_close_pct": 0.814, "graded": 49, "record": "23-26-0", "units": -6.1, "roi": -0.1245, "roi_90ci_by_game": [-0.2517, 0.0568, 13]}
   NHL spread (model): {"n": 3, "closed": 3, "clv_pp_avg": -18.16, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 14, "closed": 11, "clv_pp_avg": -2.18, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 14, "closed": 13, "clv_pp_avg": -2.12, "beat_close_pct": 0.077, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
-  pre-version (before 2026-10-26): n 441 | CLV -1.49 | beat close 0.22 | 147-164-0 | -8.69u | ROI -0.0286
+  pre-version (before 2026-10-26): n 441 | CLV -1.49 | beat close 0.222 | 147-164-0 | -8.69u | ROI -0.0286
   price-v3-activegate-2026-10-27: n 84 | CLV 0.49 | beat close 0.778 | 29-29-0 | -4.64u | ROI -0.08
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV -15.22 | beat close 0.667 | 0-0-0 | 0u | ROI None
@@ -256,6 +256,8 @@ NBA 2026-10-29T01:40:00Z Oklahoma City Thunder @ Dallas Mavericks  id=1e3ca91e27
    ML: 
 NBA 2026-10-29T02:40:00Z Los Angeles Lakers @ Los Angeles Clippers  id=6e8a41f3aeff105b0e10766515517d5e
    ML: 
+NBA 2026-11-26T00:40:00Z Minnesota Timberwolves @ Oklahoma City Thunder  id=07421d1675d6bc51bb5fa91f84a09eb3
+   ML: 
 NBA 2026-12-25T17:10:00Z San Antonio Spurs @ New York Knicks  id=a6555e8b7252dfb32f1817fc8c59ad83
    ML: New York Knicks  1.87 (open 1.87, best 1.95) / San Antonio Spurs  1.95 (open 1.95, best 1.95)
    SPREAD: New York Knicks 0.0 1.94 (open 0.0 1.94, best 1.94) / San Antonio Spurs 0.0 1.94 (open 0.0 1.94, best 1.94)
@@ -301,6 +303,8 @@ NHL 2026-10-29T00:40:00Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242
 NHL 2026-10-29T01:10:00Z New Jersey Devils @ Colorado Avalanche  id=dad41ac378a6c36e1be03122f7f34470
    ML: 
 NHL 2026-10-29T02:10:00Z Toronto Maple Leafs @ Seattle Kraken  id=f7510932dec00855b611e3685080819c
+   ML: 
+MLB 2026-10-29T00:00:00Z Milwaukee Brewers @ Tampa Bay Rays  id=99d7f299f7f7feb7980daeeee5f238a9
    ML: 
 
 QUARANTINE (42 unresolved player/market pairs; these bets are unsettled, not lost):
