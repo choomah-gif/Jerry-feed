@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T02:31:37+00:00)
-credits left 1471 | budget/day 275 | spent today 339 | reset in 3.89d | backfill days {'NHL': 4}
+KRONOS DESK SUMMARY  (generated 2026-10-28T02:41:39+00:00)
+credits left 1465 | budget/day 274 | spent today 345 | reset in 3.89d | backfill days {'NHL': 4}
 errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 305 settled (16 void), 98 pending | results on file: NBA 67, NHL 180 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 305 settled (16 void), 102 pending | results on file: NBA 67, NHL 180 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,12 +12,12 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 519 rows
-all: {"n": 519, "closed": 339, "clv_pp_avg": -1.4, "beat_close_pct": 0.248, "graded": 330, "record": "155-175-0", "units": -13.04, "roi": -0.0404, "roi_90ci_by_game": [-0.1577, 0.0909, 35]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 523 rows
+all: {"n": 523, "closed": 352, "clv_pp_avg": -1.37, "beat_close_pct": 0.261, "graded": 330, "record": "155-175-0", "units": -13.04, "roi": -0.0404, "roi_90ci_by_game": [-0.1577, 0.0909, 35]}
   MLB batter_hits (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -1.69, "beat_close_pct": 0.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
-  NBA props (price edge): {"n": 102, "closed": 40, "clv_pp_avg": -0.07, "beat_close_pct": 0.65, "graded": 73, "record": "43-30-0", "units": 9.82, "roi": 0.1345, "roi_90ci_by_game": [-0.046, 0.3205, 15]}
+  NBA props (price edge): {"n": 102, "closed": 53, "clv_pp_avg": -0.15, "beat_close_pct": 0.642, "graded": 73, "record": "43-30-0", "units": 9.82, "roi": 0.1345, "roi_90ci_by_game": [-0.046, 0.3205, 15]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
   NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
@@ -26,39 +26,33 @@ all: {"n": 519, "closed": 339, "clv_pp_avg": -1.4, "beat_close_pct": 0.248, "gra
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 38, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 5, "closed": 1, "clv_pp_avg": -1.07, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.76, "roi": 1.52, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 61, "closed": 26, "clv_pp_avg": 0.53, "beat_close_pct": 0.769, "graded": 32, "record": "16-16-0", "units": -1.82, "roi": -0.0569, "roi_90ci_by_game": null}
+  NHL props (price edge): {"n": 65, "closed": 26, "clv_pp_avg": 0.53, "beat_close_pct": 0.769, "graded": 32, "record": "16-16-0", "units": -1.82, "roi": -0.0569, "roi_90ci_by_game": null}
   NHL spread (model): {"n": 3, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NHL total (model): {"n": 14, "closed": 4, "clv_pp_avg": -2.46, "beat_close_pct": 0.0, "graded": 3, "record": "0-3-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nhl-v3-goaliejson-2026-10-26: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   pre-version (before 2026-10-26): n 441 | CLV -1.48 | beat close 0.226 | 147-164-0 | -8.69u | ROI -0.0286
-  price-v3-activegate-2026-10-27: n 75 | CLV 0.84 | beat close 0.909 | 8-11-0 | -4.35u | ROI -0.2289
+  price-v3-activegate-2026-10-27: n 79 | CLV 0.16 | beat close 0.75 | 8-11-0 | -4.35u | ROI -0.2289
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 3 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  price edge 0-2%: n 16 | CLV 0.89 | beat close 1.0 | 2-5-0 | -3.26u | ROI -0.4657
-  price edge 2-4%: n 47 | CLV 0.54 | beat close 0.8 | 5-6-0 | -2.04u | ROI -0.1855
-  price edge 4-6%: n 5 | CLV 2.12 | beat close 1.0 | 1-0-0 | 0.95u | ROI 0.95
-  price edge 6%+: n 7 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  price edge 0-2%: n 17 | CLV 0.94 | beat close 1.0 | 2-5-0 | -3.26u | ROI -0.4657
+  price edge 2-4%: n 49 | CLV 0.82 | beat close 0.769 | 5-6-0 | -2.04u | ROI -0.1855
+  price edge 4-6%: n 6 | CLV 3.1 | beat close 1.0 | 1-0-0 | 0.95u | ROI 0.95
+  price edge 6%+: n 7 | CLV -6.2 | beat close 0.0 | 0-0-0 | 0u | ROI None
  by hours before start when logged:
-  1-6h: n 36 | CLV 0.65 | beat close 0.833 | 4-5-0 | -1.62u | ROI -0.18
+  1-6h: n 36 | CLV 1.3 | beat close 0.909 | 4-5-0 | -1.62u | ROI -0.18
   6-24h: n 9 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  <1h: n 33 | CLV 1.07 | beat close 1.0 | 4-6-0 | -2.73u | ROI -0.273
+  <1h: n 37 | CLV -0.8 | beat close 0.615 | 4-6-0 | -2.73u | ROI -0.273
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
-NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | fanduel 1.88 vs fair 55.6% | EV +4.5% | [FADE PUBLIC]
-NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5 | draftkings 1.87 vs fair 55.6% | EV +3.9% | [FADE PUBLIC]
-NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5 | draftkings 1.67 vs fair 62.0% | EV +3.5% | [FADE PUBLIC]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_assists Austin Reaves Over 5.5 | draftkings 1.88 vs fair 54.8% | EV +3.1% | [FADE PUBLIC]
-NHL 2026-10-28T02:40Z Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Ivar Stenberg Under 1.5 | draftkings 2.15 vs fair 47.5% | EV +2.1% | [FADE PUBLIC]
 NBA 2026-10-28T03:10Z Portland Trail Blazers @ Los Angeles Lakers | player_rebounds Luka Doncic Under 7.5 | draftkings 1.89 vs fair 53.8% | EV +1.7% | [FADE PUBLIC]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 (models last refreshed: 2026-10-28T02:29:49+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 6, "UFC": 0, "PRICE": 6, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 1, "backfill_days": 0, "graded": 8, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 1, "backfill_days": 0, "graded": 11, "voided": 0, "quarantined": 1}}, "NBA": 6})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-28T02:40Z | KRONOS Buffalo Sabres 3.7 @ San Jose Sharks 3.3 | market total 6.5 | gap total +0.5 (0.28), home win 43% vs 42%
-      no gap large enough to be a mispricing | xG 3.34-3.69; Yaroslav Askarov (Confirmed) / Colten Ellis (Confirmed)
 NBA 2026-10-28T03:10Z | KRONOS Portland Trail Blazers 115.9 @ Los Angeles Lakers 116.9 | market 117.0-119.5 | gap margin -1.5 (0.15), total -3.7 (0.26)
       no gap large enough to be a mispricing | ridge ratings; games 4/3
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
@@ -91,10 +85,10 @@ NFL 2026-11-03T01:20Z | KRONOS Chicago Bears 22.6 @ Seattle Seahawks 25.6 | mark
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
-[FADE PUBLIC] 42 bets | beat close 83% | CLV +0.67pp | 3-6 | ROI -39.1%
-[SHARP · FADE PUBLIC · THIN MARKET] 17 bets | beat close 100% | CLV +0.87pp | 2-3 | ROI -35.2%
-[AGAINST SHARP · THIN MARKET] 13 bets | beat close 100% | CLV +1.17pp | 2-2 | ROI -6.2%
-[NEUTRAL] 11 bets | beat close 80% | CLV +0.27pp | 5-2 | ROI +44.6%
+[FADE PUBLIC] 43 bets | beat close 75% | CLV +0.27pp | 3-6 | ROI -39.1%
+[SHARP · FADE PUBLIC · THIN MARKET] 17 bets | beat close 67% | CLV -0.27pp | 2-3 | ROI -35.2%
+[AGAINST SHARP · THIN MARKET] 16 bets | beat close 80% | CLV -0.37pp | 2-2 | ROI -6.2%
+[NEUTRAL] 11 bets | beat close 83% | CLV +0.91pp | 5-2 | ROI +44.6%
 [SHARP] 7 bets | beat close 75% | CLV +1.13pp | 4-2 | ROI +27.5%
 [AGAINST SHARP] 4 bets | beat close n/a | CLV n/a | 0-2 | ROI -100.0%
 [SHARP · THIN MARKET] 1 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
@@ -110,46 +104,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 2 games | margin KRONOS None vs market None | total KRONOS 0.38 vs market 0.5
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.28->2.34 (lowvig)
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.69->1.66 (lowvig)
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.28->2.34 (betonlineag)
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.69->1.66 (betonlineag)
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  San Jose Sharks None->None 2.24->2.3 (draftkings)
-2026-10-28T02:28:32+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | h2h  Buffalo Sabres None->None 1.68->1.65 (draftkings)
-2026-10-28T02:06:28+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | totals  Under 6.5->6.5 2.0->2.15 (fanatics)
-2026-10-28T02:06:28+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | totals  Over 6.5->6.5 1.83->1.71 (fanatics)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Under 6.5->6.5 1.87->1.83 (espnbet)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | totals  Over 6.5->6.5 1.95->2.0 (espnbet)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | h2h  Vegas Golden Knights None->None 1.65->1.61 (espnbet)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | h2h  Vegas Golden Knights None->None 1.62->1.59 (williamhill_us)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | h2h  Vegas Golden Knights None->None 1.62->1.59 (fanduel)
-2026-10-28T02:06:28+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | h2h  Ottawa Senators None->None 2.32->2.4 (fanduel)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.1->2.15 (espnbet)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.13->2.18 (lowvig)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.13->2.18 (betonlineag)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.13->2.2 (williamhill_us)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Over 6.5->6.5 1.67->1.62 (williamhill_us)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.1->2.15 (fanatics)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Over 6.5->6.5 1.74->1.71 (fanatics)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Under 6.5->6.5 2.04->2.14 (fanduel)
-2026-10-28T02:06:28+00:00 Steam NHL Vancouver Canucks @ Anaheim Ducks | totals  Over 6.5->6.5 1.78->1.71 (fanduel)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Claude Giroux Under 1.5->1.5 1.86->1.82 (pinnacle)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Claude Giroux Over 1.5->1.5 1.88->1.92 (pinnacle)
-2026-10-28T02:05:27+00:00 Sharp NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Jake Sanderson Over 1.5->2.5 1.71->3.25 (espnbet)
-2026-10-28T02:05:27+00:00 Sharp NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Jake Sanderson Over 0.5->1.5 1.12->1.71 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Claude Giroux Under 2.5->0.5 1.22->4.2 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Claude Giroux Over 2.5->0.5 3.8->1.18 (espnbet)
-2026-10-28T02:05:27+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Under 1.5->2.5 1.71->1.17 (espnbet)
-2026-10-28T02:05:27+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Over 1.5->2.5 2.1->4.4 (espnbet)
-2026-10-28T02:05:27+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Under 0.5->1.5 3.8->1.71 (espnbet)
-2026-10-28T02:05:27+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Over 0.5->1.5 1.22->2.1 (espnbet)
-2026-10-28T02:05:27+00:00 Sharp NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Under 2.5->0.5 1.2->3.8 (espnbet)
-2026-10-28T02:05:27+00:00 Sharp NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Braeden Bowman Over 2.5->0.5 4.0->1.22 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Shea Theodore Under 2.5->0.5 1.36->5.0 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Shea Theodore Over 2.5->0.5 3.0->1.13 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Mark Stone Under 2.5->0.5 1.38->5.0 (espnbet)
-2026-10-28T02:05:27+00:00 Steam NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Mark Stone Over 2.5->0.5 2.9->1.13 (espnbet)
-2026-10-28T02:05:27+00:00 Move NHL Ottawa Senators @ Vegas Golden Knights | player_shots_on_goal Trevor Connelly Over 3.5->1.5 4.6->1.67 (espnbet)
+2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Under 1.5->1.5 1.94->1.88 (pinnacle)
+2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Over 1.5->1.5 1.8->1.86 (pinnacle)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5->3.5 1.7->1.74 (pinnacle)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Over 3.5->3.5 2.08->2.02 (pinnacle)
+2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Macklin Celebrini Under 3.5->3.5 1.71->1.76 (pinnacle)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Macklin Celebrini Over 3.5->3.5 2.06->1.99 (pinnacle)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jack Quinn Under 2.5->2.5 1.74->1.78 (pinnacle)
+2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Under 0.5->0.5 2.39->2.3 (pinnacle)
+2026-10-28T02:35:33+00:00 Sharp NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5->0.5 1.54->1.57 (pinnacle)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Doan Under 1.5->2.5 2.05->1.33 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Doan Over 1.5->2.5 1.65->2.95 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Kiefer Sherwood Under 1.5->1.5 1.95->2.05 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Kiefer Sherwood Over 1.5->1.5 1.71->1.67 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Mattias Samuelsson Over 1.5->1.5 2.3->2.4 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Norris Under 1.5->1.5 1.71->1.74 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Josh Norris Over 1.5->1.5 1.95->1.91 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Collin Graf Under 1.5->1.5 1.61->1.69 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Collin Graf Over 1.5->1.5 2.15->2.0 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Olen Zellweger Under 1.5->1.5 2.1->2.15 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Under 1.5->1.5 1.91->2.05 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jacob Trouba Over 1.5->1.5 1.74->1.65 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jason Zucker Under 1.5->1.5 1.91->2.0 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Jason Zucker Over 1.5->1.5 1.74->1.69 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Rasmus Dahlin Under 2.5->2.5 1.83->1.91 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Rasmus Dahlin Over 2.5->2.5 1.83->1.74 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Darnell Nurse Under 1.5->1.5 2.15->2.1 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Under 3.5->3.5 1.65->1.69 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Tage Thompson Over 3.5->3.5 2.05->2.0 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Mason Marchment Under 1.5->1.5 2.1->2.15 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Owen Power Under 1.5->1.5 1.83->1.91 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_shots_on_goal Owen Power Over 1.5->1.5 1.83->1.74 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Mattias Samuelsson Under 0.5->0.5 1.4->1.45 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Mattias Samuelsson Over 0.5->0.5 2.8->2.65 (betmgm)
+2026-10-28T02:35:33+00:00 Steam NHL Buffalo Sabres @ San Jose Sharks | player_points Konsta Helenius Under 0.5->0.5 1.54->1.57 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Collin Graf Under 0.5->0.5 1.48->1.53 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Collin Graf Over 0.5->0.5 2.5->2.4 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Jacob Trouba Under 0.5->0.5 1.43->1.48 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Jacob Trouba Over 0.5->0.5 2.7->2.55 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Under 0.5->0.5 2.05->2.35 (betmgm)
+2026-10-28T02:35:33+00:00 Move NHL Buffalo Sabres @ San Jose Sharks | player_points Ivar Stenberg Over 0.5->0.5 1.71->1.54 (betmgm)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -349,7 +343,7 @@ NHL 2026-10-28T02:40:00Z Buffalo Sabres @ San Jose Sharks  id=288b3a1e5241bd3885
    ML: Buffalo Sabres  1.68 (open 1.74, best 1.69) / San Jose Sharks  2.32 (open 2.2, best 2.34)
    SPREAD: Buffalo Sabres -1.5 2.66 (open -1.5 2.78, best 2.66) / San Jose Sharks 1.5 1.53 (open 1.5 1.48, best 1.57)
    TOTAL: Over 6.5 1.76 (open 6.5 1.83, best 1.77) / Under 6.5 2.17 (open 6.5 2.06, best 2.2)
-   moves: {'Move': 4, 'Sharp': 7, 'Steam': 48}
+   moves: {'Move': 88, 'Sharp': 36, 'Steam': 139}
 NHL 2026-10-28T23:40:00Z Philadelphia Flyers @ Washington Capitals  id=46dec80debcc79de4c248a0edd4f8d74
    ML: 
 NHL 2026-10-29T00:40:00Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242da6a96468d61f9
