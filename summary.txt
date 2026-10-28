@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-10-28T15:53:44+00:00)
-credits left 1412 | budget/day 303 | spent today 43 | reset in 3.34d | backfill days {'NHL': 5}
-errors: {'error_grade': "2026-10-27T17:12:19+00:00 'sqlite3.Row' object has no attribute 'get'"}
+KRONOS DESK SUMMARY  (generated 2026-10-28T16:07:08+00:00)
+credits left 1412 | budget/day 304 | spent today 43 | reset in 3.33d | backfill days {'NHL': 5}
+errors: none
 
 BETS: 0 total, 0 pending, 0 graded
 PROPS GRADED: 368 settled (18 void), 44 pending | results on file: NBA 70, NHL 190 | 44 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
@@ -12,8 +12,8 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 528 rows
-all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 411, "record": "201-209-1", "units": -11.47, "roi": -0.0294, "roi_90ci_by_game": [-0.1334, 0.0845, 47]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 532 rows
+all: {"n": 532, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "graded": 411, "record": "201-209-1", "units": -11.47, "roi": -0.0294, "roi_90ci_by_game": [-0.1334, 0.0845, 47]}
   MLB batter_hits (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -1.46, "beat_close_pct": 0.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.78, "beat_close_pct": 0.5, "graded": 2, "record": "1-1-0", "units": -0.35, "roi": -0.175, "roi_90ci_by_game": null}
@@ -29,9 +29,9 @@ all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "gr
   NHL props (price edge): {"n": 65, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 64, "record": "27-37-0", "units": -13.85, "roi": -0.2164, "roi_90ci_by_game": [-0.3301, -0.0662, 16]}
   NHL spread (model): {"n": 3, "closed": 3, "clv_pp_avg": -18.16, "beat_close_pct": 0.0, "graded": 3, "record": "3-0-0", "units": 0.71, "roi": 0.4733, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.69, "roi": 0.69, "roi_90ci_by_game": null}
-  NHL total (model): {"n": 14, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 14, "record": "6-7-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
+  NHL total (model): {"n": 18, "closed": 14, "clv_pp_avg": -2.25, "beat_close_pct": 0.071, "graded": 14, "record": "6-7-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
-  nhl-v3-goaliejson-2026-10-26: n 3 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
+  nhl-v3-goaliejson-2026-10-26: n 7 | CLV -15.22 | beat close 0.667 | 3-0-0 | 1.28u | ROI 0.8533
   pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-169-1 | -6.8u | ROI -0.0221
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
  by edge size at call (bigger edges should win more; flat = noise):
@@ -42,15 +42,28 @@ all: {"n": 528, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "gr
   price edge 6%+: n 7 | CLV -2.58 | beat close 0.286 | 4-2-0 | 2.72u | ROI 0.4533
  by hours before start when logged:
   1-6h: n 36 | CLV 0.92 | beat close 0.8 | 15-17-0 | -4.38u | ROI -0.1369
-  6-24h: n 9 | CLV -4.1 | beat close 0.889 | 5-4-0 | -1.38u | ROI -0.184
+  6-24h: n 13 | CLV -4.1 | beat close 0.889 | 5-4-0 | -1.38u | ROI -0.184
   <1h: n 42 | CLV -0.02 | beat close 0.727 | 23-19-0 | 1.09u | ROI 0.026
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-(models last refreshed: 2026-10-28T06:30:04+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 1, "backfill_days": 0, "graded": 7, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 0})
+MLB 2026-10-29T00:00Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 61% vs market 59%
+MLB 2026-10-29T00:00Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 61.5% fair 58.5% edge +3.0 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.87 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ TBD (n/a FIP); vs lowvig; MLB model unvalidated, capped at Lean
+      why: Negative-binomial runs model: Milwaukee Brewers 3.87, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ TBD (n/a FIP)) and home edge. Makes Tampa Bay Rays 61% versus 59% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [NEUTRAL]: no sharp or public signal yet.
+(models last refreshed: 2026-10-28T16:06:07+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 24, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 40, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 95, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 132, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
+NHL 2026-10-28T23:40Z | KRONOS Philadelphia Flyers 2.6 @ Washington Capitals 3.8 | market total 6.0 | gap total +0.4 (0.24), home win 68% vs 68%
+      no gap large enough to be a mispricing | xG 3.84-2.60; Logan Thompson (, unconfirmed) / Joseph Woll (, unconfirmed)
+MLB 2026-10-29T00:00Z | KRONOS Milwaukee Brewers 3.9 @ Tampa Bay Rays 3.2 | market total 6.5 | gap total +0.6 (0.18)
+      no gap large enough to be a mispricing | runs Milwaukee Brewers 3.87 / Tampa Bay Rays 3.24; postseason x0.88; SP Jacob Misiorowski @ TBD
+NHL 2026-10-29T00:40Z | KRONOS Calgary Flames 3.2 @ Edmonton Oilers 3.3 | market total 6.5 | gap total -0.0 (0.00), home win 62% vs 67%
+      no gap large enough to be a mispricing | xG 3.33-3.16; Tristan Jarry (, unconfirmed) / Devin Cooley (, unconfirmed)
+NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.3 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.17), home win 58% vs 61%
+      no gap large enough to be a mispricing | xG 3.49-3.34; Mackenzie Blackwood (, unconfirmed) / Jake Allen (Confirmed)
+NHL 2026-10-29T02:10Z | KRONOS Toronto Maple Leafs 3.3 @ Seattle Kraken 3.4 | market total 6.5 | gap total +0.2 (0.11), home win 49% vs 48%
+      no gap large enough to be a mispricing | xG 3.41-3.29; Philipp Grubauer (, unconfirmed) / Anthony Stolarz (, unconfirmed)
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 21.9 @ Green Bay Packers 26.1 | market 21.2-25.8 | gap margin -0.3 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; 
 NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.9 @ Dallas Cowboys 29.3 | market 23.6-29.9 | gap margin -0.8 (0.08), total -0.3 (0.04)
@@ -90,8 +103,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [SHARP · THIN MARKET] 1 bets | beat close 100% | CLV +1.23pp | 1-0 | ROI +78.0%
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-28T07:30:04+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-28T07:30:04+00:00 wp-json 5 posts
+   table: 2026-10-28T16:06:01+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-28T16:06:01+00:00 wp-json 9 posts
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 MLB: 2 games | margin KRONOS None vs market None | total KRONOS 1.79 vs market 2.0
