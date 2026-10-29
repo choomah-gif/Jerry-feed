@@ -881,8 +881,8 @@ def render_reasoning(*, market, player, selection, line, model_prob, fair_prob,
 # same thing as beating the closing line. A pick on the public side with sharp money
 # moving the other way is demoted to Sit, whatever the model says.
 
-SHARP_BOOKS = ("pinnacle", "lowvig", "betonlineag")
-RETAIL_BOOKS = ("draftkings", "fanduel", "betmgm", "williamhill_us", "espnbet", "fanatics", "betrivers")
+SHARP_BOOKS = ("pinnacle", "lowvig", "betonlineag", "betfair_ex_eu", "matchbook", "smarkets")
+RETAIL_BOOKS = ("draftkings", "fanduel", "betmgm", "williamhill_us", "espnbet", "fanatics", "betrivers", "hardrockbet", "ballybet")
 
 
 def _imp(price):
@@ -1642,7 +1642,8 @@ ESPN_NBA = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
 NHL_API = "https://api-web.nhle.com/v1"
 
 # market -> stat key in the normalised box line
-NBA_PROP_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m"}
+NBA_PROP_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m",
+                 "player_blocks": "blk"}
 NHL_PROP_STAT = {"player_points": "points", "player_shots_on_goal": "sog", "player_goals": "goals"}
 
 # NHL API uses abbreviations; The Odds API uses full names.
@@ -1755,7 +1756,7 @@ def espn_nba_box(game_id):
                         fg3m = None
                 mins = g("MIN")
                 dnp = bool(ath.get("didNotPlay")) or (mins is None and not st)
-                lines.append({"player": name, "pts": g("PTS"), "reb": g("REB"), "ast": g("AST"), "fg3m": fg3m,
+                lines.append({"player": name, "pts": g("PTS"), "reb": g("REB"), "ast": g("AST"), "fg3m": fg3m, "blk": g("BLK"),
                               "min": mins, "played": (not dnp) and (mins or 0) > 0})
         out[team] = lines
     # possessions ~ FGA - OREB + TOV + 0.44*FTA, from team totals when ESPN provides them
@@ -2100,7 +2101,7 @@ def injury_status(con, sport, player):
 
 
 # ---------- C. minutes-and-role projection (NBA) / per-game rate (NHL) ----------
-PROJ_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m",
+PROJ_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m", "player_blocks": "blk",
              "player_shots_on_goal": "sog", "player_goals": "goals"}
 
 
@@ -2153,7 +2154,7 @@ def prop_check(con, sport, player, market, selection, line):
     L = float(line)
     if per_game > 0 and L >= max(1.6 * per_game, per_game + 4.0) and stat == "pts":
         res["role_change"] = True
-    elif per_game > 0 and L >= max(1.6 * per_game, per_game + 2.0) and stat in ("reb", "ast", "sog"):
+    elif per_game > 0 and L >= max(1.6 * per_game, per_game + 2.0) and stat in ("reb", "ast", "sog", "blk"):
         res["role_change"] = True
     # count stats ~ Poisson-ish; points ~ normal with sd ~ 0.35 * mean
     import math as _m
