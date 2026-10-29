@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-29T01:06:12+00:00)
-credits left 1192 | budget/day 268 | spent today 263 | reset in 2.95d | backfill days {'NHL': 5}
+KRONOS DESK SUMMARY  (generated 2026-10-29T01:16:14+00:00)
+credits left 1186 | budget/day 267 | spent today 269 | reset in 2.95d | backfill days {'NHL': 5}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
@@ -57,10 +57,6 @@ MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and 
 (models last refreshed: 2026-10-29T00:34:59+00:00 {"NFL": 174, "NFL_PROPS": 0, "NHL": 84, "UFC": 0, "PRICE": 3, "CARD": 1, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 8, "graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 87, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 129, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 18})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.4 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.18), home win 56% vs 58%
-      no gap large enough to be a mispricing | xG 3.49-3.36; Mackenzie Blackwood (Confirmed) / Jake Allen (Confirmed)
-NBA 2026-10-29T01:10Z | KRONOS San Antonio Spurs 117.1 @ Utah Jazz 113.4 | market 123.8-109.8 | gap margin +10.4 (1.04), total -3.0 (0.21)
-      gap Utah Jazz spreads 1.04 error bands — NOT an exploit: blind-spot checks failed (enough_games), the gap is probably missing information | ridge ratings; games 5/5
 NBA 2026-10-29T01:40Z | KRONOS Oklahoma City Thunder 114.0 @ Dallas Mavericks 112.7 | market 116.8-110.8 | gap margin +4.8 (0.47), total -0.9 (0.06)
       no gap large enough to be a mispricing | ridge ratings; games 5/5
 NHL 2026-10-29T02:10Z | KRONOS Toronto Maple Leafs 3.3 @ Seattle Kraken 3.4 | market total 6.5 | gap total +0.2 (0.12), home win 47% vs 45%
@@ -178,6 +174,26 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 13 games | margin KRONOS None vs market None | total KRONOS 2.08 vs market 2.15
 
 RECENT SIGNALS (Steam/Sharp/Move):
+2026-10-29T01:06:44+00:00 Sharp NHL New Jersey Devils @ Colorado Avalanche | h2h  New Jersey Devils None->None 2.27->2.18 (betonlineag)
+2026-10-29T01:06:44+00:00 Sharp NHL New Jersey Devils @ Colorado Avalanche | h2h  Colorado Avalanche None->None 1.69->1.75 (betonlineag)
+2026-10-29T01:06:44+00:00 Sharp NHL New Jersey Devils @ Colorado Avalanche | h2h  New Jersey Devils None->None 2.27->2.18 (lowvig)
+2026-10-29T01:06:44+00:00 Sharp NHL New Jersey Devils @ Colorado Avalanche | h2h  Colorado Avalanche None->None 1.69->1.75 (lowvig)
+2026-10-29T01:06:44+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -5.5->-5.5 1.91->1.95 (fanduel)
+2026-10-29T01:06:44+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.5 1.91->1.87 (fanduel)
+2026-10-29T01:06:44+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Oklahoma City Thunder None->None 1.5->1.53 (fanduel)
+2026-10-29T01:06:44+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Dallas Mavericks None->None 2.68->2.58 (fanduel)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Under 233.0->233.0 1.96->1.88 (pinnacle)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Over 233.0->233.0 1.93->2.01 (pinnacle)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Under 233.0->232.5 1.87->1.91 (fanatics)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Over 233.0->232.5 1.95->1.91 (fanatics)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Under 232.5->231.5 1.91->1.95 (williamhill_us)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Over 232.5->231.5 1.91->1.87 (williamhill_us)
+2026-10-29T01:06:44+00:00 Sharp NBA San Antonio Spurs @ Utah Jazz | spreads  Utah Jazz 14.0->14.0 1.87->1.91 (williamhill_us)
+2026-10-29T01:06:44+00:00 Sharp NBA San Antonio Spurs @ Utah Jazz | spreads  San Antonio Spurs -14.0->-14.0 1.95->1.91 (williamhill_us)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Under 232.5->232.0 1.93->1.93 (lowvig)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Over 232.5->232.0 1.93->1.93 (lowvig)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Under 232.5->232.0 1.91->1.91 (betonlineag)
+2026-10-29T01:06:44+00:00 Steam NBA San Antonio Spurs @ Utah Jazz | totals  Over 232.5->232.0 1.91->1.91 (betonlineag)
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Under 227.5->228.5 1.98->1.87 (pinnacle)
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Over 227.5->228.5 1.89->2.02 (pinnacle)
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -6.0->-5.0 1.99->1.97 (pinnacle)
@@ -198,26 +214,6 @@ RECENT SIGNALS (Steam/Sharp/Move):
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.5 1.95->1.91 (betrivers)
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Oklahoma City Thunder None->None 1.47->1.5 (betrivers)
 2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -5.5->-5.0 1.87->1.91 (fanatics)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.0 1.95->1.91 (fanatics)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Oklahoma City Thunder None->None 1.49->1.53 (fanatics)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Dallas Mavericks None->None 2.7->2.55 (fanatics)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Under 227.5->228.5 1.93->1.87 (draftkings)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Over 227.5->228.5 1.89->1.95 (draftkings)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -5.5->-5.5 1.87->1.95 (draftkings)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.5 1.95->1.87 (draftkings)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Oklahoma City Thunder None->None 1.49->1.52 (draftkings)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Dallas Mavericks None->None 2.7->2.6 (draftkings)
-2026-10-29T00:58:43+00:00 Move NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Under 228.5->228.5 1.91->1.87 (espnbet)
-2026-10-29T00:58:43+00:00 Move NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Over 228.5->228.5 1.91->1.95 (espnbet)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -5.5->-5.5 1.87->1.95 (espnbet)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.5 1.95->1.87 (espnbet)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Under 227.5->228.0 1.93->1.93 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Over 227.5->228.0 1.93->1.93 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Oklahoma City Thunder -5.5->-5.0 1.94->1.94 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | spreads  Dallas Mavericks 5.5->5.0 1.94->1.94 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Oklahoma City Thunder None->None 1.5->1.54 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | h2h  Dallas Mavericks None->None 2.75->2.62 (lowvig)
-2026-10-29T00:58:43+00:00 Steam NBA Oklahoma City Thunder @ Dallas Mavericks | totals  Under 227.5->228.0 1.91->1.91 (betonlineag)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -360,15 +356,15 @@ NBA 2026-10-29T00:11:00Z Denver Nuggets @ New Orleans Pelicans  id=782d6ce7f65b5
    TOTAL: Over 241.0 1.94 (open 241.0 1.94, best 1.95) / Under 241.0 1.94 (open 241.0 1.94, best 1.94)
    moves: {'Move': 130, 'Sharp': 36, 'Steam': 238}
 NBA 2026-10-29T01:10:00Z San Antonio Spurs @ Utah Jazz  id=e74d54621abaed183e569394f935c362
-   ML: San Antonio Spurs  1.15 (open 1.14, best 1.15) / Utah Jazz  6.07 (open 6.27, best 6.33)
-   SPREAD: San Antonio Spurs -14.0 2.0 (open -14.0 1.92, best 2.0) / Utah Jazz 14.0 1.91 (open 14.0 1.97, best 1.91)
-   TOTAL: Over 233.0 1.93 (open 233.5 1.93, best 1.95) / Under 233.0 1.96 (open 233.5 1.93, best 1.96)
-   moves: {'Sharp': 4, 'Steam': 28}
+   ML: San Antonio Spurs  1.15 (open 1.14, best 1.15) / Utah Jazz  6.13 (open 6.27, best 6.33)
+   SPREAD: San Antonio Spurs -14.0 1.99 (open -14.0 1.92, best 1.99) / Utah Jazz 14.0 1.92 (open 14.0 1.97, best 1.92)
+   TOTAL: Over 233.0 2.01 (open 233.5 1.93, best 2.01) / Under 233.0 1.88 (open 233.5 1.93, best 1.88)
+   moves: {'Sharp': 6, 'Steam': 38}
 NBA 2026-10-29T01:40:00Z Oklahoma City Thunder @ Dallas Mavericks  id=1e3ca91e27ded6e4b4bb35aabb67b505
-   ML: Dallas Mavericks  2.57 (open 2.75, best 2.68) / Oklahoma City Thunder  1.57 (open 1.5, best 1.57)
-   SPREAD: Dallas Mavericks 5.0 1.93 (open 6.0 1.9, best 1.94) / Oklahoma City Thunder -5.0 1.97 (open -6.0 1.99, best 1.97)
-   TOTAL: Over 228.5 2.02 (open 227.5 1.89, best 2.02) / Under 228.5 1.87 (open 227.5 1.98, best 1.88)
-   moves: {'Move': 4, 'Steam': 45}
+   ML: Dallas Mavericks  2.58 (open 2.75, best 2.65) / Oklahoma City Thunder  1.57 (open 1.5, best 1.57)
+   SPREAD: Dallas Mavericks 5.0 1.94 (open 6.0 1.9, best 1.94) / Oklahoma City Thunder -5.0 1.96 (open -6.0 1.99, best 1.96)
+   TOTAL: Over 228.5 2.01 (open 227.5 1.89, best 2.01) / Under 228.5 1.88 (open 227.5 1.98, best 1.88)
+   moves: {'Move': 4, 'Steam': 49}
 NBA 2026-10-29T02:40:00Z Los Angeles Lakers @ Los Angeles Clippers  id=6e8a41f3aeff105b0e10766515517d5e
    ML: Los Angeles Clippers  1.94 (open 1.94, best 1.94) / Los Angeles Lakers  1.96 (open 1.96, best 2.0)
    SPREAD: Los Angeles Clippers -1.0 1.99 (open -1.0 1.99, best 1.99) / Los Angeles Lakers 1.0 1.92 (open 1.0 1.92, best 1.94)
@@ -414,10 +410,10 @@ NHL 2026-10-29T00:45:10Z Calgary Flames @ Edmonton Oilers  id=1358a7c35b103e3242
    TOTAL: Over 6.5 2.0 (open 6.5 1.88, best 2.0) / Under 6.5 1.89 (open 6.5 1.99, best 1.93)
    moves: {'Move': 152, 'Sharp': 22, 'Steam': 75}
 NHL 2026-10-29T01:10:00Z New Jersey Devils @ Colorado Avalanche  id=dad41ac378a6c36e1be03122f7f34470
-   ML: Colorado Avalanche  1.69 (open 1.6, best 1.69) / New Jersey Devils  2.3 (open 2.47, best 2.3)
-   SPREAD: Colorado Avalanche -1.5 2.62 (open -1.5 2.5, best 2.65) / New Jersey Devils 1.5 1.54 (open 1.5 1.57, best 1.54)
-   TOTAL: Over 6.5 2.01 (open 6.5 2.02, best 2.01) / Under 6.5 1.88 (open 6.5 1.86, best 1.89)
-   moves: {'Steam': 49}
+   ML: Colorado Avalanche  1.68 (open 1.6, best 1.75) / New Jersey Devils  2.31 (open 2.47, best 2.31)
+   SPREAD: Colorado Avalanche -1.5 2.61 (open -1.5 2.5, best 2.7) / New Jersey Devils 1.5 1.54 (open 1.5 1.57, best 1.54)
+   TOTAL: Over 6.5 2.02 (open 6.5 2.02, best 2.02) / Under 6.5 1.88 (open 6.5 1.86, best 1.89)
+   moves: {'Sharp': 4, 'Steam': 49}
 NHL 2026-10-29T02:10:00Z Toronto Maple Leafs @ Seattle Kraken  id=f7510932dec00855b611e3685080819c
    ML: Seattle Kraken  2.17 (open 2.02, best 2.17) / Toronto Maple Leafs  1.77 (open 1.87, best 1.77)
    SPREAD: Seattle Kraken 1.5 1.47 (open 1.5 1.41, best 1.5) / Toronto Maple Leafs -1.5 2.86 (open -1.5 3.05, best 2.86)
