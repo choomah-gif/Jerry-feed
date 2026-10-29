@@ -1021,6 +1021,7 @@ def alert_new_plays(con, rows):
 PAPER_BOOKS = ("pinnacle", "lowvig", "betonlineag", "draftkings", "fanduel", "fanatics", "betmgm", "williamhill_us", "espnbet", "betrivers",
                "betfair_ex_eu", "matchbook", "smarkets", "marathonbet", "williamhill", "hardrockbet", "ballybet", "bovada", "betus", "mybookieag")
 PRICE_BOOKS = tuple(b.strip() for b in os.environ.get("PRICE_BOOKS", "draftkings,fanduel,fanatics").split(",") if b.strip())
+PAPER_LOG_MAX_HOURS = 2.0   # edges are logged / carded only from pulls within 2h of start
 PRICE_EDGE_MIN = 0.015     # +EV vs Pinnacle fair needed to flag a soft-book price
 PRICE_EDGE_MIN_ADJ = 0.025 # higher bar when the fair had to be translated across a line gap
 
@@ -1033,7 +1034,7 @@ MODEL_VERSIONS = {
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v6-signals-2026-10-29",
+    ("ANY", "price"): "price-v7-late-logging-2026-10-29",
 }
 
 
@@ -1450,9 +1451,14 @@ def price_edges(con, now):
                                    values(?,?,?,?,?,?,?,?,?,?,?,?)""",
                                 (row["event_id"], market, r["outcome"], player, r["line"], r["book"], r["price"], row["fair"], row["ev"],
                                  now.isoformat(timespec="seconds"), row["flag"], row.get("activity")))
-    # paper-trade them too (one per outcome, first book seen)
+    # paper-trade them too (one per outcome, first book seen) — but only inside 2 hours of start.
+    # 2026-10-29: losing value to the close was the #1 cause of losses, and props taken 6h+ out ran
+    # -52% vs about break-even inside 2h. An edge seen early is logged at a later pull if it survives,
+    # at the price actually available then.
     n = 0
     for row in out:
+        if _hours_to(row["commence"], now) > PAPER_LOG_MAX_HOURS:
+            continue
         if con.execute("select 1 from bets where paper=1 and event_id=? and market=? and selection=? and player=? and note like 'price edge%'",
                        (row["event_id"], row["market"], row["outcome"], row["player"])).fetchone():
             continue
@@ -1490,6 +1496,19 @@ CARD_PRIOR_N = 100          # shrink toward zero by n/(n+100): the biggest raw e
 CARD_EXCLUDE = ("ROLE CHANGE", "MINUTES UNVERIFIED", "QUESTIONABLE", "NO PROJECTION", "STALE?", "LOW SNAPS", "SNAPS UNVERIFIED")
 
 
+def _category_proven(con, sport, is_prop):
+    """A category earns real-money card spots only when its flat-stake ROI's 90% range sits above zero
+    over 50+ graded bets (2026-10-29). Today: NBA props. Others join automatically if they earn it."""
+    q = """select pnl, stake from bets where paper=1 and sport=? and evidence_kind in ('price','price_adj')
+           and result in ('W','L','P') and market """ + ("like 'player_%'" if is_prop else "not like 'player_%'")
+    xs = [float(p or 0) / float(st or 1) for p, st in con.execute(q, (sport,))]
+    if len(xs) < 50:
+        return False
+    mu = sum(xs) / len(xs)
+    sd = (sum((x - mu) ** 2 for x in xs) / (len(xs) - 1)) ** 0.5
+    return mu - 1.645 * sd / len(xs) ** 0.5 > 0
+
+
 def _category_record(con, sport, is_prop):
     q = """select count(*), sum(case when result in ('W','L','P') then pnl else 0 end),
                   sum(case when result in ('W','L','P') then stake else 0 end)
@@ -1524,6 +1543,7 @@ def build_card(con, now, edges):
         groups.setdefault((e["sport"], str(e["market"]).startswith("player_")), []).append(e["ev"])
     med = {k: _st.median(v) for k, v in groups.items() if v}
     rel_cache = {}
+    _proven_cache = {}
     seen = set()
     for e in sorted(edges, key=lambda x: -x["ev"]):
         key = (e["event_id"], e["market"], e["outcome"], e["player"])
@@ -1536,6 +1556,11 @@ def build_card(con, now, edges):
             continue
         if st.astimezone(et).date() != today or st <= now:
             continue
+        _pk = (e["sport"], str(e["market"]).startswith("player_"))
+        if _pk not in _proven_cache:
+            _proven_cache[_pk] = _category_proven(con, *_pk)
+        if not _proven_cache[_pk]:
+            continue                               # unproven category: tracked in the ledger, not on the card
         tags = (e.get("activity") or "")
         is_prop = str(e["market"]).startswith("player_")
         m = med.get((e["sport"], is_prop))
