@@ -1,5 +1,5 @@
-KRONOS DESK SUMMARY  (generated 2026-10-29T00:06:04+00:00)
-credits left 1213 | budget/day 271 | spent today 242 | reset in 3.0d | backfill days {'NHL': 5}
+KRONOS DESK SUMMARY  (generated 2026-10-29T00:16:05+00:00)
+credits left 1207 | budget/day 270 | spent today 248 | reset in 2.99d | backfill days {'NHL': 5}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
@@ -51,20 +51,10 @@ all: {"n": 577, "closed": 416, "clv_pp_avg": -1.26, "beat_close_pct": 0.317, "gr
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 NBA 2026-10-29T02:40Z Los Angeles Lakers @ Los Angeles Clippers | player_assists Kris Dunn Over 4.5 | fanduel 2.04 vs fair 51.8% | EV +5.8% | [NEUTRAL] [CONSENSUS 7 BOOKS · PROJECTION AGREES (73%)]
-NBA 2026-10-29T00:10Z Denver Nuggets @ New Orleans Pelicans | player_assists Saddiq Bey Under 1.5 | fanduel 1.93 vs fair 54.6% | EV +5.5% | [SHARP · THIN MARKET] [CONSENSUS 5 BOOKS · PROJECTION AGREES (55%)]
-NBA 2026-10-29T00:10Z Houston Rockets @ Milwaukee Bucks | player_rebounds Amen Thompson Under 8.5 | draftkings 1.88 vs fair 54.6% | EV +2.7% | [NEUTRAL] [CONSENSUS 7 BOOKS · PROJECTION AGREES (67%)]
 NHL 2026-10-29T23:10Z Utah Mammoth @ Pittsburgh Penguins | spreads  Pittsburgh Penguins 1.5 | fanduel 1.52 vs fair 67.3% | EV +2.3% | [NEUTRAL]
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | batter_hits Taylor Walls Under 0.5 | draftkings 1.55 vs fair 65.9% | EV +2.1% | [NEUTRAL]
 NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | player_shots_on_goal Colton Dach Under 1.5 | draftkings 1.71 vs fair 59.6% | EV +1.9% | [NEUTRAL] [PROJECTION AGREES (55%)]
-NBA 2026-10-29T00:10Z Golden State Warriors @ Minnesota Timberwolves | player_rebounds Jaden McDaniels Over 4.5 | fanduel 1.8 vs fair 56.6% | EV +1.9% | [SHARP · THIN MARKET] [CONSENSUS 4 BOOKS · PROJECTION AGREES (79%)]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays +1.5 — KRONOS 67% vs market 58%
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | spreads  Tampa Bay Rays 1.5 | model 67.3% fair 58.2% edge +9.0 | Lean Tampa Bay Rays [AGAINST SHARP] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.37, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP)) and home edge. Makes Tampa Bay Rays 67% versus 58% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [AGAINST SHARP]: sharp/steam alerts 0.0 for, 5.3 against. Caution: sharp money has moved the other way.
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | >> Lean: Tampa Bay Rays to win — KRONOS 49% vs market 43%
-MLB 2026-10-29T00:10Z Milwaukee Brewers @ Tampa Bay Rays | h2h  Tampa Bay Rays  | model 48.9% fair 42.9% edge +6.0 | Lean Tampa Bay Rays [NEUTRAL] | model runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP); vs pinnacle; MLB model unvalidated, capped at Lean
-      why: Negative-binomial runs model: Milwaukee Brewers 3.37, Tampa Bay Rays 3.24 from season run rates, starter FIP (SP Jacob Misiorowski (2.17 FIP) @ Drew Rasmussen (2.82 FIP)) and home edge. Makes Tampa Bay Rays 49% versus 43% at fair. No backtest and no graded history — colour at most. Falsifier: the other side scores first and leads after five innings. Market read [NEUTRAL]: no sharp or public signal yet.
 NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | >> Lean: Calgary Flames +1.5 — KRONOS 63% vs market 58%
 NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | spreads  Edmonton Oilers -1.5 | model 37.5% fair 41.8% edge -4.3 | Lean Calgary Flames [SHARP] | xG 3.33-3.16; EDM G: Tristan Jarry (Confirmed); CGY G: Devin Cooley (Confirmed); raw model 29.5%, anchored 35% to market, slate scale 1.10
       why:  Market read [SHARP]: pinnacle has moved toward it since open; sharp/steam alerts 16.0 for, 0.0 against. Sharp money agrees.
@@ -74,16 +64,6 @@ NHL 2026-10-29T00:40Z Calgary Flames @ Edmonton Oilers | h2h  Edmonton Oilers  |
 (models last refreshed: 2026-10-28T23:34:54+00:00 {"NFL": 174, "NFL_PROPS": 0, "NHL": 90, "UFC": 0, "PRICE": 9, "CARD": 3, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 6, "GRADE": [{"week": 7, "graded": 0, "voided": 0, "quarantined": 39, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 90, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 129, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 48})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-MLB 2026-10-29T00:10Z | KRONOS Milwaukee Brewers 3.4 @ Tampa Bay Rays 3.2 | market total 6.0 | gap total +0.6 (0.18)
-      no gap large enough to be a mispricing | runs Milwaukee Brewers 3.37 / Tampa Bay Rays 3.24; postseason x0.88; SP Jacob Misiorowski @ Drew Rasmussen
-NBA 2026-10-29T00:10Z | KRONOS Golden State Warriors 113.0 @ Minnesota Timberwolves 120.1 | market 111.8-115.8 | gap margin +3.1 (0.31), total +5.6 (0.40)
-      no gap large enough to be a mispricing | ridge ratings; games 5/5
-NBA 2026-10-29T00:10Z | KRONOS Houston Rockets 119.7 @ Milwaukee Bucks 112.9 | market 117.0-109.0 | gap margin +1.2 (0.12), total +6.6 (0.47)
-      no gap large enough to be a mispricing | ridge ratings; games 5/5
-NBA 2026-10-29T00:10Z | KRONOS New York Knicks 115.8 @ Chicago Bulls 114.3 | market 119.8-112.8 | gap margin +5.6 (0.56), total -2.4 (0.17)
-      no gap large enough to be a mispricing | ridge ratings; games 5/5
-NBA 2026-10-29T00:10Z | KRONOS Denver Nuggets 115.8 @ New Orleans Pelicans 118.0 | market 122.8-118.2 | gap margin +6.8 (0.68), total -7.2 (0.52)
-      no gap large enough to be a mispricing | ridge ratings; games 4/4
 NHL 2026-10-29T00:40Z | KRONOS Calgary Flames 3.2 @ Edmonton Oilers 3.3 | market total 6.5 | gap total -0.0 (0.01), home win 59% vs 63%
       no gap large enough to be a mispricing | xG 3.33-3.16; Tristan Jarry (Confirmed) / Devin Cooley (Confirmed)
 NHL 2026-10-29T01:10Z | KRONOS New Jersey Devils 3.3 @ Colorado Avalanche 3.5 | market total 6.5 | gap total +0.3 (0.17), home win 56% vs 58%
@@ -206,46 +186,46 @@ NFL: 1 games | margin KRONOS 7.17 vs market 12.5 | total KRONOS 18.4 vs market 1
 NHL: 13 games | margin KRONOS None vs market None | total KRONOS 2.08 vs market 2.15
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Jamal Murray Under 2.5->2.5 2.23->2.15 (pinnacle)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Jamal Murray Over 2.5->2.5 1.61->1.65 (pinnacle)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Derik Queen Under 6.5->7.5 2.05->1.69 (fanatics)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Derik Queen Over 6.5->7.5 1.71->2.1 (fanatics)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_assists Nikola Jokic Under 10.5->9.5 1.69->2.0 (fanatics)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_assists Nikola Jokic Over 10.5->9.5 2.1->1.74 (fanatics)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Aaron Gordon Under 1.5->1.5 2.05->2.0 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Aaron Gordon Over 1.5->1.5 1.71->1.77 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Jamal Murray Under 2.5->2.5 2.25->2.0 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_threes Jamal Murray Over 2.5->2.5 1.61->1.71 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds DeMar DeRozan Over 2.5->2.5 1.91->1.95 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Jamal Murray Over 4.5->4.5 2.05->2.1 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Aaron Gordon Under 5.5->5.5 1.87->1.83 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Aaron Gordon Over 5.5->5.5 1.87->1.91 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Dejounte Murray Under 5.5->4.5 1.62->2.15 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Dejounte Murray Over 5.5->4.5 2.2->1.67 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Trevon Brazile Under 5.5->5.5 1.71->1.91 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Trevon Brazile Over 5.5->5.5 2.05->1.83 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Nikola Jokic Under 12.5->12.5 1.87->1.83 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Nikola Jokic Over 12.5->12.5 1.87->1.91 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_points Trevon Brazile Under 7.5->9.5 1.83->1.8 (espnbet)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_points Trevon Brazile Over 7.5->9.5 1.91->1.95 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Jeremiah Fears Over 11.5->11.5 2.0->1.95 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Christian Braun Under 12.5->12.5 1.87->1.91 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Christian Braun Over 12.5->12.5 1.87->1.83 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points DeMar DeRozan Under 14.5->14.5 1.91->1.95 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Trey Murphy III Under 17.5->18.5 1.95->1.8 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Trey Murphy III Over 17.5->18.5 1.8->1.95 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Nikola Jokic Over 27.5->27.5 1.95->1.91 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_assists Jeremiah Fears Under 2.5->2.5 1.95->2.0 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_assists Jamal Murray Over 6.5->6.5 1.95->2.0 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_assists Dejounte Murray Under 6.5->5.5 1.62->2.2 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_assists Dejounte Murray Over 6.5->5.5 2.2->1.62 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_assists Nikola Jokic Under 9.5->9.5 1.95->2.0 (espnbet)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_threes Saddiq Bey Over 1.5->1.5 1.94->1.87 (betrivers)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Trevon Brazile Under 4.5->5.5 2.06->2.0 (betrivers)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_rebounds Trevon Brazile Over 4.5->5.5 1.7->1.73 (betrivers)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Aaron Gordon Over 15.5->15.5 1.89->1.93 (betrivers)
-2026-10-29T00:05:41+00:00 Move NBA Denver Nuggets @ New Orleans Pelicans | player_points Zion Williamson Under 18.5->19.5 1.97->1.8 (betrivers)
-2026-10-29T00:05:41+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | player_points Trevon Brazile Under 7.5->8.5 1.74->1.85 (betrivers)
+2026-10-29T00:06:42+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | totals  Under 6.0->6.0 2.04->1.99 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | totals  Over 6.0->6.0 1.85->1.9 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam MLB Milwaukee Brewers @ Tampa Bay Rays | h2h  Milwaukee Brewers None->None 1.67->1.7 (williamhill_us)
+2026-10-29T00:06:42+00:00 Sharp NBA Houston Rockets @ Milwaukee Bucks | totals  Under 227.5->227.5 1.93->1.88 (pinnacle)
+2026-10-29T00:06:42+00:00 Sharp NBA Houston Rockets @ Milwaukee Bucks | totals  Over 227.5->227.5 1.96->2.0 (pinnacle)
+2026-10-29T00:06:42+00:00 Sharp NBA Houston Rockets @ Milwaukee Bucks | totals  Under 227.0->227.5 1.91->1.87 (williamhill_us)
+2026-10-29T00:06:42+00:00 Sharp NBA Houston Rockets @ Milwaukee Bucks | totals  Over 227.0->227.5 1.91->1.95 (williamhill_us)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | h2h  Minnesota Timberwolves None->None 1.63->1.66 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Minnesota Timberwolves -3.5->-3.5 1.87->1.91 (betmgm)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Golden State Warriors 3.5->3.5 1.95->1.91 (betmgm)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Minnesota Timberwolves -4.5->-3.5 1.98->1.89 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Golden State Warriors 4.5->3.5 1.85->1.93 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Minnesota Timberwolves -4.0->-3.5 1.91->1.87 (fanatics)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Golden State Warriors 4.0->3.5 1.91->1.95 (fanatics)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Minnesota Timberwolves -3.5->-3.5 1.83->1.91 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Golden State Warriors 3.5->3.5 2.0->1.91 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Minnesota Timberwolves -4.0->-3.5 1.95->1.87 (williamhill_us)
+2026-10-29T00:06:42+00:00 Steam NBA Golden State Warriors @ Minnesota Timberwolves | spreads  Golden State Warriors 4.0->3.5 1.87->1.95 (williamhill_us)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Under 241.0->241.0 1.88->1.94 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Over 241.0->241.0 2.0->1.94 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Under 240.5->241.5 1.91->1.87 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Over 240.5->241.5 1.91->1.95 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | spreads  New Orleans Pelicans 4.5->3.5 1.87->1.95 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | spreads  Denver Nuggets -4.5->-3.5 1.95->1.87 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Under 240.5->241.5 1.93->1.87 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | totals  Over 240.5->241.5 1.89->1.95 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | spreads  New Orleans Pelicans 4.5->4.5 1.91->1.87 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | spreads  Denver Nuggets -4.5->-4.5 1.91->1.95 (draftkings)
+2026-10-29T00:06:42+00:00 Steam NBA Denver Nuggets @ New Orleans Pelicans | h2h  Denver Nuggets None->None 1.57->1.6 (fanduel)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 232.5->233.5 2.01->1.97 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Over 232.5->233.5 1.88->1.92 (pinnacle)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 232.5->234.5 1.95->1.91 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Over 232.5->234.5 1.87->1.91 (espnbet)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 233.0->233.5 1.91->1.91 (fanatics)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Over 233.0->233.5 1.91->1.91 (fanatics)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 232.5->233.5 1.95->1.91 (betmgm)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Over 232.5->233.5 1.87->1.91 (betmgm)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 233.5->234.0 1.91->1.91 (williamhill_us)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Over 233.5->234.0 1.91->1.91 (williamhill_us)
+2026-10-29T00:06:42+00:00 Steam NBA New York Knicks @ Chicago Bulls | totals  Under 232.5->233.5 1.91->1.95 (draftkings)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-10-30T00:15:00Z Carolina Panthers @ Green Bay Packers  id=ab2865e9f2d4b012de8bc6fb6de11a7c
@@ -368,25 +348,25 @@ NBA 2026-10-28T23:42:00Z Orlando Magic @ Toronto Raptors  id=67550840fbe9bb9c550
    TOTAL: Over 224.5 1.95 (open 224.5 1.9, best 1.95) / Under 224.5 1.93 (open 224.5 1.99, best 1.98)
    moves: {'Move': 178, 'Sharp': 50, 'Steam': 271}
 NBA 2026-10-29T00:10:00Z Golden State Warriors @ Minnesota Timberwolves  id=c6d62b9457cbd8517860e222f1d4f953
-   ML: Golden State Warriors  2.42 (open 2.44, best 2.43) / Minnesota Timberwolves  1.63 (open 1.62, best 1.67)
-   SPREAD: Golden State Warriors 4.0 1.94 (open 4.0 1.93, best 1.94) / Minnesota Timberwolves -4.0 1.96 (open -4.0 1.97, best 1.99)
-   TOTAL: Over 227.5 1.92 (open 227.5 1.91, best 1.92) / Under 227.5 1.96 (open 227.5 1.98, best 1.96)
-   moves: {'Move': 220, 'Sharp': 49, 'Steam': 269}
+   ML: Golden State Warriors  2.37 (open 2.44, best 2.43) / Minnesota Timberwolves  1.66 (open 1.62, best 1.67)
+   SPREAD: Golden State Warriors 4.0 1.92 (open 4.0 1.93, best 1.92) / Minnesota Timberwolves -4.0 1.99 (open -4.0 1.97, best 1.99)
+   TOTAL: Over 227.5 1.92 (open 227.5 1.91, best 1.92) / Under 227.5 1.97 (open 227.5 1.98, best 1.97)
+   moves: {'Move': 220, 'Sharp': 43, 'Steam': 286}
 NBA 2026-10-29T00:10:00Z Houston Rockets @ Milwaukee Bucks  id=83ca338f605b5664b7b1da34c19a0222
-   ML: Houston Rockets  1.3 (open 1.3, best 1.32) / Milwaukee Bucks  3.86 (open 3.86, best 3.86)
-   SPREAD: Houston Rockets -8.0 1.91 (open -8.0 1.9, best 1.93) / Milwaukee Bucks 8.0 2.0 (open 8.0 2.01, best 2.0)
-   TOTAL: Over 227.5 1.96 (open 226.0 1.89, best 1.96) / Under 227.5 1.93 (open 226.0 2.0, best 1.93)
-   moves: {'Move': 211, 'Sharp': 73, 'Steam': 288}
+   ML: Houston Rockets  1.3 (open 1.3, best 1.33) / Milwaukee Bucks  3.87 (open 3.86, best 3.87)
+   SPREAD: Houston Rockets -8.0 1.9 (open -8.0 1.9, best 1.93) / Milwaukee Bucks 8.0 2.0 (open 8.0 2.01, best 2.0)
+   TOTAL: Over 227.5 2.0 (open 226.0 1.89, best 2.0) / Under 227.5 1.88 (open 226.0 2.0, best 1.93)
+   moves: {'Move': 211, 'Sharp': 79, 'Steam': 288}
 NBA 2026-10-29T00:10:00Z New York Knicks @ Chicago Bulls  id=7b9e02686c886a54c9a91dd3f3879326
-   ML: Chicago Bulls  3.33 (open 3.35, best 3.33) / New York Knicks  1.37 (open 1.37, best 1.38)
-   SPREAD: Chicago Bulls 7.0 2.0 (open 7.0 2.02, best 2.0) / New York Knicks -7.0 1.9 (open -7.0 1.89, best 1.9)
-   TOTAL: Over 232.5 1.88 (open 231.5 1.88, best 1.91) / Under 232.5 2.01 (open 231.5 2.01, best 2.01)
-   moves: {'Move': 53, 'Sharp': 25, 'Steam': 153}
+   ML: Chicago Bulls  3.34 (open 3.35, best 3.4) / New York Knicks  1.37 (open 1.37, best 1.38)
+   SPREAD: Chicago Bulls 7.0 2.01 (open 7.0 2.02, best 2.01) / New York Knicks -7.0 1.9 (open -7.0 1.89, best 1.9)
+   TOTAL: Over 233.5 1.92 (open 231.5 1.88, best 1.92) / Under 233.5 1.97 (open 231.5 2.01, best 1.97)
+   moves: {'Move': 49, 'Sharp': 25, 'Steam': 173}
 NBA 2026-10-29T00:10:00Z Denver Nuggets @ New Orleans Pelicans  id=782d6ce7f65b592ad1c43d2f4e53cc82
    ML: Denver Nuggets  1.61 (open 1.6, best 1.61) / New Orleans Pelicans  2.47 (open 2.51, best 2.55)
    SPREAD: Denver Nuggets -4.5 2.0 (open -4.5 1.97, best 2.0) / New Orleans Pelicans 4.5 1.91 (open 4.5 1.93, best 1.92)
-   TOTAL: Over 241.0 2.0 (open 241.0 1.94, best 2.0) / Under 241.0 1.88 (open 241.0 1.94, best 1.92)
-   moves: {'Move': 134, 'Sharp': 36, 'Steam': 223}
+   TOTAL: Over 241.0 1.94 (open 241.0 1.94, best 1.95) / Under 241.0 1.94 (open 241.0 1.94, best 1.94)
+   moves: {'Move': 130, 'Sharp': 36, 'Steam': 238}
 NBA 2026-10-29T01:10:00Z San Antonio Spurs @ Utah Jazz  id=e74d54621abaed183e569394f935c362
    ML: San Antonio Spurs  1.14 (open 1.14, best 1.15) / Utah Jazz  6.27 (open 6.27, best 7.0)
    SPREAD: San Antonio Spurs -14.0 1.92 (open -14.0 1.92, best 1.92) / Utah Jazz 14.0 1.97 (open 14.0 1.97, best 1.97)
@@ -493,9 +473,9 @@ NHL 2026-10-30T02:10:00Z Vancouver Canucks @ San Jose Sharks  id=b07a2b3d9d717c9
    TOTAL: Over 6.5 1.79 (open 6.5 1.79, best 1.82) / Under 6.5 2.11 (open 6.5 2.11, best 2.13)
 MLB 2026-10-29T00:10:00Z Milwaukee Brewers @ Tampa Bay Rays  id=99d7f299f7f7feb7980daeeee5f238a9
    ML: Milwaukee Brewers  1.76 (open 1.72, best 1.76) / Tampa Bay Rays  2.22 (open 2.27, best 2.26)
-   SPREAD: Milwaukee Brewers -1.5 2.35 (open -1.5 2.31, best 2.37) / Tampa Bay Rays 1.5 1.67 (open 1.5 1.68, best 1.67)
-   TOTAL: Over 6.0 1.85 (open 6.0 1.88, best 1.89) / Under 6.0 2.04 (open 6.0 2.02, best 2.04)
-   moves: {'Move': 67, 'Sharp': 32, 'Steam': 167}
+   SPREAD: Milwaukee Brewers -1.5 2.36 (open -1.5 2.31, best 2.38) / Tampa Bay Rays 1.5 1.66 (open 1.5 1.68, best 1.67)
+   TOTAL: Over 6.0 1.9 (open 6.0 1.88, best 1.9) / Under 6.0 1.99 (open 6.0 2.02, best 2.0)
+   moves: {'Move': 67, 'Sharp': 29, 'Steam': 173}
 
 QUARANTINE (41 unresolved player/market pairs; these bets are unsettled, not lost):
   George Pickens | player_anytime_td | player name did not resolve x2
