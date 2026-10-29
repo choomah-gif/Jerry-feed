@@ -1309,6 +1309,46 @@ class Desk:
                             f"  all edges   : {_f(sc['an'], sc['aw'], sc['au'], sc['aclv'], sc['abc'], sc['abn'])}"]
             except Exception as _e:   # noqa: BLE001
                 out.append(f"(shadow card unavailable: {str(_e)[:100]})")
+            # ---- learning layer (jerry_signals): measured weights, calibration, autopsy, timing ----
+            try:
+                def _mj(k):
+                    r_ = con.execute("select v from meta where k=?", (k,)).fetchone()
+                    try:
+                        return json.loads(r_[0]) if r_ else None
+                    except Exception:
+                        return r_[0] if r_ else None
+                sw, lr = _mj("signal_weights"), _mj("learn_report")
+                out += ["", "LEARNING (every signal starts at weight 0; it moves a price only after 20 graded spots and a measured effect):"]
+                if sw:
+                    grad = [k for k, v in sw["status"].items() if v == "graduated"]
+                    live_w = {k: v for k, v in sw["weights"].items() if v}
+                    out.append(f"  graded rows with signals: {sw['n_rows']} | graduated: {', '.join(grad) or 'none yet'}"
+                               + (f" | weights: {', '.join(f'{k} {v:+.3f}' for k, v in live_w.items())}" if live_w else ""))
+                    prob = [f"{k} {v.split(' ')[1]}" for k, v in sw["status"].items() if v.startswith("probation")]
+                    out.append("  on probation: " + ", ".join(prob))
+                if lr:
+                    cal = lr.get("calibration") or {}
+                    if cal.get("buckets"):
+                        out.append("  calibration (price says -> actually hit): " + " | ".join(
+                            f"{b['bucket']} n{b['n']} hit {b['hit']:.0%}" for b in cal["buckets"]) + f" | Brier {cal.get('brier')}")
+                    if lr.get("autopsy"):
+                        out.append("  results by cause, 14 days: " + ", ".join(f"{k} {v}" for k, v in
+                                   sorted(lr["autopsy"].items(), key=lambda x: -x[1])))
+                    if lr.get("timing"):
+                        out.append("  timing: " + " | ".join(f"{k} n{v['n']} ROI {v['roi']:+.1%} CLV {v['clv'] if v['clv'] is not None else 'n/a'}"
+                                                         for k, v in sorted(lr["timing"].items())))
+                    sc = lr.get("scorecard") or {}
+                    best = [(k, v) for k, v in sc.items() if v.get("n", 0) >= 20 and v.get("high") and v.get("low")]
+                    for k, v in best[:8]:
+                        out.append(f"  {k}: high n{v['high']['n']} ROI {v['high']['roi']:+.1%} vs low n{v['low']['n']} ROI {v['low']['roi']:+.1%}")
+                cx = _mj("contradictions") or []
+                if cx:
+                    out.append("  CONTRADICTIONS: " + " || ".join(cx[:6]))
+                feeds = [(_mj("trends_status"), "DK trends"), (_mj("nfl_usage_status"), "nflverse"),
+                         (_mj("signals_error_last"), "signals error")]
+                out.append("  feeds: " + " | ".join(f"{lab}: {str(v)[:140]}" for v, lab in feeds if v))
+            except Exception as _e:   # noqa: BLE001
+                out.append(f"(learning section unavailable: {str(_e)[:100]})")
             g = jr.grade_spins(con)
             if g:
                 out += ["", "SPIN SCORECARD (mean absolute error on completed games; lower is better):"]
@@ -1456,14 +1496,13 @@ MKT_LABEL = {"h2h": "Moneyline", "spreads": "Spread", "totals": "Total", "player
              "player_goals": "Goals", "player_shots_on_goal": "Shots on goal", "player_goal_scorer_anytime": "Anytime goalscorer"}
 
 
-def _american(dec):
+def _dec(dec):
+    """Decimal odds only (owner's rule, 2026-10-29): American odds are never shown."""
     try:
         dec = float(dec)
     except (TypeError, ValueError):
         return "—"
-    if dec <= 1.0:
-        return "—"
-    return f"+{round((dec - 1) * 100)}" if dec >= 2 else f"{-round(100 / (dec - 1))}"
+    return "—" if dec <= 1.0 else f"{dec:.2f}"
 
 
 def _book_order(books):
@@ -1656,7 +1695,7 @@ def odds_page(q):
                            + f"<div class=scroll><table><tr><th class=sel>Selection</th><th>Fair</th>{hdr}</tr>")
             fair = r["fair"]
             cells = [f'<td class=sel title="{_h.escape(r["label"])}">{_h.escape(r["label"])}</td>',
-                     f"<td class=fair>{_american(1 / fair) if fair else ('vs avg' if r.get('vs_avg') else '—')}<small>{f'{fair:.1%}' if fair else ''}</small></td>"]
+                     f"<td class=fair>{_dec(1 / fair) if fair else ('vs avg' if r.get('vs_avg') else '—')}<small>{f'{fair:.1%}' if fair else ''}</small></td>"]
             for b in books:
                 p = r["prices"].get(b)
                 if p is None:
@@ -1670,7 +1709,7 @@ def odds_page(q):
                 if b == r["best_bet"]:
                     cls.append("bb")
                 sub = f"{ev:+.1%}" if ev is not None else ""
-                cells.append(f'<td class="{" ".join(c for c in cls if c)}">{_american(p)}<small>{sub}</small></td>')
+                cells.append(f'<td class="{" ".join(c for c in cls if c)}">{_dec(p)}<small>{sub}</small></td>')
             out.append("<tr>" + "".join(cells) + "</tr>")
         if sec is not None:
             out.append("</table></div>" + ("</details>" if sec not in ("Moneyline", "Spread", "Total") else ""))
