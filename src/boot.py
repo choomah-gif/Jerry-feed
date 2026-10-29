@@ -2216,6 +2216,762 @@ def run(con, now, sports=("NBA", "NHL"), days_back=2):
     return rep
 '''
 
+_SIGNALS_SRC = r'''"""
+jerry_signals.py — the learning layer for KRONOS (2026-10-29).
+
+KRONOS's reasoning used to be rules Claude wrote. This module makes it measure itself:
+
+  capture()        every signal's value on every edge and paper bet (stored as JSON on the bet)
+  fit_weights()    per-signal weights learned from graded results, starting at ZERO; a signal
+                   only moves a price once it has 20+ graded spots and shows an effect
+  adjust()         market fair price -> shifted by measured signal weights (capped)
+  reports          signal scorecard, calibration, loss autopsy, timing, contradictions
+  sim_prop()       NBA game-script simulation (blowout / overtime / pace) for props
+  data feeds       dropping odds (own tape), DK public-betting-trends articles, nflverse snap
+                   counts + injuries, NFL positional matchups, Open-Meteo weather, ESPN soccer grading
+
+Nothing here changes a pick on day one: unproven signals have weight 0 by construction.
+"""
+from __future__ import annotations
+
+import csv
+import html as _html
+import io
+import json
+import math
+import random
+import re
+import urllib.request
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
+UA = {"User-Agent": "Mozilla/5.0 (KRONOS desk)"}
+GRADUATE_N = 20          # owner's rule: 20 spots before a feature can make a play
+MAX_SHIFT_LOGIT = 0.25   # total adjustment cap (~6pp at a 50% price)
+L2 = 20.0                # strong shrinkage: weights must be earned
+
+
+def _get(url, timeout=25, text=False):
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
+        b = r.read().decode("utf-8", "replace")
+    return b if text else json.loads(b)
+
+
+def _norm(s):
+    s = re.sub(r"[^a-z ]", "", " ".join(str(s).lower().replace(".", " ").replace("-", " ").split())).strip()
+    p = s.split()
+    while len(p) > 2 and p[-1] in ("jr", "sr", "ii", "iii", "iv", "v"):
+        p = p[:-1]
+    return " ".join(p)
+
+
+def _imp(dec):
+    try:
+        d = float(dec)
+        return 1.0 / d if d > 1 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _american(dec):
+    d = float(dec)
+    return (d - 1) * 100 if d >= 2 else -100 / (d - 1)
+
+
+def _cents(dec_a, dec_b):
+    """Line-movement 'cents' the way bettors count them: +100 and -100 are the same price, so
+    +110 -> -105 is 15 cents, not 215."""
+    x, y = _american(dec_a), _american(dec_b)
+    if (x >= 100) == (y >= 100):
+        return abs(x - y)
+    return abs(abs(x) - 100) + abs(abs(y) - 100)
+
+
+def _ensure(con):
+    con.executescript("""
+    create table if not exists nfl_snaps(season int, week int, team text, player_norm text, player text,
+        position text, off_pct real, primary key(season, week, team, player_norm));
+    create table if not exists nfl_inj(season int, week int, team text, player_norm text, player text,
+        status text, primary key(season, week, team, player_norm));
+    create table if not exists nfl_pos_def(season int, team text, position text, stat text, allowed_pg real,
+        league_pg real, n int, primary key(season, team, position, stat));
+    create table if not exists weather(event_id text primary key, ts text, wind_mph real, precip_mm real,
+        temp_c real, dome int);
+    create table if not exists soccer_box(source_id text, game_date text, team text, player_norm text,
+        player text, goals real, assists real, primary key(source_id, team, player_norm));
+    create table if not exists soccer_results(source_id text primary key, league text, game_date text,
+        home text, away text, hs int, as_ int, ts text);
+    """)
+    cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    if "signals" not in cols:
+        con.execute("alter table bets add column signals text")
+
+
+def _meta(con, k, v):
+    con.execute("insert or replace into meta(k,v) values(?,?)", (k, v if isinstance(v, str) else json.dumps(v)))
+
+
+def _meta_get(con, k):
+    r = con.execute("select v from meta where k=?", (k,)).fetchone()
+    return r[0] if r else None
+
+
+# ======================================================================= data: dropping odds
+def dropping(con, event_id, market, outcome, player, line):
+    """Average across books of the change in implied probability since open, for this side.
+    Positive = the price has shortened (money came in on this side). Returns (pct_drop, cents, n_books)."""
+    rows = con.execute("""select o.book, o.price op, l.price np from opens o join last_quote l
+                          on l.event_id=o.event_id and l.book=o.book and l.market=o.market and l.outcome=o.outcome
+                          and l.player=o.player and coalesce(l.line,-999)=coalesce(o.line,-999)
+                          where o.event_id=? and o.market=? and o.outcome=? and o.player=?
+                          and coalesce(o.line,-999)=coalesce(?, -999)""",
+                       (event_id, market, outcome, player or "", line)).fetchall()
+    drops, cents = [], None
+    for bk, op, np_ in rows:
+        a, b = _imp(op), _imp(np_)
+        if a and b:
+            drops.append((b - a) / a)
+            if bk == "pinnacle":
+                try:
+                    cents = _cents(op, np_) * (1 if b > a else -1)
+                except ZeroDivisionError:
+                    pass
+    if not drops:
+        return None, cents, 0
+    return sum(drops) / len(drops), cents, len(drops)
+
+
+# ======================================================================= data: DK public betting trends
+_PCT = re.compile(r"(\d{1,3})%\s*/\s*(\d{1,3})%")
+
+
+def parse_trends(page):
+    """DK Network 'Public Betting Trends' article -> [(team_a, team_b, market, bets_a, bets_b, handle_a, handle_b)].
+    Table header: Market | Team A (ABR) | Team B (ABR) | Bets % | Handle %; cells like '44% / 56%'."""
+    out = []
+    for tbl in re.findall(r"<table.*?</table>", page, flags=re.S | re.I):
+        rows = [[_html.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+                 for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", tr, flags=re.S | re.I)]
+                for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", tbl, flags=re.S | re.I)]
+        if not rows or len(rows[0]) < 5 or "bets" not in rows[0][3].lower():
+            continue
+        ta, tb = re.sub(r"\s*\(.*?\)", "", rows[0][1]).strip(), re.sub(r"\s*\(.*?\)", "", rows[0][2]).strip()
+        for r in rows[1:]:
+            if len(r) < 5:
+                continue
+            m1, m2 = _PCT.search(r[3]), _PCT.search(r[4])
+            if not (m1 and m2):
+                continue
+            mk = {"moneyline": "h2h", "spread": "spreads", "total": "totals", "puck line": "spreads",
+                  "run line": "spreads"}.get(r[0].strip().lower())
+            if mk:
+                out.append((ta, tb, mk, float(m1.group(1)), float(m1.group(2)), float(m2.group(1)), float(m2.group(2))))
+    return out
+
+
+def ingest_trends(con, now):
+    """Pull recent 'public betting trends' posts from DK Network (WordPress REST) into the splits table."""
+    after = (now - timedelta(hours=30)).strftime("%Y-%m-%dT%H:%M:%S")
+    try:
+        posts = _get(f"https://dknetwork.draftkings.com/wp-json/wp/v2/posts?search=public%20betting%20trends"
+                     f"&per_page=20&after={after}&_fields=title,link,content,modified")
+    except Exception as e:                                        # noqa: BLE001
+        _meta(con, "trends_status", f"{now.isoformat(timespec='seconds')} fetch failed: {str(e)[:120]}")
+        return 0
+    if not isinstance(posts, list):
+        _meta(con, "trends_status", f"{now.isoformat(timespec='seconds')} unexpected reply from DK Network")
+        return 0
+    con.execute("""create table if not exists splits(event_id text, market text, outcome text, line real,
+                   source text, handle_pct real, bets_pct real, ts text, url text,
+                   primary key(event_id, market, outcome, source))""")
+    lo, hi = (now - timedelta(hours=4)).isoformat(timespec="seconds"), (now + timedelta(hours=40)).isoformat(timespec="seconds")
+    evs = list(con.execute("select event_id, home, away from events where commence>? and commence<?", (lo, hi)))
+    nick = lambda t: _norm(t).split()[-1] if _norm(t) else ""
+    n = 0
+    for p in posts:
+        for ta, tb, mk, ba, bb, ha, hb in parse_trends(p.get("content", {}).get("rendered", "")):
+            na, nb = nick(ta), nick(tb)
+            for eid, home, away in evs:
+                if {nick(home), nick(away)} == {na, nb}:
+                    side_a = home if nick(home) == na else away
+                    side_b = away if side_a == home else home
+                    if mk == "totals":
+                        side_a, side_b = "Over", "Under"
+                    for o, bets, handle in ((side_a, ba, ha), (side_b, bb, hb)):
+                        con.execute("insert or replace into splits values(?,?,?,?,?,?,?,?,?)",
+                                    (eid, mk, o, None, "dk_trends", handle, bets, now.isoformat(timespec="seconds"), p.get("link")))
+                        n += 1
+    _meta(con, "trends_status", f"{now.isoformat(timespec='seconds')} {len(posts)} posts, {n} split rows matched")
+    return n
+
+
+# ======================================================================= data: NFL usage + injuries + matchups
+NFLV = "https://github.com/nflverse/nflverse-data/releases/download"
+
+
+def _csv(url):
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+        return list(csv.DictReader(io.StringIO(r.read().decode("utf-8", "replace"))))
+
+
+def ingest_nfl(con, season, now):
+    """Snap counts, injury reports and positional defense from nflverse (free). Every 6 hours."""
+    last = _meta_get(con, "nfl_usage_ts")
+    if last and (now - datetime.fromisoformat(last)).total_seconds() < 6 * 3600:
+        return _meta_get(con, "nfl_usage_status")
+    _meta(con, "nfl_usage_ts", now.isoformat(timespec="seconds"))
+    rep = []
+    try:
+        rows = _csv(f"{NFLV}/snap_counts/snap_counts_{season}.csv")
+        for r in rows:
+            try:
+                con.execute("insert or replace into nfl_snaps values(?,?,?,?,?,?,?)",
+                            (int(r["season"]), int(r["week"]), r["team"], _norm(r["player"]), r["player"],
+                             r.get("position"), float(r.get("offense_pct") or 0)))
+            except (KeyError, ValueError):
+                continue
+        rep.append(f"snaps {len(rows)}")
+    except Exception as e:                                        # noqa: BLE001
+        rep.append(f"snaps failed: {str(e)[:60]}")
+    try:
+        rows = _csv(f"{NFLV}/injuries/injuries_{season}.csv")
+        for r in rows:
+            try:
+                con.execute("insert or replace into nfl_inj values(?,?,?,?,?,?)",
+                            (int(r["season"]), int(r["week"]), r["team"], _norm(r["full_name"]), r["full_name"],
+                             r.get("report_status") or ""))
+            except (KeyError, ValueError):
+                continue
+        rep.append(f"injuries {len(rows)}")
+    except Exception as e:                                        # noqa: BLE001
+        rep.append(f"injuries failed: {str(e)[:60]}")
+    try:
+        rows = _csv(f"{NFLV}/stats_player/stats_player_week_{season}.csv")
+        agg = {}
+        for r in rows:
+            pos, opp = r.get("position"), r.get("opponent_team")
+            if pos not in ("QB", "RB", "WR", "TE") or not opp:
+                continue
+            for stat in ("passing_yards", "rushing_yards", "receiving_yards", "receptions"):
+                try:
+                    v = float(r.get(stat) or 0)
+                except ValueError:
+                    continue
+                k = (opp, pos, stat)
+                a = agg.setdefault(k, [0.0, set()])
+                a[0] += v; a[1].add(r.get("week"))
+        league = {}
+        for (opp, pos, stat), (tot, wks) in agg.items():
+            league.setdefault((pos, stat), []).append(tot / max(len(wks), 1))
+        for (opp, pos, stat), (tot, wks) in agg.items():
+            lg = league[(pos, stat)]
+            con.execute("insert or replace into nfl_pos_def values(?,?,?,?,?,?,?)",
+                        (season, opp, pos, stat, tot / max(len(wks), 1), sum(lg) / len(lg), len(wks)))
+        rep.append(f"positional defense {len(agg)} rows")
+    except Exception as e:                                        # noqa: BLE001
+        rep.append(f"matchups failed: {str(e)[:60]}")
+    st = f"{now.isoformat(timespec='seconds')} " + " | ".join(rep)
+    _meta(con, "nfl_usage_status", st)
+    con.commit()
+    return st
+
+
+def nfl_role(con, player):
+    """(avg offense snap % over the last two weeks on file, latest injury status) for a player."""
+    pn = _norm(player)
+    snaps = [r[0] for r in con.execute("""select off_pct from nfl_snaps where player_norm=?
+                                          order by season desc, week desc limit 2""", (pn,))]
+    inj = con.execute("select status from nfl_inj where player_norm=? order by season desc, week desc limit 1", (pn,)).fetchone()
+    return (sum(snaps) / len(snaps) if snaps else None), (inj[0] if inj else None)
+
+
+NFL_STAT = {"player_pass_yds": "passing_yards", "player_rush_yds": "rushing_yards",
+            "player_reception_yds": "receiving_yards", "player_receptions": "receptions"}
+
+
+
+NFL_ABBR = {"Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
+            "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
+            "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
+            "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
+            "Las Vegas Raiders": "LV", "Los Angeles Chargers": "LAC", "Los Angeles Rams": "LA", "Miami Dolphins": "MIA",
+            "Minnesota Vikings": "MIN", "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG",
+            "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "San Francisco 49ers": "SF",
+            "Seattle Seahawks": "SEA", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WAS"}
+
+
+def nfl_player_context(con, player, home, away):
+    """(position, opponent abbreviation) for an NFL player from the latest snap-count row."""
+    r = con.execute("select team, position from nfl_snaps where player_norm=? order by season desc, week desc limit 1",
+                    (_norm(player),)).fetchone()
+    if not r:
+        return None, None
+    ha, aa = NFL_ABBR.get(home), NFL_ABBR.get(away)
+    opp = aa if r[0] == ha else ha if r[0] == aa else None
+    return r[1], opp
+
+def nfl_matchup(con, season, opp_team_abbr, position, market):
+    stat = NFL_STAT.get(market)
+    if not stat or not opp_team_abbr or not position:
+        return None
+    r = con.execute("select allowed_pg, league_pg, n from nfl_pos_def where season=? and team=? and position=? and stat=?",
+                    (season, opp_team_abbr, position, stat)).fetchone()
+    if not r or not r[1] or r[2] < 3:
+        return None
+    return r[0] / r[1]
+
+
+# ======================================================================= data: NFL weather
+STADIUM = {   # team: (lat, lon, dome/closed roof usually)
+    "Arizona Cardinals": (33.528, -112.263, 1), "Atlanta Falcons": (33.755, -84.401, 1), "Baltimore Ravens": (39.278, -76.623, 0),
+    "Buffalo Bills": (42.774, -78.787, 0), "Carolina Panthers": (35.226, -80.853, 0), "Chicago Bears": (41.862, -87.617, 0),
+    "Cincinnati Bengals": (39.095, -84.516, 0), "Cleveland Browns": (41.506, -81.700, 0), "Dallas Cowboys": (32.748, -97.093, 1),
+    "Denver Broncos": (39.744, -105.020, 0), "Detroit Lions": (42.340, -83.046, 1), "Green Bay Packers": (44.501, -88.062, 0),
+    "Houston Texans": (29.685, -95.411, 1), "Indianapolis Colts": (39.760, -86.164, 1), "Jacksonville Jaguars": (30.324, -81.637, 0),
+    "Kansas City Chiefs": (39.049, -94.484, 0), "Las Vegas Raiders": (36.091, -115.184, 1), "Los Angeles Chargers": (33.953, -118.339, 1),
+    "Los Angeles Rams": (33.953, -118.339, 1), "Miami Dolphins": (25.958, -80.239, 0), "Minnesota Vikings": (44.974, -93.258, 1),
+    "New England Patriots": (42.091, -71.264, 0), "New Orleans Saints": (29.951, -90.081, 1), "New York Giants": (40.813, -74.074, 0),
+    "New York Jets": (40.813, -74.074, 0), "Philadelphia Eagles": (39.901, -75.168, 0), "Pittsburgh Steelers": (40.447, -80.016, 0),
+    "San Francisco 49ers": (37.403, -121.970, 0), "Seattle Seahawks": (47.595, -122.332, 0), "Tampa Bay Buccaneers": (27.976, -82.503, 0),
+    "Tennessee Titans": (36.166, -86.771, 0), "Washington Commanders": (38.908, -76.864, 0)}
+
+
+def weather_for(con, event_id, home, commence, now):
+    """Wind (mph), precipitation (mm) and temperature at kickoff from Open-Meteo (free), cached 3 hours."""
+    st = STADIUM.get(home)
+    if not st:
+        return None
+    lat, lon, dome = st
+    r = con.execute("select ts, wind_mph, precip_mm, temp_c, dome from weather where event_id=?", (event_id,)).fetchone()
+    if r and (now - datetime.fromisoformat(r[0])).total_seconds() < 3 * 3600:
+        return {"wind_mph": r[1], "precip_mm": r[2], "temp_c": r[3], "dome": r[4]}
+    if dome:
+        con.execute("insert or replace into weather values(?,?,?,?,?,?)", (event_id, now.isoformat(timespec="seconds"), 0, 0, None, 1))
+        return {"wind_mph": 0.0, "precip_mm": 0.0, "temp_c": None, "dome": 1}
+    try:
+        kick = datetime.fromisoformat(str(commence).replace("Z", "+00:00"))
+        if (kick - now).days > 14:
+            return None
+        d = _get(f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                 f"&hourly=wind_speed_10m,precipitation,temperature_2m&wind_speed_unit=mph&timezone=UTC"
+                 f"&start_date={kick.date().isoformat()}&end_date={kick.date().isoformat()}")
+        hrs = d["hourly"]["time"]
+        i = min(range(len(hrs)), key=lambda j: abs(datetime.fromisoformat(hrs[j]).replace(tzinfo=UTC) - kick))
+        w = {"wind_mph": float(d["hourly"]["wind_speed_10m"][i]), "precip_mm": float(d["hourly"]["precipitation"][i]),
+             "temp_c": float(d["hourly"]["temperature_2m"][i]), "dome": 0}
+        con.execute("insert or replace into weather values(?,?,?,?,?,?)",
+                    (event_id, now.isoformat(timespec="seconds"), w["wind_mph"], w["precip_mm"], w["temp_c"], 0))
+        return w
+    except Exception:                                             # noqa: BLE001
+        return None
+
+
+# ======================================================================= data: soccer results + prop grading
+ESPN_SOCCER = {"EPL": "eng.1", "UCL": "uefa.champions"}
+
+
+def _soccer_stat(stats, names):
+    for s in stats or []:
+        if str(s.get("name", "")).lower() in names or str(s.get("abbreviation", "")).lower() in names:
+            try:
+                return float(s.get("value") if s.get("value") is not None else s.get("displayValue"))
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def ingest_soccer_day(con, league, day):
+    """One date of finished matches. A match whose players' goals don't reconcile with the score is
+    held (own goals and missing players both cause that), so a prop is never graded from a bad box."""
+    code = ESPN_SOCCER[league]
+    sb = _get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={day.replace('-', '')}")
+    got = 0
+    for ev in sb.get("events", []):
+        comp = (ev.get("competitions") or [{}])[0]
+        if not (comp.get("status", {}).get("type", {}).get("completed")):
+            continue
+        teams = {c.get("homeAway"): c for c in comp.get("competitors", [])}
+        if "home" not in teams or "away" not in teams:
+            continue
+        home, away = teams["home"]["team"]["displayName"], teams["away"]["team"]["displayName"]
+        hs, as_ = int(teams["home"].get("score") or 0), int(teams["away"].get("score") or 0)
+        sm = _get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/summary?event={ev['id']}")
+        lines, sums = [], {}
+        for ros in sm.get("rosters", []):
+            tname = (ros.get("team") or {}).get("displayName", "")
+            for p in ros.get("roster", []):
+                nm = (p.get("athlete") or {}).get("displayName")
+                if not nm:
+                    continue
+                g = _soccer_stat(p.get("stats"), ("totalgoals", "goals", "g"))
+                a = _soccer_stat(p.get("stats"), ("goalassists", "assists", "a"))
+                lines.append((tname, nm, g or 0.0, a or 0.0))
+                sums[tname] = sums.get(tname, 0.0) + (g or 0.0)
+        if sums.get(home, -1) != hs or sums.get(away, -1) != as_:
+            _meta(con, f"soccer_incomplete_{ev['id']}", f"{day} {away} @ {home}: player goals {sums} vs score {hs}-{as_}")
+            continue
+        con.execute("insert or replace into soccer_results values(?,?,?,?,?,?,?,?)",
+                    (ev["id"], league, day, home, away, hs, as_, datetime.now(UTC).isoformat(timespec="seconds")))
+        for tname, nm, g, a in lines:
+            con.execute("insert or replace into soccer_box values(?,?,?,?,?,?,?)", (ev["id"], day, tname, _norm(nm), nm, g, a))
+        got += 1
+    return got
+
+
+def grade_soccer(con, now):
+    """Settle pending EPL/UCL anytime-goalscorer and assists props from reconciled ESPN boxes."""
+    _ensure(con)
+    graded = 0
+    for lg in ESPN_SOCCER:
+        for k in range(3, -1, -1):
+            day = (now - timedelta(days=k)).date().isoformat()
+            try:
+                ingest_soccer_day(con, lg, day)
+            except Exception as e:                                # noqa: BLE001
+                _meta(con, f"soccer_feed_error_{lg}", f"{now.isoformat(timespec='seconds')} {str(e)[:120]}")
+    for b in con.execute("""select * from bets where sport in ('EPL','UCL') and result='pending'
+                            and market in ('player_goal_scorer_anytime','player_assists') and commence<?""",
+                         ((now - timedelta(hours=3)).isoformat(timespec="seconds"),)).fetchall():
+        day = str(b["commence"])[:10]
+        d0 = datetime.fromisoformat(day)
+        lo, hi = (d0 - timedelta(days=1)).date().isoformat(), (d0 + timedelta(days=1)).date().isoformat()
+        try:
+            away, home = [x.strip() for x in str(b["game"]).split("@")]
+        except ValueError:
+            continue
+        nick = lambda t: _norm(t).split()[-1] if _norm(t) else ""
+        m = [r for r in con.execute("select * from soccer_results where game_date between ? and ?", (lo, hi))
+             if {nick(r["home"]), nick(r["away"])} == {nick(home), nick(away)}]
+        if not m:
+            continue
+        row = con.execute("select * from soccer_box where source_id=? and player_norm=?", (m[0]["source_id"], _norm(b["player"]))).fetchone()
+        if not row:
+            continue                                             # not in a reconciled box: unknown, stays pending
+        if b["market"] == "player_goal_scorer_anytime":
+            res = "W" if (row["goals"] >= 1) == (b["selection"] == "Yes") else "L"
+            val = row["goals"]
+        else:
+            v, L = row["assists"], float(b["line"] or 0.5)
+            res = "P" if v == L else ("W" if (v > L) == (b["selection"] == "Over") else "L")
+            val = v
+        pnl = b["stake"] * (b["price"] - 1) if res == "W" else (-b["stake"] if res == "L" else 0.0)
+        con.execute("update bets set result=?, pnl=?, graded_ts=?, note=coalesce(note,'')||? where id=?",
+                    (res, pnl, now.isoformat(timespec="seconds"), f" | settled {val:g} (ESPN soccer)", b["id"]))
+        graded += 1
+    con.commit()
+    return graded
+
+
+# ======================================================================= NBA game-script simulation
+def sim_prop(proj, line, side, spread=None, total=None, stat="pts", n=4000, seed=7):
+    """Probability the side wins once game script is simulated: margin ~ N(spread, 12), total ~ N(total, 16).
+    Blowouts (|margin| > 18) cut a starter's minutes ~15%; overtime (|margin| < 1, ~6% of games) adds ~10%;
+    a higher-scoring game lifts counting stats in proportion. Points ~ Normal, counts ~ Poisson."""
+    if proj is None or line is None:
+        return None
+    rnd = random.Random(seed)
+    base_total = total or 225.0
+    wins = 0
+    for _ in range(n):
+        m = rnd.gauss(spread or 0.0, 12.0)
+        t = rnd.gauss(base_total, 16.0)
+        f = 1.0
+        if abs(m) > 18:
+            f *= 0.85
+        elif abs(m) < 1 and rnd.random() < 0.5:
+            f *= 1.10
+        f *= max(0.7, min(1.3, t / base_total))
+        lam = max(proj * f, 0.05)
+        if stat == "pts":
+            x = rnd.gauss(lam, max(0.35 * lam, 2.5))
+        else:
+            # Poisson draw
+            L_, k, p = math.exp(-lam), 0, 1.0
+            while True:
+                p *= rnd.random()
+                if p <= L_:
+                    break
+                k += 1
+            x = k
+        over = x > line
+        wins += 1 if (over if side in ("Over", "Yes") else not over) else 0
+    return wins / n
+
+
+# ======================================================================= signal capture
+SIGNALS = ["drop_pct", "tape_cents", "steam", "rlm", "dk_gap", "shade_pp", "proj_p", "sim_p", "role_change",
+           "injury_q", "snap_pct", "matchup", "wind_mph", "precip_mm", "hours", "edge", "n_books", "is_fav", "is_home"]
+
+
+def capture(con, ev, market, outcome, player, line, price, fair, extra=None):
+    """Every signal's value for one edge. Stored on the paper bet so its value can be measured later."""
+    extra = extra or {}
+    s = {k: None for k in SIGNALS}
+    try:
+        dp, cents, nb = dropping(con, ev["event_id"], market, outcome, player, line)
+        s["drop_pct"], s["tape_cents"] = (None if dp is None else round(dp, 4)), (None if cents is None else round(cents, 1))
+    except Exception:                                             # noqa: BLE001
+        pass
+    sig = extra.get("sig") or {}
+    s["steam"] = (sig.get("steam_for") or 0) - (sig.get("steam_against") or 0) if sig else None
+    s["rlm"] = 1 if sig.get("rlm") else (0 if sig else None)
+    s["dk_gap"] = sig.get("dk_gap")
+    s["shade_pp"] = sig.get("shade_pp")
+    pc = extra.get("pc") or {}
+    s["proj_p"] = pc.get("p_side")
+    s["role_change"] = 1 if pc.get("role_change") else (0 if pc else None)
+    s["injury_q"] = 1 if extra.get("injury") == "doubtful" else 0
+    s["snap_pct"] = extra.get("snap_pct")
+    s["matchup"] = extra.get("matchup")
+    w = extra.get("weather") or {}
+    s["wind_mph"], s["precip_mm"] = w.get("wind_mph"), w.get("precip_mm")
+    s["sim_p"] = extra.get("sim_p")
+    try:
+        st = datetime.fromisoformat(str(ev["commence"]).replace("Z", "+00:00"))
+        s["hours"] = round((st - datetime.now(UTC)).total_seconds() / 3600, 2)
+    except Exception:                                             # noqa: BLE001
+        pass
+    s["edge"] = round(float(price) * float(fair) - 1, 4) if fair else None
+    s["n_books"] = extra.get("n_books")
+    if not player and market in ("h2h", "spreads"):
+        s["is_home"] = 1 if outcome == ev.get("home") else 0
+        s["is_fav"] = 1 if (fair or 0) > 0.5 else 0
+    return s
+
+
+# ======================================================================= learning
+def _logit(p):
+    p = min(max(p, 1e-4), 1 - 1e-4)
+    return math.log(p / (1 - p))
+
+
+def _graded_rows(con):
+    rows = []
+    for b in con.execute("""select result, fair_prob, model_prob, price, clv_pp, signals, sport, market, evidence_kind, hours_to_start
+                            from bets where paper=1 and result in ('W','L') and signals is not null"""):
+        try:
+            sg = json.loads(b["signals"])
+        except Exception:                                         # noqa: BLE001
+            continue
+        f = b["fair_prob"] or b["model_prob"]
+        if not f:
+            continue
+        rows.append((1 if b["result"] == "W" else 0, float(f), sg, b))
+    return rows
+
+
+def _fit(rows, keys, stats, l2, iters=600, lr=1.0):
+    """Logistic regression with the market fair price as offset, ridge-penalised. Returns (weights, se)."""
+    w = {k: 0.0 for k in keys}
+    n = max(len(rows), 1)
+    def x(sg, k):
+        v = sg.get(k)
+        return 0.0 if v is None else (v - stats[k]["mu"]) / stats[k]["sd"]
+    for _ in range(iters):
+        grad = {k: 0.0 for k in keys}
+        for y, f, sg, _b in rows:
+            z = _logit(f) + sum(w[k] * x(sg, k) for k in keys)
+            p = 1 / (1 + math.exp(-max(min(z, 30), -30)))
+            for k in keys:
+                grad[k] += (p - y) * x(sg, k)
+        for k in keys:
+            w[k] -= lr * (grad[k] + l2 * w[k]) / n
+    info = {k: 0.0 for k in keys}
+    for y, f, sg, _b in rows:
+        z = _logit(f) + sum(w[k] * x(sg, k) for k in keys)
+        p = 1 / (1 + math.exp(-max(min(z, 30), -30)))
+        for k in keys:
+            info[k] += p * (1 - p) * x(sg, k) ** 2
+    se = {k: (1 / math.sqrt(info[k])) if info[k] > 0 else float("inf") for k in keys}
+    return w, se
+
+
+def fit_weights(con, now):
+    """A signal graduates only when it has GRADUATE_N graded spots, actually varies, AND its effect on
+    results is statistically clear (|z| >= 2 on its own, with the market price as the baseline).
+    Graduated signals are then fitted together, ridge-shrunk; everything else stays at weight 0."""
+    rows = _graded_rows(con)
+    stats = {}
+    for k in SIGNALS:
+        vals = [r[2].get(k) for r in rows if r[2].get(k) is not None]
+        mu = sum(vals) / len(vals) if vals else 0.0
+        sd = (sum((v - mu) ** 2 for v in vals) / len(vals)) ** 0.5 if len(vals) > 1 else 0.0
+        stats[k] = {"n": len(vals), "mu": mu, "sd": sd if sd > 1e-9 else 1.0, "varies": sd > 1e-9}
+    status, zs = {}, {}
+    for k in SIGNALS:
+        if stats[k]["n"] < GRADUATE_N:
+            status[k] = f"probation {stats[k]['n']}/{GRADUATE_N}"; continue
+        if not stats[k]["varies"]:
+            status[k] = "constant (no information)"; continue
+        sub = [r for r in rows if r[2].get(k) is not None]
+        w1, se1 = _fit(sub, [k], stats, l2=1.0)
+        zs[k] = w1[k] / se1[k] if se1[k] not in (0, float("inf")) else 0.0
+        status[k] = "graduated" if abs(zs[k]) >= 2.0 else f"no clear effect yet (z {zs[k]:+.1f})"
+    live = [k for k in SIGNALS if status[k] == "graduated"]
+    w = {k: 0.0 for k in SIGNALS}
+    if live:
+        wl, _se = _fit(rows, live, stats, l2=L2)
+        w.update(wl)
+    out = {"ts": now.isoformat(timespec="seconds"), "n_rows": len(rows),
+           "weights": {k: round(w[k], 4) for k in SIGNALS}, "z": {k: round(v, 2) for k, v in zs.items()},
+           "stats": stats, "status": status}
+    _meta(con, "signal_weights", out)
+    return out
+
+
+def adjust(fair, signals, model=None):
+    """Market fair -> fair shifted by measured signal weights. Zero weights = no change. Capped."""
+    if not fair or not signals or not model:
+        return fair
+    w, st = model.get("weights", {}), model.get("stats", {})
+    shift = 0.0
+    for k, wk in w.items():
+        v = signals.get(k)
+        if wk and v is not None and k in st:
+            shift += wk * ((v - st[k]["mu"]) / (st[k]["sd"] or 1.0))
+    shift = max(-MAX_SHIFT_LOGIT, min(MAX_SHIFT_LOGIT, shift))
+    z = _logit(fair) + shift
+    return 1 / (1 + math.exp(-z))
+
+
+def load_model(con):
+    try:
+        return json.loads(_meta_get(con, "signal_weights") or "null")
+    except Exception:                                             # noqa: BLE001
+        return None
+
+
+# ======================================================================= reports
+def signal_scorecard(con):
+    """Per signal: graded spots where it was 'on' vs 'off', win rate, ROI and CLV for each."""
+    rows = _graded_rows(con)
+    out = {}
+    for k in SIGNALS:
+        vals = [r[2].get(k) for r in rows if r[2].get(k) is not None]
+        if not vals:
+            out[k] = {"n": 0}
+            continue
+        med = sorted(vals)[len(vals) // 2]
+        on = [r for r in rows if r[2].get(k) is not None and r[2][k] > med]
+        off = [r for r in rows if r[2].get(k) is not None and r[2][k] <= med]
+        def summ(rs):
+            if not rs:
+                return None
+            wins = sum(r[0] for r in rs)
+            pnl = sum((r[3]["price"] - 1) if r[0] else -1 for r in rs)
+            clv = [r[3]["clv_pp"] for r in rs if r[3]["clv_pp"] is not None]
+            return {"n": len(rs), "win": round(wins / len(rs), 3), "roi": round(pnl / len(rs), 3),
+                    "clv": round(sum(clv) / len(clv), 2) if clv else None}
+        out[k] = {"n": len(vals), "split_at": med, "high": summ(on), "low": summ(off)}
+    return out
+
+
+def calibration(con):
+    """Bets grouped by the fair probability at bet time: does a 60% price win 60% of the time?"""
+    rows = _graded_rows(con)
+    buckets = {}
+    for y, f, _sg, _b in rows:
+        k = min(int(f * 10), 9)
+        a = buckets.setdefault(k, [0, 0, 0.0])
+        a[0] += 1; a[1] += y; a[2] += (f - y) ** 2
+    out = []
+    for k in sorted(buckets):
+        n, w, se = buckets[k]
+        out.append({"bucket": f"{k * 10}-{k * 10 + 10}%", "n": n, "hit": round(w / n, 3)})
+    brier = round(sum(b[2] for b in buckets.values()) / max(sum(b[0] for b in buckets.values()), 1), 4)
+    return {"buckets": out, "brier": brier}
+
+
+def autopsy(con, days=14):
+    """Every graded paper bet in the window, sorted into a cause."""
+    since = (datetime.now(UTC) - timedelta(days=days)).isoformat(timespec="seconds")
+    causes = {}
+    for b in con.execute("""select * from bets where paper=1 and result in ('W','L') and graded_ts>?""", (since,)):
+        sg = {}
+        try:
+            sg = json.loads(b["signals"] or "{}")
+        except Exception:                                         # noqa: BLE001
+            pass
+        note = str(b["note"] or "")
+        if b["result"] == "W":
+            c = "win: value held" if (b["clv_pp"] or 0) >= 0 else "win: despite losing value"
+        elif b["clv_pp"] is not None and b["clv_pp"] < -1.0:
+            c = "loss: bad price (lost value to the close)"
+        elif sg.get("role_change") == 1 or (sg.get("snap_pct") is not None and sg["snap_pct"] < 40):
+            c = "loss: role / minutes"
+        elif "settled" in note and b["line"] is not None and re.search(r"settled ([\d.]+) vs", note):
+            v = float(re.search(r"settled ([\d.]+) vs", note).group(1))
+            c = "loss: narrow (variance)" if abs(v - float(b["line"])) <= max(1.0, 0.1 * abs(float(b["line"]))) else "loss: clear miss"
+        else:
+            c = "loss: other / game script"
+        causes[c] = causes.get(c, 0) + 1
+    return causes
+
+
+def timing(con):
+    """CLV and ROI by how early the edge was taken."""
+    out = {}
+    for b in con.execute("""select hours_to_start h, clv_pp, result, price, market from bets
+                            where paper=1 and result in ('W','L') and hours_to_start is not null"""):
+        bucket = "6h+" if b["h"] >= 6 else "2-6h" if b["h"] >= 2 else "under 2h"
+        kind = "props" if str(b["market"]).startswith("player_") else "game lines"
+        a = out.setdefault(f"{kind} {bucket}", {"n": 0, "pnl": 0.0, "clv": []})
+        a["n"] += 1
+        a["pnl"] += (b["price"] - 1) if b["result"] == "W" else -1
+        if b["clv_pp"] is not None:
+            a["clv"].append(b["clv_pp"])
+    return {k: {"n": v["n"], "roi": round(v["pnl"] / v["n"], 3),
+                "clv": round(sum(v["clv"]) / len(v["clv"]), 2) if v["clv"] else None} for k, v in out.items()}
+
+
+def contradictions(con, now):
+    """Picks that disagree with each other or with KRONOS's own projected score."""
+    out = []
+    hi = (now + timedelta(hours=36)).isoformat(timespec="seconds")
+    for m in con.execute("""select m.*, e.home, e.away from model_probs m join events e using(event_id)
+                            where e.commence>? and e.commence<? and (m.call like 'Lean%' or m.call like 'Play%')
+                            and m.market in ('spreads','h2h')""", (now.isoformat(timespec="seconds"), hi)):
+        n = con.execute("select margin from jerry_numbers where event_id=?", (m["event_id"],)).fetchone()
+        if not n or n[0] is None:
+            continue
+        side = str(m["call"]).split(" ", 1)[1].split(" [")[0].strip()
+        favors_home = n[0] > 0
+        if (side == m["home"]) != favors_home and side in (m["home"], m["away"]):
+            out.append(f"{m['away']} @ {m['home']}: pick {side} but KRONOS's projected score favors "
+                       f"{m['home'] if favors_home else m['away']} by {abs(n[0]):.1f}")
+    return out
+
+
+def run(con, now):
+    """Refresh the learning layer and its reports (every 6 hours) and grade soccer props."""
+    _ensure(con)
+    rep = {}
+    last = _meta_get(con, "learn_ts")
+    if not last or (now - datetime.fromisoformat(last)).total_seconds() >= 6 * 3600:
+        _meta(con, "learn_ts", now.isoformat(timespec="seconds"))
+        model = fit_weights(con, now)
+        rep["weights"] = {k: v for k, v in model["weights"].items() if v}
+        _meta(con, "learn_report", {"scorecard": signal_scorecard(con), "calibration": calibration(con),
+                                    "autopsy": autopsy(con), "timing": timing(con),
+                                    "graduated": [k for k, v in model["status"].items() if v == "graduated"]})
+    _meta(con, "contradictions", contradictions(con, now))
+    try:
+        rep["soccer_graded"] = grade_soccer(con, now)
+    except Exception as e:                                        # noqa: BLE001
+        rep["soccer_graded"] = f"error {str(e)[:80]}"
+    try:
+        rep["trends"] = ingest_trends(con, now)
+    except Exception as e:                                        # noqa: BLE001
+        rep["trends"] = f"error {str(e)[:80]}"
+    season = now.year if now.month >= 8 else now.year - 1
+    try:
+        rep["nfl"] = ingest_nfl(con, season, now)
+    except Exception as e:                                        # noqa: BLE001
+        rep["nfl"] = f"error {str(e)[:80]}"
+    con.commit()
+    return rep
+'''
+
 _SPLITS_SRC = r'''"""
 jerry_splits.py — free DraftKings betting splits (bets % and handle %) for KRONOS.
 
@@ -2775,7 +3531,8 @@ try:
     jerry_feeds = _register("jerry_feeds", _FEEDS_SRC)
     jerry_nba = _register("jerry_nba", _NBA_SRC)
     jerry_splits = _register("jerry_splits", _SPLITS_SRC)
-    print("[boot] KRONOS: reasoning + grading + feeds + nba + splits modules registered", flush=True)
+    jerry_signals = _register("jerry_signals", _SIGNALS_SRC)
+    print("[boot] KRONOS: reasoning + grading + feeds + nba + splits + signals modules registered", flush=True)
 except Exception:
     traceback.print_exc()
     print("[boot] WARNING reasoning/grading modules failed to load", flush=True)
@@ -2951,6 +3708,17 @@ def refresh_all(db_path, sports=None):
         _spl = f"error: {e}"
     res = _orig_refresh_all(db_path) if sports is None else _orig_refresh_all(db_path, sports=tuple(s for s in sports if s != "MLB"))
     res["SPLITS"] = _spl
+    # learning layer: measured signal weights, calibration, autopsy, timing, contradictions,
+    # plus soccer grading, DK public-betting-trends splits and nflverse snaps/injuries/matchups
+    try:
+        import jerry_signals as _jsig
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        try:
+            res["LEARN"] = _jsig.run(_c, datetime.now(UTC))
+        finally:
+            _c.close()
+    except Exception as e:   # noqa: BLE001 - never block a refresh
+        res["LEARN"] = f"error: {e}"
     if sports is None or "MLB" in sports:
         try:
             res["MLB"] = refresh_mlb(db_path)
