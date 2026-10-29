@@ -1018,7 +1018,8 @@ def alert_new_plays(con, rows):
 
 # ---------------------------------------------------------------- entry point
 # ---------------------------------------------------------------- paper ledger, price edges, health checks
-PAPER_BOOKS = ("pinnacle", "lowvig", "betonlineag", "draftkings", "fanduel", "fanatics", "betmgm", "williamhill_us", "espnbet", "betrivers")
+PAPER_BOOKS = ("pinnacle", "lowvig", "betonlineag", "draftkings", "fanduel", "fanatics", "betmgm", "williamhill_us", "espnbet", "betrivers",
+               "betfair_ex_eu", "matchbook", "smarkets", "marathonbet", "williamhill", "hardrockbet", "ballybet", "bovada", "betus", "mybookieag")
 PRICE_BOOKS = tuple(b.strip() for b in os.environ.get("PRICE_BOOKS", "draftkings,fanduel,fanatics").split(",") if b.strip())
 PRICE_EDGE_MIN = 0.015     # +EV vs Pinnacle fair needed to flag a soft-book price
 PRICE_EDGE_MIN_ADJ = 0.025 # higher bar when the fair had to be translated across a line gap
@@ -1032,7 +1033,7 @@ MODEL_VERSIONS = {
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v4-consensus-projection-2026-10-28",
+    ("ANY", "price"): "price-v5-20books-2026-10-29",
 }
 
 
@@ -1198,7 +1199,8 @@ def paper_log(con, rows, now):
 
 
 
-CONSENSUS_W = {"pinnacle": 3.0, "lowvig": 2.0, "betonlineag": 2.0}
+CONSENSUS_W = {"pinnacle": 3.0, "betfair_ex_eu": 3.0, "lowvig": 2.0, "betonlineag": 2.0,
+               "matchbook": 2.0, "smarkets": 2.0, "marathonbet": 1.5}
 
 
 def _consensus_fair(rows, outcome, line, exclude_book):
@@ -1248,17 +1250,29 @@ def price_edges(con, now):
         for r in q:
             groups.setdefault((r["market"], r["player"] or ""), []).append(r)
         for (market, player), rows in groups.items():
-            sharp = [r for r in rows if r["book"] == "pinnacle"] or [r for r in rows if r["book"] in ("lowvig", "betonlineag")]
-            if len({r["outcome"] for r in sharp}) != 2:
+            # referee: Pinnacle, then BetOnline/LowVig, then the exchanges (Betfair is the sharpest soccer price)
+            sharp = ([r for r in rows if r["book"] == "pinnacle"] or [r for r in rows if r["book"] in ("lowvig", "betonlineag")]
+                     or [r for r in rows if r["book"] in ("betfair_ex_eu", "matchbook", "smarkets")])
+            outs = {r["outcome"] for r in sharp}
+            three_way = market == "h2h" and len(outs) == 3          # soccer: home / draw / away
+            if len(outs) != 2 and not three_way:
                 continue
             by = {}
             for r in sharp:
                 by.setdefault(r["outcome"], r)
-            o1, o2 = list(by.values())[:2]
-            if o1["line"] is not None and o2["line"] is not None and market != "spreads" and abs(float(o1["line"]) - float(o2["line"])) > 1e-9:
-                continue
-            fair = {o1["outcome"]: fair_two_way(o1["price"], o2["price"]), o2["outcome"]: fair_two_way(o2["price"], o1["price"])}
-            lines = {o1["outcome"]: o1["line"], o2["outcome"]: o2["line"]}
+            if three_way:
+                ks = list(by)
+                fw = jr.power_devig([by[k]["price"] for k in ks])
+                if not fw:
+                    continue
+                fair = {k: fw[i] for i, k in enumerate(ks)}
+                lines = {k: None for k in ks}
+            else:
+                o1, o2 = list(by.values())[:2]
+                if o1["line"] is not None and o2["line"] is not None and market != "spreads" and abs(float(o1["line"]) - float(o2["line"])) > 1e-9:
+                    continue
+                fair = {o1["outcome"]: fair_two_way(o1["price"], o2["price"]), o2["outcome"]: fair_two_way(o2["price"], o1["price"])}
+                lines = {o1["outcome"]: o1["line"], o2["outcome"]: o2["line"]}
             for r in rows:
                 if r["book"] not in PRICE_BOOKS or r["outcome"] not in fair or not r["price"]:
                     continue
