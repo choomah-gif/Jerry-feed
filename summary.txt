@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-29T18:29:03+00:00)
-credits left 1049 | budget/day 291 | spent today 115 | reset in 2.23d | backfill days {'NHL': 7}
+KRONOS DESK SUMMARY  (generated 2026-10-29T18:39:04+00:00)
+credits left 1049 | budget/day 292 | spent today 115 | reset in 2.22d | backfill days {'NHL': 7}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 384 settled (18 void), 49 pending | results on file: NBA 82, NHL 194 | 1 props rejected on roster mismatch | 43 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 412 settled (46 void), 60 pending | results on file: NBA 82, NHL 194 | 1 props rejected on roster mismatch | 54 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,15 +12,15 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 588 rows
-all: {"n": 588, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "graded": 435, "record": "210-224-1", "units": -15.27, "roi": -0.0374, "roi_90ci_by_game": [-0.1408, 0.0705, 57]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 627 rows
+all: {"n": 627, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "graded": 435, "record": "210-224-1", "units": -15.27, "roi": -0.0374, "roi_90ci_by_game": [-0.1408, 0.0705, 57]}
   MLB batter_hits (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.05, "beat_close_pct": 0.5, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 3, "closed": 3, "clv_pp_avg": 4.65, "beat_close_pct": 0.667, "graded": 3, "record": "2-1-0", "units": 0.44, "roi": 0.1467, "roi_90ci_by_game": null}
   NBA props (price edge): {"n": 120, "closed": 75, "clv_pp_avg": 0.18, "beat_close_pct": 0.693, "graded": 115, "record": "70-45-0", "units": 18.54, "roi": 0.1612, "roi_90ci_by_game": [0.0052, 0.3057, 25]}
   NFL moneyline (model): {"n": 22, "closed": 8, "clv_pp_avg": -0.99, "beat_close_pct": 0.0, "graded": 8, "record": "4-4-0", "units": -1.55, "roi": -0.1937, "roi_90ci_by_game": [-0.61, 0.2425, 8]}
   NFL moneyline (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -1.21, "beat_close_pct": 0.0, "graded": 2, "record": "1-1-0", "units": 3.0, "roi": 1.5, "roi_90ci_by_game": null}
-  NFL props (model): {"n": 204, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
+  NFL props (model): {"n": 243, "closed": 195, "clv_pp_avg": -2.28, "beat_close_pct": 0.051, "graded": 150, "record": "65-85-0", "units": -17.24, "roi": -0.1177, "roi_90ci_by_game": [-0.2752, 0.0432, 13]}
   NFL props (price edge): {"n": 36, "closed": 36, "clv_pp_avg": 0.63, "beat_close_pct": 0.694, "graded": 35, "record": "12-23-0", "units": -5.94, "roi": -0.1697, "roi_90ci_by_game": [-0.471, 0.0797, 12]}
   NFL spread (model): {"n": 26, "closed": 13, "clv_pp_avg": -1.73, "beat_close_pct": 0.077, "graded": 13, "record": "9-4-0", "units": 4.91, "roi": 0.3777, "roi_90ci_by_game": [-0.08, 0.8162, 13]}
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
@@ -32,6 +32,7 @@ all: {"n": 588, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "gr
   NHL total (model): {"n": 29, "closed": 18, "clv_pp_avg": -1.75, "beat_close_pct": 0.167, "graded": 18, "record": "7-10-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   nfl-v3-anchor25-qbstatus-2026-10-26: n 15 | CLV None | beat close None | 0-0-0 | 0u | ROI None
+  nflprops-v2-paperonly-2026-10-26: n 39 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   nhl-v3-goaliejson-2026-10-26: n 24 | CLV -4.28 | beat close 0.7 | 4-6-0 | -0.22u | ROI -0.0733
   pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-170-1 | -7.8u | ROI -0.0252
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
@@ -44,7 +45,7 @@ all: {"n": 588, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "gr
   price edge 4-6%: n 10 | CLV 1.11 | beat close 0.667 | 3-4-0 | -1.26u | ROI -0.18
   price edge 6%+: n 8 | CLV -0.32 | beat close 0.375 | 5-2-0 | 3.51u | ROI 0.5014
  by hours before start when logged:
-  1-6h: n 49 | CLV 1.03 | beat close 0.838 | 19-25-0 | -8.1u | ROI -0.1884
+  1-6h: n 88 | CLV 1.03 | beat close 0.838 | 19-25-0 | -8.1u | ROI -0.1884
   24h+: n 27 | CLV None | beat close None | 0-0-0 | 0u | ROI None
   6-24h: n 24 | CLV -2.55 | beat close 0.786 | 6-9-0 | -2.88u | ROI -0.32
   <1h: n 47 | CLV 0.43 | beat close 0.735 | 27-20-0 | 3.51u | ROI 0.0747
@@ -58,16 +59,19 @@ NHL 2026-10-30T00:10Z Boston Bruins @ St Louis Blues | player_shots_on_goal Colt
 NHL 2026-10-29T23:10Z Columbus Blue Jackets @ Carolina Hurricanes | player_shots_on_goal Sean Walker Over 1.5 | draftkings 1.91 vs fair 53.4% | EV +1.9% | [NEUTRAL] [PROJECTION AGREES (80%)]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
+NFL 2026-10-30T00:15Z Carolina Panthers @ Green Bay Packers | >> Avoid: Jalen Coker to score a TD — market 31%, KRONOS 26%. Overpriced to score — not a bet; keep him out of parlays.
+NFL 2026-10-30T00:15Z Carolina Panthers @ Green Bay Packers | player_anytime_td Jalen Coker Yes  | model 26.5% fair 30.7% edge -4.2 | AVOID Yes [NEUTRAL] | proj 0.2 (sd 0.0) from last 5 games x opp factor 1.01; raw model 18.6%, anchored 35%; ratio 0.79
+      why: Jalen Coker projects 0.21 touchdowns per game over his last 5 games on about 8 touches a week, shrunk toward a role prior of 0.15. That is 26% to score versus a de-vigged market of 31%. The disagreement is 0.79 error bands: real but small, which caps this at a quarter-unit Lean. The number on the other side was set by a book that can see red-zone role, goal-line committee, depth-chart position — none of which this model ingests. Falsifier: Jalen Coker scores. Market read [NEUTRAL]: no sharp or public signal yet.
 NHL 2026-10-29T23:10Z Winnipeg Jets @ Tampa Bay Lightning | >> Lean: Winnipeg Jets +1.5 — KRONOS 56% vs market 53%
 NHL 2026-10-29T23:10Z Winnipeg Jets @ Tampa Bay Lightning | spreads  Tampa Bay Lightning -1.5 | model 43.6% fair 47.1% edge -3.5 | Lean Winnipeg Jets [AGAINST SHARP] | xG 3.56-2.85; TBL G: Andrei Vasilevskiy (Confirmed); WPG G: Stuart Skinner (Confirmed); B2B WPG; raw model 37.2%, anchored 35% to market, slate scale 1.10
-      why:  Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 3.5 against. Caution: sharp money has moved the other way.
+      why:  Market read [AGAINST SHARP]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 3.2 against. Caution: sharp money has moved the other way.
 NHL 2026-10-30T00:10Z Boston Bruins @ St Louis Blues | >> Lean: Boston Bruins to win — KRONOS 52% vs market 48%
 NHL 2026-10-30T00:10Z Boston Bruins @ St Louis Blues | h2h  St Louis Blues  | model 48.3% fair 51.6% edge -3.4 | Lean Boston Bruins [NEUTRAL] | xG 2.85-3.34; STL G: Joel Hofer (Confirmed); BOS G: Jeremy Swayman (Confirmed); raw model 42.0%, anchored 35% to market, slate scale 1.10
       why: Expected goals 2.85-3.34 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Joel Hofer (Confirmed) / Jeremy Swayman (Confirmed). Raw model 42% home, anchored 35% toward the market: Boston Bruins 52% versus 48% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [NEUTRAL]: no sharp or public signal yet.
 NHL 2026-10-29T23:10Z Winnipeg Jets @ Tampa Bay Lightning | >> Lean: Winnipeg Jets to win — KRONOS 33% vs market 30%
 NHL 2026-10-29T23:10Z Winnipeg Jets @ Tampa Bay Lightning | h2h  Tampa Bay Lightning  | model 67.1% fair 70.1% edge -3.0 | Lean Winnipeg Jets [AGAINST SHARP · PUBLIC] | xG 3.56-2.85; TBL G: Andrei Vasilevskiy (Confirmed); WPG G: Stuart Skinner (Confirmed); B2B WPG; raw model 61.4%, anchored 35% to market, slate scale 1.10
-      why: Expected goals 3.56-2.85 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Andrei Vasilevskiy (Confirmed) / Stuart Skinner (Confirmed). Raw model 61% home, anchored 35% toward the market: Winnipeg Jets 33% versus 30% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [AGAINST SHARP · PUBLIC]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 2.7 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
-(models last refreshed: 2026-10-29T17:36:03+00:00 {"NFL": 174, "NFL_PROPS": 0, "NHL": 66, "UFC": 0, "PRICE": 4, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 8, "graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 88, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 127, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 18})
+      why: Expected goals 3.56-2.85 (home first) from 5v5 and special-teams xG shrunk toward league average; goalies Andrei Vasilevskiy (Confirmed) / Stuart Skinner (Confirmed). Raw model 61% home, anchored 35% toward the market: Winnipeg Jets 33% versus 30% at fair. Moneylines have no backtest; colour only. Falsifier: the other side leads by two after the first period. Market read [AGAINST SHARP · PUBLIC]: pinnacle has moved away from it since open; sharp/steam alerts 0.0 for, 2.4 against; retail books shade it 2.1pp — this is the public side. Caution: sharp money has moved the other way. Caution: this is the public side.
+(models last refreshed: 2026-10-29T18:36:08+00:00 {"NFL": 174, "NFL_PROPS": 39, "NHL": 66, "UFC": 0, "PRICE": 6, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "MLB": 0, "GRADE": [{"week": 8, "graded": 28, "voided": 28, "quarantined": 11, "season": 2026}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 88, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 124, "graded": 0, "voided": 0, "quarantined": 1}}, "NBA": 18})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NHL 2026-10-29T23:10Z | KRONOS Columbus Blue Jackets 2.6 @ Carolina Hurricanes 3.7 | market total 6.0 | gap total +0.3 (0.17), home win 69% vs 70%
@@ -93,11 +97,11 @@ NBA 2026-10-30T00:10Z | KRONOS Cleveland Cavaliers 113.3 @ Atlanta Hawks 119.9 |
 NFL 2026-10-30T00:15Z | KRONOS Carolina Panthers 22.4 @ Green Bay Packers 26.1 | market 21.8-25.8 | gap margin -0.4 (0.04), total +1.0 (0.11)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.0 margin -0.0 total; GB: 2 skill/OL out (+1.0); CAR: 2 skill/OL out (+1.0)
 NHL 2026-10-30T02:10Z | KRONOS Buffalo Sabres 3.4 @ Anaheim Ducks 3.2 | market total 6.5 | gap total +0.0 (0.00), home win 45% vs 43%
-      no gap large enough to be a mispricing | xG 3.16-3.35; Ville Husso (, unconfirmed) / Colten Ellis (, unconfirmed)
+      no gap large enough to be a mispricing | xG 3.16-3.35; Ville Husso (, unconfirmed) / Colten Ellis (Likely, unconfirmed)
 NHL 2026-10-30T02:10Z | KRONOS Ottawa Senators 3.1 @ Los Angeles Kings 2.8 | market total 6.0 | gap total -0.1 (0.04), home win 48% vs 49%
-      no gap large enough to be a mispricing | xG 2.83-3.09; Darcy Kuemper (, unconfirmed) / Jonas Johansson (, unconfirmed)
+      no gap large enough to be a mispricing | xG 2.83-3.09; Darcy Kuemper (Confirmed) / Jonas Johansson (Confirmed)
 NHL 2026-10-30T02:10Z | KRONOS Vancouver Canucks 2.9 @ San Jose Sharks 4.0 | market total 6.5 | gap total +0.4 (0.22), home win 64% vs 64%
-      no gap large enough to be a mispricing | xG 3.97-2.94; Yaroslav Askarov (, unconfirmed) / goalie unconfirmed (team avg)
+      no gap large enough to be a mispricing | xG 3.97-2.94; Yaroslav Askarov (Confirmed) / goalie unconfirmed (team avg)
 NBA 2026-10-30T02:10Z | KRONOS Memphis Grizzlies 114.1 @ Portland Trail Blazers 116.3 | market 112.8-120.2 | gap margin -5.3 (0.53), total -2.7 (0.19)
       no gap large enough to be a mispricing | ridge ratings; games 4/5
 NFL 2026-11-01T18:00Z | KRONOS Arizona Cardinals 23.8 @ Dallas Cowboys 30.5 | market 23.5-31.0 | gap margin -0.8 (0.09), total -0.1 (0.01)
@@ -159,7 +163,7 @@ NFL 2026-11-10T01:15Z | KRONOS Buffalo Bills 26.2 @ Minnesota Vikings 22.2 | mar
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 20-24 | ROI -15.9%
-[NEUTRAL] 33 bets | beat close 92% | CLV +2.16pp | 11-11 | ROI +1.8%
+[NEUTRAL] 34 bets | beat close 92% | CLV +2.16pp | 11-11 | ROI +1.8%
 [SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 9-8 | ROI -6.5%
 [AGAINST SHARP · THIN MARKET] 19 bets | beat close 77% | CLV +0.28pp | 10-8 | ROI +6.2%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 5-2 | ROI +32.9%
@@ -168,8 +172,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [AGAINST SHARP · PUBLIC] 1 bets | beat close n/a | CLV n/a | 0-0 | ROI n/a
 
 DK SPLITS: 0 rows on file (none)
-   table: 2026-10-29T17:35:58+00:00 DraftKings reports the table temporarily unavailable
-   articles: 2026-10-29T17:35:58+00:00 wp-json 5 posts
+   table: 2026-10-29T18:36:03+00:00 DraftKings reports the table temporarily unavailable
+   articles: 2026-10-29T18:36:03+00:00 wp-json 4 posts
 
 KRONOS CARD (shadow; chosen by rule: shrunk EV, consensus price, projection agrees, verified minutes, <=2 per game, <=60% one direction; locks 90 min before start):
 #1 NBA Charlotte Hornets @ Detroit Pistons | Daniss Jenkins Over 3.5 player_assists | fanduel 2.0 | score 0.01062 | L | edge gone at last refresh | CONSENSUS 4 BOOKS · PROJECTION AGREES (65%)
@@ -466,7 +470,7 @@ NHL 2026-10-30T23:10:00Z Winnipeg Jets @ Florida Panthers  id=a536736a6da269d2e1
 NHL 2026-10-31T00:10:00Z Seattle Kraken @ Calgary Flames  id=026d37181dd4ace0df7565d9b208ce7e
    ML: 
 
-QUARANTINE (41 unresolved player/market pairs; these bets are unsettled, not lost):
+QUARANTINE (52 unresolved player/market pairs; these bets are unsettled, not lost):
   George Pickens | player_anytime_td | player name did not resolve x2
   Tyler Goodson | player_rush_yds | player name did not resolve x2
   AJ Dillon | player_rush_yds | player name did not resolve
@@ -477,6 +481,8 @@ QUARANTINE (41 unresolved player/market pairs; these bets are unsettled, not los
   Brevyn Spann-Ford | player_anytime_td | player name did not resolve
   Brevyn Spann-Ford | player_reception_yds | player name did not resolve
   Brevyn Spann-Ford | player_receptions | player name did not resolve
+  Bryce Young | player_pass_yds | player name did not resolve
+  Bryce Young | player_rush_yds | player name did not resolve
   CeeDee Lamb | player_anytime_td | player name did not resolve
   CeeDee Lamb | player_reception_yds | player name did not resolve
   CeeDee Lamb | player_receptions | player name did not resolve
@@ -493,13 +499,22 @@ QUARANTINE (41 unresolved player/market pairs; these bets are unsettled, not los
   Jake Ferguson | player_anytime_td | player name did not resolve
   Jake Ferguson | player_reception_yds | player name did not resolve
   Jake Ferguson | player_receptions | player name did not resolve
+  Jalen Coker | player_anytime_td | player name did not resolve
+  Jalen Coker | player_reception_yds | player name did not resolve
+  Jalen Coker | player_receptions | player name did not resolve
+  John Metchie III | player_reception_yds | player name did not resolve
+  John Metchie III | player_receptions | player name did not resolve
   Johnny Mundt | player_anytime_td | player name did not resolve
   Jonathan Mingo | player_anytime_td | player name did not resolve
+  Jonnu Smith | player_reception_yds | player name did not resolve
+  Jonnu Smith | player_receptions | player name did not resolve
   KaVontae Turpin | player_anytime_td | player name did not resolve
   Luke Schoonmaker | player_anytime_td | player name did not resolve
   Makai Lemon | player_anytime_td | player name did not resolve
   Makai Lemon | player_reception_yds | player name did not resolve
   Makai Lemon | player_receptions | player name did not resolve
+  Mitchell Evans | player_reception_yds | player name did not resolve
+  Mitchell Evans | player_receptions | player name did not resolve
   Ryan Flournoy | player_anytime_td | player name did not resolve
   Ryan Flournoy | player_reception_yds | player name did not resolve
   Ryan Flournoy | player_receptions | player name did not resolve
