@@ -34,6 +34,7 @@ import threading
 import time
 import unicodedata
 import urllib.parse
+import urllib.error
 import urllib.request
 import webbrowser
 from datetime import datetime, timedelta, timezone
@@ -59,35 +60,52 @@ MONTHLY_CREDITS = int(os.environ.get("ODDS_MONTHLY_CREDITS", "20000"))
 RESERVE = 400            # held for closes; tape/props/backfill never spend below it
 HARD_FLOOR = 25          # even closes stop here
 # 10 named books = 1 region on the quota. Three sharp books + seven retail.
-BOOKS = "pinnacle,lowvig,betonlineag,draftkings,fanduel,betmgm,williamhill_us,espnbet,fanatics,betrivers"
+# 20 books, standard across every sport (2026-10-29). The feed bills per batch of 10, so
+# 20 costs exactly 2x of 10 — never pull 11-19. Exchanges (Betfair, Matchbook, Smarkets) are
+# the sharpest soccer referees; DraftKings, FanDuel and Fanatics are the only CT-bettable books.
+BOOKS_CORE = "pinnacle,lowvig,betonlineag,draftkings,fanduel,betmgm,williamhill_us,espnbet,fanatics,betrivers"
+BOOKS_EXTRA = "betfair_ex_eu,matchbook,smarkets,marathonbet,williamhill,hardrockbet,ballybet,bovada,betus,mybookieag"
+BOOKS = os.environ.get("BOOKS", BOOKS_CORE + "," + BOOKS_EXTRA)
+BOOK_UNITS = max(1, -(-len([b for b in BOOKS.split(",") if b.strip()]) // 10))   # credits multiplier per market
 SHARP = {"pinnacle", "lowvig", "betonlineag"}
 FAMILY = {"lowvig": "betonline", "betonlineag": "betonline"}   # LowVig is BetOnline's sister book
 
 SPORTS = {
+    # prop pulls are limited to these markets only (owner's spec, 2026-10-29)
     "NFL": dict(key="americanfootball_nfl", markets="h2h,spreads,totals",
-                props=["player_pass_yds", "player_rush_yds", "player_reception_yds", "player_receptions", "player_anytime_td"]),
-    "NBA": dict(key="basketball_nba", markets="h2h,spreads,totals",
-                props=["player_points", "player_rebounds", "player_assists", "player_threes"]),
+                props=["player_anytime_td", "player_rush_yds", "player_reception_yds", "player_receptions",
+                       "player_pass_yds", "player_pass_tds"]),
+    "EPL": dict(key="soccer_epl", markets="h2h,spreads,totals",
+                props=["player_goal_scorer_anytime", "player_assists"]),
+    # The Odds API carries no Champions League player props (EPL, La Liga, Bundesliga, Serie A,
+    # Ligue 1 and MLS only), so UCL is game lines only — prop pulls would cost credits for nothing.
+    "UCL": dict(key="soccer_uefa_champs_league", markets="h2h,spreads,totals", props=[]),
     "NHL": dict(key="icehockey_nhl", markets="h2h,spreads,totals",
-                props=["player_points", "player_shots_on_goal", "player_goals"]),
-    "MLB": dict(key="baseball_mlb", markets="h2h,spreads,totals",
-                props=["pitcher_strikeouts", "batter_hits", "batter_total_bases", "batter_home_runs"]),
+                props=["player_goals", "player_shots_on_goal"]),
+    "NBA": dict(key="basketball_nba", markets="h2h,spreads,totals",
+                props=["player_points", "player_assists", "player_blocks", "player_rebounds"]),
+    # UFC: moneyline only. The Odds API does not carry method of victory for MMA (checked
+    # 2026-10-29), so that needs a different source if it's ever wanted.
     "UFC": dict(key="mma_mixed_martial_arts", markets="h2h", props=[]),
 }
+SOCCER = {"EPL", "UCL"}
+# NBA game lines are pulled less often (tape intervals x3); props follow the same 6h/2h/30m schedule as every sport
+SPORT_CADENCE = {"NBA": 3}
+PROP_SLOTS_BY_SPORT = {"NBA": (360, 120, 60, 30)}   # NBA gets an extra 1-hour prop pull: its prop edge is the proven one
 OUTRIGHTS = {"WS": "baseball_mlb_world_series_winner"}   # pulled every 6h while it returns data
 
 # cadence (minutes) — the bucket stretches these automatically when credits are tight
 SHARP_WINDOW_MIN = 90      # last 90 minutes before a start cluster
-SHARP_EVERY = 5
+SHARP_EVERY = 120          # 2026-10-29: no 5-minute tape in the last 90 min; closes still pulled below
 BASELINE_HOURS = 36        # games inside 36h get baseline tape
-BASELINE_EVERY = 20
-OPENER_DAYS = 7            # games 36h-7d out get a pull every 6h (openers + early moves)
-OPENER_EVERY = 360
-PROP_SLOTS_MIN = (360, 90, 20, 5)    # props at 6h, 90m, 20m and a T-5 prop CLOSE (only for games with open paper props)
+BASELINE_EVERY = 120       # games inside 36h: game lines every 2 hours (owner's spec, 2026-10-29)
+OPENER_DAYS = 7            # games 36h-7d out get a pull every 12h (openers + early moves)
+OPENER_EVERY = 720         # every 12 hours (was 6): early lines matter least for price edges
+PROP_SLOTS_MIN = (360, 120, 30)      # owner's spec 2026-10-29: props at 6h, 2h and 30m; the 30m pull is the prop close
 CLOSE_SLOTS_MIN = ((12, 8), (4, 0))  # two close pulls per start cluster: T-12..T-8 and T-4..T-0
 CLUSTER_MIN = 30
-UFC_LOOKAHEAD_DAYS = 7
-PROP_FLOOR_HOURS = 6
+UFC_LOOKAHEAD_DAYS = 30   # numbered cards graded from a month out (2026-10-29)
+PROP_FLOOR_HOURS = 8       # props get first claim: credits for every prop pull due in the next 8h are held back from tape
 
 # historical backfill queue (featured markets, one snapshot per game day). Cost: 10 x 3 = 30/day.
 # Two snapshots per game day: ~8h before (15 UTC) = "opener-ish", and 23 UTC = near close, so backtests can
@@ -219,10 +237,29 @@ def meta_set(con, k, v):
 
 
 # ---------------------------------------------------------------- HTTP (overridable for tests)
+BOOKS_FALLBACK = {"active": False}
+
+
 def http_get(path, params):
-    q = urllib.parse.urlencode({"apiKey": load_key(), **params})
-    with urllib.request.urlopen(urllib.request.Request(f"{API}{path}?{q}"), timeout=40) as r:
-        return json.loads(r.read().decode()), {k.lower(): v for k, v in r.headers.items()}
+    """One request to the odds feed. If the feed rejects a bookmaker key in the 20-book list,
+    retry with the core 10 so KRONOS keeps pricing, and remember the fallback for the summary."""
+    p = dict(params)
+    if BOOKS_FALLBACK["active"] and p.get("bookmakers") == BOOKS:
+        p["bookmakers"] = BOOKS_CORE
+    q = urllib.parse.urlencode({"apiKey": load_key(), **p})
+    try:
+        with urllib.request.urlopen(urllib.request.Request(f"{API}{path}?{q}"), timeout=40) as r:
+            return json.loads(r.read().decode()), {k.lower(): v for k, v in r.headers.items()}
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode()[:300]
+        except Exception:
+            pass
+        if e.code in (400, 422) and "bookmaker" in body.lower() and p.get("bookmakers") == BOOKS:
+            BOOKS_FALLBACK.update(active=True, reason=f"{e.code} {body[:160]}")
+            return http_get(path, params)
+        raise
 
 
 
@@ -350,8 +387,59 @@ class Desk:
         return tokens - cost >= floor
 
     # ---------- schedule (free endpoints)
+    def discover_ufc_cards(self, con, now):
+        """Numbered UFC cards (UFC 3xx) from UFCStats' upcoming-events page, within
+        UFC_LOOKAHEAD_DAYS. Writes cards_auto.json so load_cards picks them up; hand-made files in
+        cards/ still work and win on conflicts. Runs at most every 12 hours."""
+        last = meta_get(con, "ufc_cards_auto_ts")
+        if last and (now - parse(last)).total_seconds() < 12 * 3600:
+            return
+        meta_set(con, "ufc_cards_auto_ts", iso(now))
+        ua = {"User-Agent": "Mozilla/5.0 (KRONOS desk)"}
+        def fetch(u):
+            with urllib.request.urlopen(urllib.request.Request(u, headers=ua), timeout=30) as r:
+                return r.read().decode("utf-8", "replace")
+        try:
+            page = fetch("http://ufcstats.com/statistics/events/upcoming")
+        except Exception as ex:
+            meta_set(con, "ufc_cards_auto", f"{iso(now)} upcoming page failed: {ex}"[:200]); return
+        found = []
+        for href, name in re.findall(r'<a[^>]+href="(http[s]?://ufcstats\.com/event-details/[0-9a-f]+)"[^>]*>\s*([^<]+?)\s*</a>', page):
+            if not re.match(r"^UFC\s+\d+", name.strip()):
+                continue                                   # numbered cards only, no Fight Nights
+            tail = page[page.find(href):page.find(href) + 900]
+            dm = re.search(r"([A-Z][a-z]+ \d{1,2}, \d{4})", tail)
+            try:
+                when = datetime.strptime(dm.group(1), "%B %d, %Y").replace(tzinfo=UTC) if dm else None
+            except ValueError:
+                when = None
+            if when and (when - now).days > UFC_LOOKAHEAD_DAYS:
+                continue
+            try:
+                ev = fetch(href)
+            except Exception:
+                continue
+            names = re.findall(r'href="http[s]?://ufcstats\.com/fighter-details/[0-9a-f]+"[^>]*>\s*([^<]+?)\s*</a>', ev)
+            fights = [{"a": names[i], "b": names[i + 1]} for i in range(0, len(names) - 1, 2)]
+            if fights:
+                found.append({"event": name.strip(), "date": dm.group(1) if dm else None, "fights": fights})
+        try:
+            with open(os.path.join(STORE, "cards_auto.json"), "w") as fh:
+                json.dump(found, fh)
+            meta_set(con, "ufc_cards_auto", f"{iso(now)} {len(found)} numbered cards: " +
+                     ", ".join(f"{c['event']} ({len(c['fights'])} fights)" for c in found)[:300])
+        except Exception as ex:
+            meta_set(con, "ufc_cards_auto", f"{iso(now)} write failed: {ex}"[:200])
+
     def load_cards(self):
         cards = {}
+        try:
+            for c in json.load(open(os.path.join(STORE, "cards_auto.json"))):
+                for f in c.get("fights", []):
+                    cards[frozenset((norm_name(f["a"]), norm_name(f["b"])))] = c["event"]
+                    cards[self.last_names(f["a"], f["b"])] = c["event"]
+        except Exception:
+            pass
         for path in glob.glob(os.path.join(CARDS, "*.json")):
             try:
                 raw = json.load(open(path))
@@ -375,6 +463,10 @@ class Desk:
         self._record(con, sport, "events", hdr, now)
         self.events_at[sport] = now
         if sport == "UFC":
+            try:
+                self.discover_ufc_cards(con, now)
+            except Exception as ex:
+                meta_set(con, "ufc_cards_auto", f"{iso(now)} error: {ex}"[:200])
             self.load_cards()
         for e in data:
             card = None
@@ -614,7 +706,7 @@ class Desk:
                     if lo <= mins < hi and not self._done(con, k):
                         if sport == "UFC" and i == 0:
                             self._mark(con, k, now); continue      # one close per UFC fight cluster
-                        if self.can_spend(con, len(SPORTS[sport]["markets"].split(",")), now, priority="close"):
+                        if self.can_spend(con, len(SPORTS[sport]["markets"].split(",")) * BOOK_UNITS, now, priority="close"):
                             ids = [e["event_id"] for e in evs
                                    if abs((parse(e["commence"]) - c).total_seconds()) <= CLUSTER_MIN * 60]
                             self.pull_featured(con, sport, now, is_close=True, close_ids=ids)
@@ -627,28 +719,22 @@ class Desk:
             props = SPORTS[sport]["props"]
             for e in evs:
                 start = parse(e["commence"])
-                for s in PROP_SLOTS_MIN:
+                for s in PROP_SLOTS_BY_SPORT.get(sport, PROP_SLOTS_MIN):
                     k = f"prop:{e['event_id']}:{s}"
                     mins = (start - now).total_seconds() / 60
                     if self._done(con, k) or not props:
                         continue
-                    if s == 5:
-                        # prop close: only worth the credits when a paper/real prop is open on this game,
-                        # and never after the start (that would be a live price)
-                        if not (0 < mins <= 5):
-                            continue
-                        if not con.execute("select 1 from bets where event_id=? and market like 'player_%' and result='pending' limit 1",
-                                           (e["event_id"],)).fetchone():
-                            self._mark(con, k, now); continue
-                    if s - 15 < mins <= s:
-                        if self.can_spend(con, len(props), now, priority="close" if s == 5 else "props"):
+                    is_last = (s == min(PROP_SLOTS_BY_SPORT.get(sport, PROP_SLOTS_MIN)))
+                    window = 15 if s <= 30 else 30
+                    if s - window < mins <= s:
+                        if self.can_spend(con, len(props) * BOOK_UNITS, now, priority="close" if is_last else "props"):
                             try:
-                                self.pull_props(con, sport, e["event_id"], now, is_close=(s == 5))
+                                self.pull_props(con, sport, e["event_id"], now, is_close=is_last)
                             except Exception as ex:
                                 meta_set(con, f"error_props_{sport}", f"{iso(now)} {ex}"[:200])
                         self._mark(con, k, now)   # missed slots are skipped, not retried
                     elif 0 < mins - s <= PROP_FLOOR_HOURS * 60:
-                        prop_floor += len(props)   # tokens held back so tape can't starve upcoming props
+                        prop_floor += len(props) * BOOK_UNITS   # tokens held back so tape can't starve upcoming props
 
         # 3) tape: sharp window > baseline > openers. Each sport pull covers every game in it.
         tokens, cap = self._bucket(con, now)
@@ -666,7 +752,7 @@ class Desk:
             evs = plan[sport]
             if not evs:
                 continue
-            cost = len(SPORTS[sport]["markets"].split(","))
+            cost = len(SPORTS[sport]["markets"].split(",")) * BOOK_UNITS
             soonest = min((parse(e["commence"]) - now).total_seconds() / 60 for e in evs)
             in_sharp = any(0 < (c - now).total_seconds() / 60 <= SHARP_WINDOW_MIN for c in self.clusters(evs))
             if in_sharp:
@@ -675,6 +761,7 @@ class Desk:
                 every, floor = BASELINE_EVERY, prop_floor + hold_bf * 0.5 + cost * 6
             else:
                 every, floor = OPENER_EVERY, prop_floor + hold_bf + cost * 12
+            every = every * SPORT_CADENCE.get(sport, 1)
             # starvation guard: a sport with games inside the baseline window and no
             # game-line quotes at all gets one pull regardless of the prop floor
             if soonest <= BASELINE_HOURS * 60:
@@ -863,6 +950,8 @@ class Desk:
             mine, theirs = as_, hs
         else:
             mine = theirs = None
+        if market == "h2h" and selection == "Draw":
+            return "W" if hs == as_ else "L"                     # three-way soccer moneyline
         if market == "h2h" and mine is not None:
             return "W" if mine > theirs else "L" if mine < theirs else "P"
         if market == "spreads" and mine is not None and line is not None:
@@ -1232,12 +1321,36 @@ class Desk:
             con.close()
         return out
 
+
+    def _credit_forecast_line(self, st):
+        """Projected spend to the reset date, by sport, so a squeeze shows up before it slows the data."""
+        con = db()
+        try:
+            since = iso(now_utc() - timedelta(days=3))
+            rows = con.execute("""select sport, coalesce(sum(cost),0) c from usage where ts>? group by sport""", (since,)).fetchall()
+            per_day = {r["sport"] or "?": r["c"] / 3.0 for r in rows}
+            tot = sum(per_day.values())
+            days = float(st.get("days_to_reset") or 0)
+            left = float(st.get("remaining") or 0)
+            proj = tot * days
+            verdict = "on track" if proj <= left else f"SHORT by ~{proj - left:.0f} — KRONOS will stretch pull intervals"
+            by = ", ".join(f"{k} {v:.0f}" for k, v in sorted(per_day.items(), key=lambda x: -x[1]))
+            fb = f" | BOOKS FALLBACK to core 10: {BOOKS_FALLBACK.get('reason')}" if BOOKS_FALLBACK.get("active") else f" | {len(BOOKS.split(','))} books"
+            ufc = meta_get(con, "ufc_cards_auto")
+            return (f"CREDIT FORECAST: ~{tot:.0f}/day over the last 3 days ({by}) -> ~{proj:.0f} to reset vs {left:.0f} left: {verdict}{fb}"
+                    + (f"\nUFC CARDS: {ufc}" if ufc else ""))
+        except Exception as e:   # noqa: BLE001
+            return f"CREDIT FORECAST unavailable ({str(e)[:80]})"
+        finally:
+            con.close()
+
     def summary_text(self):
         """Plain-text digest embedded in the home page so a web fetch (no JavaScript) can read everything."""
         st = self.status(); rp = self.report()
         lines = ["KRONOS DESK SUMMARY  (generated " + iso(now_utc()) + ")",
                  f"credits left {st['remaining']} | budget/day {st['allowance_per_day']} | spent today {st['spent_today']} | "
                  f"reset in {st['days_to_reset']}d | backfill days {st['backfill_days']}",
+                 self._credit_forecast_line(st),
                  f"errors: {st['errors'] or 'none'}", "",
                  f"BETS: {rp['bets_total']} total, {rp['pending']} pending, {rp['graded']} graded",
                  self._grading_status_line(),
@@ -1326,6 +1439,245 @@ def bet_type(r):
 
 
 # ---------------------------------------------------------------- web
+
+# ------------------------------------------------------------------ odds board (/odds)
+# Every book side by side for each game, each price colored by its edge over a fair price.
+BOOK_SHORT = {"draftkings": "DK", "fanduel": "FD", "fanatics": "FAN", "pinnacle": "PIN", "lowvig": "LV",
+              "betonlineag": "BOL", "betfair_ex_eu": "BFX", "matchbook": "MB", "smarkets": "SMK", "marathonbet": "MAR",
+              "betmgm": "MGM", "williamhill_us": "CZR", "espnbet": "ESPN", "betrivers": "BR", "hardrockbet": "HR",
+              "ballybet": "BAL", "williamhill": "WH", "bovada": "BOV", "betus": "BUS", "mybookieag": "MYB"}
+BETTABLE = ("draftkings", "fanduel", "fanatics")            # the only legal books in Connecticut
+ODDS_SHARP_W = {"pinnacle": 3.0, "betfair_ex_eu": 3.0, "lowvig": 2.0, "betonlineag": 2.0, "matchbook": 2.0,
+                "smarkets": 2.0, "marathonbet": 1.5}
+MKT_LABEL = {"h2h": "Moneyline", "spreads": "Spread", "totals": "Total", "player_points": "Points",
+             "player_rebounds": "Rebounds", "player_assists": "Assists", "player_blocks": "Blocks",
+             "player_anytime_td": "Anytime TD", "player_rush_yds": "Rushing yards", "player_reception_yds": "Receiving yards",
+             "player_receptions": "Receptions", "player_pass_yds": "Passing yards", "player_pass_tds": "Passing TDs",
+             "player_goals": "Goals", "player_shots_on_goal": "Shots on goal", "player_goal_scorer_anytime": "Anytime goalscorer"}
+
+
+def _american(dec):
+    try:
+        dec = float(dec)
+    except (TypeError, ValueError):
+        return "—"
+    if dec <= 1.0:
+        return "—"
+    return f"+{round((dec - 1) * 100)}" if dec >= 2 else f"{-round(100 / (dec - 1))}"
+
+
+def _book_order(books):
+    rank = {b: i for i, b in enumerate(list(BETTABLE) + list(ODDS_SHARP_W) + list(BOOK_SHORT))}
+    return sorted(books, key=lambda b: rank.get(b, 99))
+
+
+def odds_grid(con, event_id):
+    """Rows of {section, label, prices{book: dec}, fair, ev{book: ev}, best, best_bet} for one game.
+
+    Fair price: each book's own prices are de-vigged (power method), then averaged with sharp books
+    weighted up (Pinnacle and Betfair x3). A book's edge is measured against the fair price built from
+    every OTHER book, so a book can't make its own price look good."""
+    q = [dict(r) for r in con.execute("select * from last_quote where event_id=?", (event_id,))]
+    groups = {}
+    for r in q:
+        if not r["price"]:
+            continue
+        m, pl = r["market"], r["player"] or ""
+        if m == "h2h":
+            key = None
+        elif m == "spreads":
+            key = None if r["line"] is None else round(abs(float(r["line"])), 2)
+        else:
+            key = None if r["line"] is None else round(float(r["line"]), 2)
+        groups.setdefault((m, pl, key), []).append(r)
+    rows = []
+    for (m, pl, key), rs in groups.items():
+        sides = {}
+        for r in rs:
+            sides.setdefault((r["outcome"], r["line"]), {})[r["book"]] = float(r["price"])
+        # each book's de-vigged view of this market (needs every side from that book)
+        side_ids = list(sides)
+        book_fair = {}
+        for bk in {r["book"] for r in rs}:
+            if m == "spreads":
+                # pair complementary sides: same |line|, opposite sign, different team
+                pairs = [(a, b) for i, a in enumerate(side_ids) for b in side_ids[i + 1:]
+                         if a[0] != b[0] and a[1] is not None and b[1] is not None and abs(float(a[1]) + float(b[1])) < 1e-9]
+                for a, b in pairs:
+                    if bk in sides[a] and bk in sides[b]:
+                        f = jr.power_devig([sides[a][bk], sides[b][bk]])
+                        if f:
+                            book_fair.setdefault(bk, {})[a] = f[0]; book_fair[bk][b] = f[1]
+            else:
+                if all(bk in sides[s] for s in side_ids) and len(side_ids) >= 2:
+                    f = jr.power_devig([sides[s][bk] for s in side_ids])
+                    if f:
+                        book_fair[bk] = {s: f[i] for i, s in enumerate(side_ids)}
+        for s in side_ids:
+            prices = sides[s]
+            def fair_excluding(ex):
+                num = den = 0.0
+                for bk, fv in book_fair.items():
+                    if bk == ex or s not in fv:
+                        continue
+                    w = ODDS_SHARP_W.get(bk, 1.0)
+                    num += fv[s] * w; den += w
+                return (num / den) if den else None
+            fair_all = fair_excluding(None)
+            ev = {}
+            vs_avg = False
+            for bk, p in prices.items():
+                fx = fair_excluding(bk)
+                if fx:
+                    ev[bk] = p * fx - 1
+            if fair_all is None and len(prices) >= 3:
+                # one-sided market (anytime scorer / TD: books post "Yes" only) — no second side to de-vig,
+                # so compare each price with the other books' average implied probability instead
+                vs_avg = True
+                for bk, p in prices.items():
+                    others = [1 / v for b2, v in prices.items() if b2 != bk]
+                    ev[bk] = p * (sum(others) / len(others)) - 1
+            best = max(prices, key=lambda b: prices[b]) if prices else None
+            bet_books = [b for b in prices if b in BETTABLE]
+            best_bet = max(bet_books, key=lambda b: prices[b]) if bet_books else None
+            out, line = s
+            if m == "h2h":
+                label = out
+            elif m == "spreads":
+                label = f"{out} {float(line):+g}"
+            elif m in ("player_anytime_td", "player_goal_scorer_anytime"):
+                label = f"{pl} {out}"
+            else:
+                label = f"{(pl + ' ') if pl else ''}{out} {float(line):g}" if line is not None else f"{pl} {out}"
+            section = MKT_LABEL.get(m, m.replace("player_", "").replace("_", " ").title())
+            rows.append(dict(section=section, market=m, player=pl, label=label, prices=prices, fair=fair_all,
+                             ev=ev, best=best, best_bet=best_bet, vs_avg=vs_avg))
+    order = {"Moneyline": 0, "Spread": 1, "Total": 2}
+    rows.sort(key=lambda r: (order.get(r["section"], 3), r["section"], r["player"], r["label"]))
+    return rows, (max((r["ts"] for r in q), default=None))
+
+
+ODDS_CSS = """
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#f4f1ea;--ink:#1c1a17;--ink2:#6d675e;--card:#fffdf8;--line:#e2dcd0;--head:#ece6da;
+ --g3:#17663a;--g3b:#cfeed9;--g2:#2b7a4b;--g2b:#e3f4e8;--neg:#9a948a;--gold:#b8860b;--bet:#1f4fa0;--betb:#e5edfa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+ --bg:#14171b;--ink:#ebe6da;--ink2:#a39e93;--card:#1d2127;--line:#2e343c;--head:#252a31;
+ --g3:#7ee0a2;--g3b:#173a26;--g2:#8fd4a8;--g2b:#1a2c22;--neg:#6f7680;--gold:#e8b84a;--bet:#9ab8f2;--betb:#1c2740}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#14171b;--ink:#ebe6da;--ink2:#a39e93;--card:#1d2127;--line:#2e343c;--head:#252a31;
+ --g3:#7ee0a2;--g3b:#173a26;--g2:#8fd4a8;--g2b:#1a2c22;--neg:#6f7680;--gold:#e8b84a;--bet:#9ab8f2;--betb:#1c2740}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1500px;margin:0 auto;padding:14px 12px 60px}
+a{color:var(--bet)} h1{font:600 26px/1.1 Georgia,serif;margin:4px 0 2px} h2{font:600 17px Georgia,serif;margin:18px 0 6px}
+.sub{color:var(--ink2);font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:10px 0 4px;font-size:12px;color:var(--ink2)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+th,td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--head);font-weight:600;font-size:11.5px;position:sticky;top:0}
+th.bet{color:var(--bet);background:var(--betb)}
+td.sel,th.sel{position:sticky;left:0;background:var(--card);text-align:left;z-index:2;max-width:190px;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line)}
+th.sel{background:var(--head);z-index:3}
+td.fair{color:var(--ink2);border-right:1px solid var(--line)}
+td small{display:block;font-size:10px;line-height:1.1;color:var(--ink2)}
+td.e3{background:var(--g3b);color:var(--g3);font-weight:700} td.e3 small{color:var(--g3)}
+td.e2{background:var(--g2b);color:var(--g2)} td.e2 small{color:var(--g2)}
+td.neg{color:var(--neg)}
+td.best{box-shadow:inset 0 0 0 2px var(--gold)}
+td.bb{font-weight:700} td.bb::after{content:"\u2605";color:var(--bet);font-size:10px;margin-left:2px}
+td.na{color:var(--line)}
+.games a{display:block;padding:8px 10px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.games a span{color:var(--ink2);font-size:12px} .games{background:var(--card);border:1px solid var(--line);border-radius:8px}
+details{margin-top:8px} summary{cursor:pointer;font:600 15px Georgia,serif;padding:6px 0}
+"""
+
+
+def odds_page(q):
+    import html as _h
+    con = db()
+    try:
+        eid = q.get("event")
+        head = (f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content=\"width=device-width,"
+                f" initial-scale=1, viewport-fit=cover\"><title>KRONOS odds board</title><style>{ODDS_CSS}</style></head><body><div class=wrap>")
+        if not eid:
+            now = now_utc()
+            evs = con.execute("""select e.*, (select count(distinct book) from last_quote l where l.event_id=e.event_id) nb
+                                 from events e where commence>? and commence<? order by sport, commence""",
+                              (iso(now - timedelta(hours=3)), iso(now + timedelta(days=UFC_LOOKAHEAD_DAYS)))).fetchall()
+            out = [head, "<div class=sub>KRONOS</div><h1>Odds board</h1><div class=sub>Every book for every game, priced against a fair line. "
+                   "<a href=\"/\">Back to the desk</a></div>"]
+            cur = None
+            for e in evs:
+                if e["nb"] == 0:
+                    continue
+                if e["sport"] != cur:
+                    if cur is not None:
+                        out.append("</div>")
+                    cur = e["sport"]; out.append(f"<h2>{_h.escape(cur)}</h2><div class=games>")
+                t = parse(e["commence"]).astimezone(ET).strftime("%a %b %d, %-I:%M %p ET")
+                out.append(f'<a href="/odds?event={_h.escape(e["event_id"])}">{_h.escape(e["away"])} @ {_h.escape(e["home"])}'
+                           f'<br><span>{t} · {e["nb"]} books</span></a>')
+            if cur is not None:
+                out.append("</div>")
+            if cur is None:
+                out.append("<p class=sub>No priced games right now.</p>")
+            return "".join(out) + "</div></body></html>"
+        e = con.execute("select * from events where event_id=?", (eid,)).fetchone()
+        if not e:
+            return head + "<p>Game not found. <a href=\"/odds\">All games</a></p></div></body></html>"
+        rows, ts = odds_grid(con, eid)
+        books = _book_order({b for r in rows for b in r["prices"]})
+        t = parse(e["commence"]).astimezone(ET).strftime("%a %b %d, %-I:%M %p ET")
+        age = ""
+        if ts:
+            mins = (now_utc() - parse(ts)).total_seconds() / 60
+            age = f" · prices updated {int(mins)} min ago" if mins < 180 else f" · prices updated {mins / 60:.1f} h ago"
+        out = [head, f'<div class=sub><a href="/odds">All games</a> · {_h.escape(e["sport"])}</div>',
+               f"<h1>{_h.escape(e['away'])} @ {_h.escape(e['home'])}</h1><div class=sub>{t}{age} · {len(books)} books</div>",
+               "<div class=legend><span><i class=sw style=\"background:var(--g3b);outline:1px solid var(--g3)\"></i>edge +3% or more</span>"
+               "<span><i class=sw style=\"background:var(--g2b)\"></i>edge +1% to +3%</span>"
+               "<span><i class=sw style=\"box-shadow:inset 0 0 0 2px var(--gold)\"></i>best price anywhere</span>"
+               "<span><b style=\"color:var(--bet)\">\u2605</b> best price you can bet (DK / FD / Fanatics)</span>"
+               "<span>Fair = all other books de-vigged, Pinnacle and Betfair weighted x3. Exchange prices exclude commission. "
+               "Rows marked <i>vs avg</i> (anytime scorer / TD) have no second side to de-vig, so % is against the other books' average.</span></div>"]
+        if not rows:
+            out.append("<p class=sub>No prices on file for this game yet.</p>")
+        sec = None
+        for r in rows:
+            if r["section"] != sec:
+                if sec is not None:
+                    out.append("</table></div>" + ("</details>" if sec not in ("Moneyline", "Spread", "Total") else ""))
+                sec = r["section"]
+                is_prop = r["market"].startswith("player_")
+                hdr = "".join(f'<th class="{"bet" if b in BETTABLE else ""}">{BOOK_SHORT.get(b, b[:4].upper())}</th>' for b in books)
+                out.append((f"<details><summary>{_h.escape(sec)}</summary>" if is_prop else f"<h2>{_h.escape(sec)}</h2>")
+                           + f"<div class=scroll><table><tr><th class=sel>Selection</th><th>Fair</th>{hdr}</tr>")
+            fair = r["fair"]
+            cells = [f'<td class=sel title="{_h.escape(r["label"])}">{_h.escape(r["label"])}</td>',
+                     f"<td class=fair>{_american(1 / fair) if fair else ('vs avg' if r.get('vs_avg') else '—')}<small>{f'{fair:.1%}' if fair else ''}</small></td>"]
+            for b in books:
+                p = r["prices"].get(b)
+                if p is None:
+                    cells.append("<td class=na>·</td>"); continue
+                ev = r["ev"].get(b)
+                cls = []
+                if ev is not None:
+                    cls.append("e3" if ev >= 0.03 else "e2" if ev >= 0.01 else "neg" if ev < -0.02 else "")
+                if b == r["best"]:
+                    cls.append("best")
+                if b == r["best_bet"]:
+                    cls.append("bb")
+                sub = f"{ev:+.1%}" if ev is not None else ""
+                cells.append(f'<td class="{" ".join(c for c in cls if c)}">{_american(p)}<small>{sub}</small></td>')
+            out.append("<tr>" + "".join(cells) + "</tr>")
+        if sec is not None:
+            out.append("</table></div>" + ("</details>" if sec not in ("Moneyline", "Spread", "Total") else ""))
+        return "".join(out) + "</div></body></html>"
+    finally:
+        con.close()
+
 PAGE = """<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KRONOS desk</title>
 <style>
@@ -1361,7 +1713,7 @@ details.props summary{cursor:pointer;color:#2a5db0;font-size:14px}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid #e2dcd0;font-size:14px;vertical-align:top}
 form input,form select{font:14px Georgia,serif;margin:2px 0}
 </style>
-<header><div class="sub">THE SPORTS DESK</div><h1>KRONOS</h1></header>
+<header><div class="sub">THE SPORTS DESK</div><h1>KRONOS</h1><div class="sub"><a href="/odds">Odds board: every book, every game &rarr;</a></div></header>
 <div class="bar" id="bar">loading…</div>
 <nav id="nav"></nav>
 <main><section>
@@ -1385,7 +1737,7 @@ form input,form select{font:14px Georgia,serif;margin:2px 0}
 <details><summary class=mute>Plain-text summary (what Claude reads)</summary><pre id="summary" style="white-space:pre-wrap;font-size:12px">__SUMMARY__</pre></details>
 <details><summary class=mute>Fresh-read links for Claude (one per hour, next 14 days)</summary><p class=mute style="font-size:11px">__SLOTS__</p></details>
 <script>
-const SPORTS=["NFL","NBA","NHL","MLB","UFC","WS"];let sport="NFL";let BOARD=[],EDGES=[];
+const SPORTS=["NFL","EPL","UCL","NBA","NHL","UFC"];let sport="NFL";let BOARD=[],EDGES=[];
 const am=d=>d==null?"—":(d>=2?"+"+Math.round((d-1)*100):Math.round(-100/(d-1)));
 const t=s=>new Date(s).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
 const pct=x=>(x*100).toFixed(0)+"%";
@@ -1593,6 +1945,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(PAGE.replace("__SUMMARY__", _h.escape(summ)).replace("__SLOTS__", slots), "text/html; charset=utf-8")
         if u.path == "/picks":
             return self.send(picks_page(DESK.report(), DESK), "text/html; charset=utf-8")
+        if u.path == "/odds":
+            return self.send(odds_page(q), "text/html; charset=utf-8")
         if u.path.startswith("/s/"):   # hourly fresh-read slots (each address is new, so no stale cache)
             return self.send(DESK.summary_text(), "text/plain; charset=utf-8")
         if u.path == "/summary":
