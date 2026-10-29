@@ -388,45 +388,68 @@ class Desk:
 
     # ---------- schedule (free endpoints)
     def discover_ufc_cards(self, con, now):
-        """Numbered UFC cards (UFC 3xx) from UFCStats' upcoming-events page, within
-        UFC_LOOKAHEAD_DAYS. Writes cards_auto.json so load_cards picks them up; hand-made files in
-        cards/ still work and win on conflicts. Runs at most every 12 hours."""
-        last = meta_get(con, "ufc_cards_auto_ts")
+        """Numbered UFC cards (UFC 3xx) within UFC_LOOKAHEAD_DAYS. ESPN's MMA scoreboard is the main
+        source (clean JSON with event names and every bout); UFCStats is the fallback. Writes
+        cards_auto.json for load_cards; hand-made files in cards/ still work. At most every 12 hours.
+        2026-10-29: the UFCStats-only version found 0 cards while UFC 334 sat 16 days out."""
+        last = meta_get(con, "ufc_cards_auto_ts2")
         if last and (now - parse(last)).total_seconds() < 12 * 3600:
             return
-        meta_set(con, "ufc_cards_auto_ts", iso(now))
+        meta_set(con, "ufc_cards_auto_ts2", iso(now))
         ua = {"User-Agent": "Mozilla/5.0 (KRONOS desk)"}
         def fetch(u):
             with urllib.request.urlopen(urllib.request.Request(u, headers=ua), timeout=30) as r:
                 return r.read().decode("utf-8", "replace")
+        found, src = [], ""
         try:
-            page = fetch("http://ufcstats.com/statistics/events/upcoming")
+            rng = f"{now.strftime('%Y%m%d')}-{(now + timedelta(days=UFC_LOOKAHEAD_DAYS)).strftime('%Y%m%d')}"
+            sb = json.loads(fetch(f"https://site.api.espn.com/apis/site/v2/sports/mma/ufc/scoreboard?dates={rng}"))
+            for ev in sb.get("events", []):
+                name = str(ev.get("name") or ev.get("shortName") or "")
+                if not re.match(r"^UFC\s+\d+", name):
+                    continue                               # numbered cards only, no Fight Nights
+                fights = []
+                for comp in ev.get("competitions", []):
+                    names = [((c.get("athlete") or {}).get("displayName") or (c.get("team") or {}).get("displayName"))
+                             for c in comp.get("competitors", [])]
+                    names = [n for n in names if n]
+                    if len(names) == 2:
+                        fights.append({"a": names[0], "b": names[1]})
+                if fights:
+                    found.append({"event": name, "date": str(ev.get("date", ""))[:10], "fights": fights})
+            src = "ESPN"
         except Exception as ex:
-            meta_set(con, "ufc_cards_auto", f"{iso(now)} upcoming page failed: {ex}"[:200]); return
-        found = []
-        for href, name in re.findall(r'<a[^>]+href="(http[s]?://ufcstats\.com/event-details/[0-9a-f]+)"[^>]*>\s*([^<]+?)\s*</a>', page):
-            if not re.match(r"^UFC\s+\d+", name.strip()):
-                continue                                   # numbered cards only, no Fight Nights
-            tail = page[page.find(href):page.find(href) + 900]
-            dm = re.search(r"([A-Z][a-z]+ \d{1,2}, \d{4})", tail)
+            src = f"ESPN failed ({str(ex)[:60]})"
+        if not found:
             try:
-                when = datetime.strptime(dm.group(1), "%B %d, %Y").replace(tzinfo=UTC) if dm else None
-            except ValueError:
-                when = None
-            if when and (when - now).days > UFC_LOOKAHEAD_DAYS:
-                continue
-            try:
-                ev = fetch(href)
-            except Exception:
-                continue
-            names = re.findall(r'href="http[s]?://ufcstats\.com/fighter-details/[0-9a-f]+"[^>]*>\s*([^<]+?)\s*</a>', ev)
-            fights = [{"a": names[i], "b": names[i + 1]} for i in range(0, len(names) - 1, 2)]
-            if fights:
-                found.append({"event": name.strip(), "date": dm.group(1) if dm else None, "fights": fights})
+                page = fetch("http://ufcstats.com/statistics/events/upcoming")
+                link = r'<a[^>]+href="(https?://(?:www\.)?ufcstats\.com/event-details/[0-9a-f]+)"[^>]*>\s*([^<]+?)\s*</a>'
+                for href, name in re.findall(link, page):
+                    if not re.match(r"^UFC\s+\d+", name.strip()):
+                        continue
+                    tail = page[page.find(href):page.find(href) + 900]
+                    dm = re.search(r"([A-Z][a-z]+\.? \d{1,2}, \d{4})", tail)
+                    when = None
+                    if dm:
+                        for fmt in ("%B %d, %Y", "%b. %d, %Y", "%b %d, %Y"):
+                            try:
+                                when = datetime.strptime(dm.group(1), fmt).replace(tzinfo=UTC); break
+                            except ValueError:
+                                continue
+                    if when and (when - now).days > UFC_LOOKAHEAD_DAYS:
+                        continue
+                    ev = fetch(href)
+                    names = re.findall(r'href="https?://(?:www\.)?ufcstats\.com/fighter-details/[0-9a-f]+"[^>]*>\s*([^<]+?)\s*</a>', ev)
+                    fights = [{"a": names[i], "b": names[i + 1]} for i in range(0, len(names) - 1, 2)]
+                    if fights:
+                        found.append({"event": name.strip(), "date": dm.group(1) if dm else None, "fights": fights})
+                src += " -> UFCStats"
+            except Exception as ex:
+                src += f" -> UFCStats failed ({str(ex)[:60]})"
         try:
             with open(os.path.join(STORE, "cards_auto.json"), "w") as fh:
                 json.dump(found, fh)
-            meta_set(con, "ufc_cards_auto", f"{iso(now)} {len(found)} numbered cards: " +
+            meta_set(con, "ufc_cards_auto", f"{iso(now)} [{src}] {len(found)} numbered cards: " +
                      ", ".join(f"{c['event']} ({len(c['fights'])} fights)" for c in found)[:300])
         except Exception as ex:
             meta_set(con, "ufc_cards_auto", f"{iso(now)} write failed: {ex}"[:200])
