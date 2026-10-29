@@ -3851,11 +3851,305 @@ def _quarantine_block():
         out.append(f"  {r['player']} | {r['market']} | {r['reason']}" + (f" x{r['n']}" if r["n"] > 1 else ""))
     return "\n".join(out) + "\n"
 
+
+
+# ================================================================= every-game signal check (2026-10-29)
+# Owner's rule: the 19 KRONOS signals run on EVERY tracked game, not only on price edges.
+# Before this, jerry_signals.capture() ran only inside the price-edge scan, so game sides and model
+# calls carried no signals, the learning layer had nothing to learn from ("graded rows with signals: 0"),
+# and the feed showed no per-game metrics. This block:
+#   1. computes all 19 signals for both sides of every game line (moneyline, spread, total) on every
+#      tracked game starting in the next 36 hours, at every feed push (10 min);
+#   2. stores the latest values in game_signals, and freezes a pick-time copy 90 minutes before start;
+#   3. back-fills signals onto every pending paper bet that has none, so the learning layer can grade them;
+#   4. publishes the whole check in the feed as GAME SIGNALS, with KRONOS's projection, the de-vigged
+#      fair price, the best Connecticut price, the sharp/public read and the contradiction check.
+# Reporting and data capture only: no pick, price, stake or model weight is changed here.
+GS_HORIZON_H = 36
+GS_FREEZE_MIN = 90
+GS_FAIR_BOOKS = ("pinnacle", "lowvig", "betonlineag")
+GS_SD = {("NFL", "margin"): 13.0, ("NFL", "total"): 13.5, ("NBA", "margin"): 12.0, ("NBA", "total"): 17.0}
+
+
+def _gs_imp(p):
+    try:
+        p = float(p)
+        return 1.0 / p if p > 1 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _gs_power_fair(prices):
+    """Power de-vig across all outcomes of one market. Returns list of fair probs or None."""
+    imps = [_gs_imp(p) for p in prices]
+    if not imps or any(i is None for i in imps):
+        return None
+    lo, hi = 0.5, 3.0
+    for _ in range(80):
+        k = (lo + hi) / 2
+        s = sum(i ** k for i in imps)
+        if s > 1:
+            lo = k
+        else:
+            hi = k
+    k = (lo + hi) / 2
+    return [i ** k for i in imps]
+
+
+def _gs_ncdf(x):
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+
+def _gs_poisson_pmf(lam, k):
+    return math.exp(-lam) * lam ** k / math.factorial(k)
+
+
+def _gs_sim_p(sport, market, outcome, line, home, nums):
+    """Probability of this outcome from KRONOS's own projected score.
+    NHL: independent Poisson goals (ties go to OT/shootout as a coin flip for the moneyline).
+    NFL/NBA: normal around KRONOS's margin and total (approximation; NFL's own cover % uses the
+    empirical key-number distribution inside the model)."""
+    if not nums or nums["home_pts"] is None or nums["away_pts"] is None:
+        return None
+    hp, ap = float(nums["home_pts"]), float(nums["away_pts"])
+    is_home = outcome == home
+    if sport == "NHL":
+        ph = [_gs_poisson_pmf(hp, k) for k in range(16)]
+        pa = [_gs_poisson_pmf(ap, k) for k in range(16)]
+        def p_margin(cond):
+            return sum(ph[i] * pa[j] for i in range(16) for j in range(16) if cond(i - j, i + j))
+        if market == "h2h":
+            ph_win = p_margin(lambda m, t: m > 0) + 0.5 * p_margin(lambda m, t: m == 0)
+            return ph_win if is_home else 1 - ph_win
+        if market == "totals" and line is not None:
+            over = p_margin(lambda m, t: t > float(line))
+            return over if outcome == "Over" else p_margin(lambda m, t: t < float(line))
+        if market == "spreads" and line is not None:
+            L = float(line)
+            return p_margin((lambda m, t: m + L > 0) if is_home else (lambda m, t: -m + L > 0))
+        return None
+    sdm, sdt = GS_SD.get((sport, "margin")), GS_SD.get((sport, "total"))
+    if not sdm:
+        return None
+    m = hp - ap
+    if market == "h2h":
+        p = 1 - _gs_ncdf((0 - m) / sdm)
+        return p if is_home else 1 - p
+    if market == "spreads" and line is not None:
+        L = float(line)
+        p = 1 - _gs_ncdf((-L - m) / sdm) if is_home else _gs_ncdf((L - m) / sdm)
+        return p
+    if market == "totals" and line is not None:
+        p_over = 1 - _gs_ncdf((float(line) - (hp + ap)) / sdt)
+        return p_over if outcome == "Over" else 1 - p_over
+    return None
+
+
+def _gs_ensure(con):
+    con.execute("""create table if not exists game_signals(event_id text, market text, outcome text, line real,
+                   price real, fair real, best_book text, best_price real, model_prob real, sim_p real,
+                   sharp text, signals text, ts text, primary key(event_id, market, outcome))""")
+    con.execute("""create table if not exists game_signals_pick(event_id text, market text, outcome text, line real,
+                   price real, fair real, best_book text, best_price real, model_prob real, sim_p real,
+                   sharp text, signals text, ts text, primary key(event_id, market, outcome))""")
+    cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    if "signals" not in cols:
+        con.execute("alter table bets add column signals text")
+
+
+def _gs_fmt(k, v):
+    if v is None:
+        return f"{k} n/a"
+    if k in ("drop_pct", "edge"):
+        return f"{k} {v * 100:+.1f}%"
+    if k in ("proj_p", "sim_p"):
+        return f"{k} {v * 100:.1f}%"
+    if k in ("shade_pp", "dk_gap"):
+        return f"{k} {v:+.1f}"
+    if isinstance(v, float):
+        return f"{k} {v:+.2f}" if k in ("steam", "tape_cents") else f"{k} {v:g}"
+    return f"{k} {v}"
+
+
+def game_signals(db_path=None, now=None):
+    """Compute, store and render the 19-signal check for every tracked game. Returns feed text."""
+    import jerry_signals as _js
+    import jerry_reason as _jr
+    now = now or datetime.now(UTC)
+    db_path = db_path or os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db")
+    con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
+    out, n_sides, n_backfill, errors = [], 0, 0, []
+    try:
+        _gs_ensure(con)
+        model = None
+        try:
+            model = _js.load_model(con)
+        except Exception:                                             # noqa: BLE001
+            model = None
+        live_w = {k: v for k, v in ((model or {}).get("weights") or {}).items() if v}
+        hi = (now + timedelta(hours=GS_HORIZON_H)).isoformat(timespec="seconds")
+        lo = now.isoformat(timespec="seconds")
+        evs = [dict(r) for r in con.execute("""select * from events where commence>? and commence<?
+                                                order by commence, sport""", (lo, hi))]
+        try:
+            contra = json.loads(con.execute("select v from meta where k='contradictions'").fetchone()[0] or "[]")
+        except Exception:                                             # noqa: BLE001
+            contra = []
+        for ev in evs:
+            eid, sport = ev["event_id"], ev["sport"]
+            nums = con.execute("select * from jerry_numbers where event_id=?", (eid,)).fetchone()
+            game_lines = []
+            hours = None
+            try:
+                hours = (datetime.fromisoformat(ev["commence"].replace("Z", "+00:00")) - now).total_seconds() / 3600
+            except Exception:                                         # noqa: BLE001
+                pass
+            for market in ("h2h", "spreads", "totals"):
+                ref = None
+                for bk in GS_FAIR_BOOKS:
+                    q = [dict(r) for r in con.execute("""select outcome, line, price from last_quote where event_id=? and book=?
+                                                         and market=? and coalesce(player,'')='' order by outcome""",
+                                                      (eid, bk, market))]
+                    if len(q) >= 2:
+                        ref = (bk, q)
+                        break
+                if not ref:
+                    continue
+                bk, q = ref
+                fairs = _gs_power_fair([r["price"] for r in q])
+                if not fairs:
+                    continue
+                n_books = con.execute("""select count(distinct book) from last_quote where event_id=? and market=?
+                                         and coalesce(player,'')=''""", (eid, market)).fetchone()[0]
+                for r, fair in zip(q, fairs):
+                    outcome, line, price = r["outcome"], r["line"], r["price"]
+                    best = con.execute(f"""select book, price from last_quote where event_id=? and market=? and outcome=?
+                                           and coalesce(player,'')='' and coalesce(line,-999)=coalesce(?,-999)
+                                           and book in ({",".join("?" * len(BET_BOOKS_GS))}) order by price desc limit 1""",
+                                       (eid, market, outcome, line, *BET_BOOKS_GS)).fetchone()
+                    mp = con.execute("""select model_prob, call from model_probs where event_id=? and market=? and outcome=?
+                                        and coalesce(player,'')=''""", (eid, market, outcome)).fetchone()
+                    model_prob = mp["model_prob"] if mp else None
+                    if model_prob is None and market == "h2h" and nums is not None and nums["p_home"] is not None:
+                        model_prob = nums["p_home"] if outcome == ev["home"] else (1 - nums["p_home"] if len(q) == 2 else None)
+                    sim_p = None
+                    try:
+                        sim_p = _gs_sim_p(sport, market, outcome, line, ev["home"], nums)
+                    except Exception:                                 # noqa: BLE001
+                        sim_p = None
+                    extra = {"n_books": n_books, "sim_p": round(sim_p, 4) if sim_p is not None else None}
+                    try:
+                        extra["sig"] = _jr.sharp_signal(con, eid, market, outcome, "")
+                    except Exception as e:                            # noqa: BLE001
+                        extra["sig"] = {}
+                        errors.append(f"sharp {str(e)[:60]}")
+                    if model_prob is not None:
+                        extra["pc"] = {"p_side": round(float(model_prob), 4)}
+                    if sport == "NFL":
+                        try:
+                            extra["weather"] = _js.weather_for(con, eid, ev["home"], ev["commence"], now)
+                        except Exception:                             # noqa: BLE001
+                            extra["weather"] = {}
+                    try:
+                        # edge is measured at the best price you can actually bet (CT books), else the sharp price
+                        s = _js.capture(con, ev, market, outcome, "", line, (best["price"] if best else price), fair, extra)
+                    except Exception as e:                            # noqa: BLE001
+                        errors.append(f"capture {str(e)[:60]}")
+                        continue
+                    s["hours"] = round(hours, 2) if hours is not None else s.get("hours")
+                    adj = None
+                    if live_w:
+                        try:
+                            adj = _js.adjust(fair, s, model)
+                        except Exception:                             # noqa: BLE001
+                            adj = None
+                    verdict = (extra.get("sig") or {}).get("verdict", "neutral")
+                    row = (eid, market, outcome, line, price, round(fair, 4), best["book"] if best else None,
+                           best["price"] if best else None, model_prob, sim_p, verdict, json.dumps(s),
+                           now.isoformat(timespec="seconds"))
+                    con.execute("insert or replace into game_signals values(?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
+                    if hours is not None and hours * 60 <= GS_FREEZE_MIN and not con.execute(
+                            "select 1 from game_signals_pick where event_id=? and market=? and outcome=?",
+                            (eid, market, outcome)).fetchone():
+                        con.execute("insert into game_signals_pick values(?,?,?,?,?,?,?,?,?,?,?,?,?)", row)
+                    n_sides += 1
+                    game_lines.append((market, outcome, line, price, fair, best, model_prob, sim_p, verdict, s, adj,
+                                       mp["call"] if mp else None))
+            if not game_lines:
+                continue
+            head = f"{sport} {ev['commence'][:16]}Z {ev['away']} @ {ev['home']}"
+            if nums is not None and nums["home_pts"] is not None:
+                head += (f" | KRONOS {ev['away']} {float(nums['away_pts']):.1f} @ {ev['home']} {float(nums['home_pts']):.1f}"
+                         + (f" | market margin {nums['mkt_margin']:+.1f} total {nums['mkt_total']:.1f}"
+                            if nums["mkt_margin"] is not None and nums["mkt_total"] is not None else ""))
+            else:
+                head += " | KRONOS: no projection for this game"
+            out.append(head)
+            for (market, outcome, line, price, fair, best, model_prob, sim_p, verdict, s, adj, call) in game_lines:
+                ln = f" {line:+g}" if (market == "spreads" and line is not None) else (f" {line:g}" if line is not None else "")
+                bp = f"{best['book']} {best['price']:g} (EV {(best['price'] * fair - 1) * 100:+.1f}%)" if best else "no CT price"
+                mtxt = f"KRONOS {model_prob * 100:.1f}%" if model_prob is not None else "KRONOS n/a"
+                if call:
+                    mtxt += f" [{call}]"
+                parts = [f"  {market} {outcome}{ln} | sharp book {price:g} fair {fair * 100:.1f}% | {mtxt} | "
+                         f"sim (raw projection) {sim_p * 100:.1f}%" if sim_p is not None else
+                         f"  {market} {outcome}{ln} | sharp book {price:g} fair {fair * 100:.1f}% | {mtxt} | sim n/a"]
+                parts.append(f"best CT {bp} | money [{verdict.upper()}]")
+                if adj is not None and abs(adj - fair) > 1e-6:
+                    parts.append(f"LEARNED {(adj - fair) * 100:+.1f}pp")
+                out.append(" | ".join(parts))
+                out.append("      signals: " + ", ".join(_gs_fmt(k, s.get(k)) for k in _js.SIGNALS))
+            g = f"{ev['away']} @ {ev['home']}"
+            hits = [c for c in contra if c.startswith(g) or g in c]
+            out.append("      contradiction check: " + ("; ".join(hits) if hits else "clear"))
+        # signals onto every pending paper bet that has none (the learning layer grades these)
+        cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+        fair_col = "fair_prob" if "fair_prob" in cols else None
+        for b in con.execute(f"""select b.id, b.event_id, b.market, b.selection, b.player, b.line, b.price, b.model_prob
+                                 {', b.' + fair_col if fair_col else ''}
+                                 from bets b join events e on e.event_id=b.event_id
+                                 where b.paper=1 and b.result='pending' and b.signals is null and e.commence>?""",
+                             (lo,)).fetchall():
+            ev = dict(con.execute("select * from events where event_id=?", (b["event_id"],)).fetchone())
+            f = (b[fair_col] if fair_col else None) or b["model_prob"]
+            extra = {}
+            try:
+                extra["sig"] = _jr.sharp_signal(con, b["event_id"], b["market"], b["selection"], b["player"] or "")
+            except Exception:                                         # noqa: BLE001
+                extra["sig"] = {}
+            if b["model_prob"] is not None:
+                extra["pc"] = {"p_side": b["model_prob"]}
+            try:
+                s = _js.capture(con, ev, b["market"], b["selection"], b["player"] or "", b["line"], b["price"], f, extra)
+                con.execute("update bets set signals=? where id=?", (json.dumps(s), b["id"]))
+                n_backfill += 1
+            except Exception as e:                                    # noqa: BLE001
+                errors.append(f"backfill {str(e)[:60]}")
+        con.commit()
+    finally:
+        con.close()
+    hdr = ["", "", f"GAME SIGNALS (all {19} KRONOS signals on both sides of every game line, every tracked game in the next "
+           f"{GS_HORIZON_H}h; {n_sides} sides; computed {now.isoformat(timespec='seconds')}; signals still at weight 0 "
+           f"until graduated, so they inform but do not move prices; pick-time copy frozen {GS_FREEZE_MIN} min before start; "
+           f"{n_backfill} pending paper bets given signals this pass" + (f"; errors: {'; '.join(errors[:3])}" if errors else "") + "):"]
+    return "\n".join(hdr + out) + "\n"
+
+
+BET_BOOKS_GS = ("draftkings", "fanduel", "fanatics")
+
+
+def _game_signals_block():
+    try:
+        return game_signals()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nGAME SIGNALS: unavailable ({str(e)[:200]})\n"
+
+
 def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text() + _quarantine_block()
+    txt = _summary_text() + _game_signals_block() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
