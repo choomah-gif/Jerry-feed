@@ -1,9 +1,9 @@
-KRONOS DESK SUMMARY  (generated 2026-10-29T17:08:50+00:00)
-credits left 1086 | budget/day 300 | spent today 78 | reset in 2.29d | backfill days {'NHL': 7}
+KRONOS DESK SUMMARY  (generated 2026-10-29T17:18:51+00:00)
+credits left 1077 | budget/day 297 | spent today 87 | reset in 2.28d | backfill days {'NHL': 7}
 errors: none
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 384 settled (18 void), 43 pending | results on file: NBA 82, NHL 194 | 43 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 384 settled (18 void), 47 pending | results on file: NBA 82, NHL 194 | 43 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -12,8 +12,8 @@ UFC by fighter faded: {}
 
 RECENT BETS:
 
-PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 581 rows
-all: {"n": 581, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "graded": 435, "record": "210-224-1", "units": -15.27, "roi": -0.0374, "roi_90ci_by_game": [-0.1408, 0.0705, 57]}
+PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 585 rows
+all: {"n": 585, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "graded": 435, "record": "210-224-1", "units": -15.27, "roi": -0.0374, "roi_90ci_by_game": [-0.1408, 0.0705, 57]}
   MLB batter_hits (price edge): {"n": 2, "closed": 2, "clv_pp_avg": -0.05, "beat_close_pct": 0.5, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   MLB batter_total_bases (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 1.59, "beat_close_pct": 1.0, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
   NBA moneyline (price edge): {"n": 3, "closed": 3, "clv_pp_avg": 4.65, "beat_close_pct": 0.667, "graded": 3, "record": "2-1-0", "units": 0.44, "roi": 0.1467, "roi_90ci_by_game": null}
@@ -26,7 +26,7 @@ all: {"n": 581, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "gr
   NFL spread (price edge): {"n": 1, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 1, "record": "0-1-0", "units": -1.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL total (model): {"n": 53, "closed": 12, "clv_pp_avg": -1.9, "beat_close_pct": 0.083, "graded": 12, "record": "4-8-0", "units": -3.98, "roi": -0.3317, "roi_90ci_by_game": [-0.8308, 0.165, 12]}
   NHL moneyline (model): {"n": 8, "closed": 7, "clv_pp_avg": 0.45, "beat_close_pct": 0.571, "graded": 7, "record": "4-3-0", "units": 0.88, "roi": 0.2514, "roi_90ci_by_game": null}
-  NHL props (price edge): {"n": 67, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 66, "record": "28-38-0", "units": -14.23, "roi": -0.2156, "roi_90ci_by_game": [-0.3317, -0.0684, 17]}
+  NHL props (price edge): {"n": 71, "closed": 51, "clv_pp_avg": 0.62, "beat_close_pct": 0.804, "graded": 66, "record": "28-38-0", "units": -14.23, "roi": -0.2156, "roi_90ci_by_game": [-0.3317, -0.0684, 17]}
   NHL spread (model): {"n": 5, "closed": 4, "clv_pp_avg": -13.54, "beat_close_pct": 0.25, "graded": 4, "record": "3-1-0", "units": 0.21, "roi": 0.105, "roi_90ci_by_game": null}
   NHL spread (price edge): {"n": 2, "closed": 1, "clv_pp_avg": -0.21, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 0.69, "roi": 0.69, "roi_90ci_by_game": null}
   NHL total (model): {"n": 29, "closed": 18, "clv_pp_avg": -1.75, "beat_close_pct": 0.167, "graded": 18, "record": "7-10-1", "units": 0, "roi": null, "roi_90ci_by_game": null}
@@ -35,21 +35,25 @@ all: {"n": 581, "closed": 429, "clv_pp_avg": -1.16, "beat_close_pct": 0.333, "gr
   nhl-v3-goaliejson-2026-10-26: n 23 | CLV -4.28 | beat close 0.7 | 4-6-0 | -0.22u | ROI -0.0733
   pre-version (before 2026-10-26): n 441 | CLV -1.5 | beat close 0.221 | 158-170-1 | -7.8u | ROI -0.0252
   price-v3-activegate-2026-10-27: n 84 | CLV 0.52 | beat close 0.783 | 40-40-0 | -5.95u | ROI -0.0744
-  price-v4-consensus-projection-2026-10-28: n 18 | CLV 4.06 | beat close 1.0 | 8-8-0 | -1.3u | ROI -0.0813
+  price-v4-consensus-projection-2026-10-28: n 22 | CLV 4.06 | beat close 1.0 | 8-8-0 | -1.3u | ROI -0.0813
  by edge size at call (bigger edges should win more; flat = noise):
   model 2-4%: n 6 | CLV -11.1 | beat close 0.75 | 3-1-0 | 0.78u | ROI 0.39
   model 4-6%: n 2 | CLV 0.81 | beat close 1.0 | 0-2-0 | -1.0u | ROI -1.0
-  price edge 0-2%: n 22 | CLV 0.56 | beat close 0.933 | 9-12-0 | -4.45u | ROI -0.2119
-  price edge 2-4%: n 64 | CLV 1.03 | beat close 0.848 | 31-30-0 | -5.05u | ROI -0.0828
-  price edge 4-6%: n 8 | CLV 1.11 | beat close 0.667 | 3-4-0 | -1.26u | ROI -0.18
+  price edge 0-2%: n 23 | CLV 0.56 | beat close 0.933 | 9-12-0 | -4.45u | ROI -0.2119
+  price edge 2-4%: n 66 | CLV 1.03 | beat close 0.848 | 31-30-0 | -5.05u | ROI -0.0828
+  price edge 4-6%: n 9 | CLV 1.11 | beat close 0.667 | 3-4-0 | -1.26u | ROI -0.18
   price edge 6%+: n 8 | CLV -0.32 | beat close 0.375 | 5-2-0 | 3.51u | ROI 0.5014
  by hours before start when logged:
   1-6h: n 49 | CLV 1.03 | beat close 0.838 | 19-25-0 | -8.1u | ROI -0.1884
   24h+: n 27 | CLV None | beat close None | 0-0-0 | 0u | ROI None
-  6-24h: n 17 | CLV -2.55 | beat close 0.786 | 6-9-0 | -2.88u | ROI -0.32
+  6-24h: n 21 | CLV -2.55 | beat close 0.786 | 6-9-0 | -2.88u | ROI -0.32
   <1h: n 47 | CLV 0.43 | beat close 0.735 | 27-20-0 | 3.51u | ROI 0.0747
 
 PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
+NHL 2026-10-29T23:10Z Columbus Blue Jackets @ Carolina Hurricanes | player_shots_on_goal Sebastian Aho Over 2.5 | draftkings 2.15 vs fair 49.2% | EV +5.9% | [NEUTRAL] [CONSENSUS 4 BOOKS · PROJECTION AGREES (57%)]
+NHL 2026-10-29T23:10Z Utah Mammoth @ Pittsburgh Penguins | player_points MacKenzie Weegar Under 0.5 | draftkings 1.69 vs fair 61.5% | EV +3.9% | [NEUTRAL] [PROJECTION AGREES (58%)]
+NHL 2026-10-29T23:10Z Utah Mammoth @ Pittsburgh Penguins | player_shots_on_goal Tommy Novak Under 1.5 | draftkings 2.1 vs fair 49.1% | EV +3.1% | [NEUTRAL] [PROJECTION AGREES (63%)]
+NHL 2026-10-29T23:10Z Columbus Blue Jackets @ Carolina Hurricanes | player_shots_on_goal Sean Walker Over 1.5 | draftkings 1.91 vs fair 53.4% | EV +1.9% | [NEUTRAL] [PROJECTION AGREES (80%)]
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 NHL 2026-10-29T23:10Z Winnipeg Jets @ Tampa Bay Lightning | >> Lean: Winnipeg Jets +1.5 — KRONOS 56% vs market 53%
@@ -150,7 +154,7 @@ NFL 2026-11-10T01:15Z | KRONOS Buffalo Bills 26.2 @ Minnesota Vikings 22.2 | mar
 
 FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?):
 [FADE PUBLIC] 45 bets | beat close 79% | CLV +0.62pp | 20-24 | ROI -15.9%
-[NEUTRAL] 26 bets | beat close 92% | CLV +2.16pp | 11-11 | ROI +1.8%
+[NEUTRAL] 30 bets | beat close 92% | CLV +2.16pp | 11-11 | ROI +1.8%
 [SHARP · FADE PUBLIC · THIN MARKET] 19 bets | beat close 75% | CLV +0.20pp | 9-8 | ROI -6.5%
 [AGAINST SHARP · THIN MARKET] 19 bets | beat close 77% | CLV +0.28pp | 10-8 | ROI +6.2%
 [SHARP] 7 bets | beat close 80% | CLV +0.93pp | 5-2 | ROI +32.9%
