@@ -2925,20 +2925,40 @@ def timing(con):
 
 
 def contradictions(con, now):
-    """Picks that disagree with each other or with KRONOS's own projected score."""
-    out = []
+    """Picks that contradict KRONOS's own numbers (2026-10-29 rule, owner's checklist):
+      - spread: KRONOS's projected margin must cover the line on the picked side;
+      - moneyline: judged on value, not on who is projected to win — a plus-money underdog KRONOS
+        rates above its price is consistent; a pick KRONOS itself rates at or below the price is not.
+    One entry per game and market."""
+    out, seen = [], set()
     hi = (now + timedelta(hours=36)).isoformat(timespec="seconds")
     for m in con.execute("""select m.*, e.home, e.away from model_probs m join events e using(event_id)
                             where e.commence>? and e.commence<? and (m.call like 'Lean%' or m.call like 'Play%')
                             and m.market in ('spreads','h2h')""", (now.isoformat(timespec="seconds"), hi)):
-        n = con.execute("select margin from jerry_numbers where event_id=?", (m["event_id"],)).fetchone()
-        if not n or n[0] is None:
+        key = (m["event_id"], m["market"])
+        if key in seen:
             continue
         side = str(m["call"]).split(" ", 1)[1].split(" [")[0].strip()
-        favors_home = n[0] > 0
-        if (side == m["home"]) != favors_home and side in (m["home"], m["away"]):
-            out.append(f"{m['away']} @ {m['home']}: pick {side} but KRONOS's projected score favors "
-                       f"{m['home'] if favors_home else m['away']} by {abs(n[0]):.1f}")
+        if side not in (m["home"], m["away"]):
+            continue
+        game = f"{m['away']} @ {m['home']}"
+        if m["market"] == "spreads":
+            n = con.execute("select margin from jerry_numbers where event_id=?", (m["event_id"],)).fetchone()
+            if not n or n[0] is None or m["line"] is None:
+                continue
+            line = float(m["line"]) if side == m["outcome"] else -float(m["line"])
+            proj = float(n[0]) if side == m["home"] else -float(n[0])   # picked side's projected margin
+            if proj + line <= 0:
+                out.append(f"{game}: spread pick {side} {line:+g} but KRONOS projects {side} by {proj:+.1f}, which doesn't cover")
+                seen.add(key)
+        else:
+            if m["model_prob"] is None or m["fair_prob"] is None:
+                continue
+            p = m["model_prob"] if side == m["outcome"] else 1 - m["model_prob"]
+            f = m["fair_prob"] if side == m["outcome"] else 1 - m["fair_prob"]
+            if p <= f:
+                out.append(f"{game}: moneyline pick {side} but KRONOS rates it {p:.0%}, at or below the market's {f:.0%}")
+                seen.add(key)
     return out
 
 
