@@ -1033,7 +1033,7 @@ MODEL_VERSIONS = {
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v5-20books-2026-10-29",
+    ("ANY", "price"): "price-v6-signals-2026-10-29",
 }
 
 
@@ -1237,6 +1237,12 @@ def _consensus_fair(rows, outcome, line, exclude_book):
 def price_edges(con, now):
     """Soft-book prices that beat Pinnacle's de-vigged fair price: an edge that needs no model."""
     ensure_paper_schema(con)
+    try:
+        import jerry_signals as _js
+        _js._ensure(con)
+        _learned = _js.load_model(con)
+    except Exception:
+        _js, _learned = None, None
     lim = (now + timedelta(hours=48)).isoformat(timespec="seconds")
     evs = [dict(r) for r in con.execute("select event_id, sport, home, away, commence from events where commence>? and commence<?",
                                         (now.isoformat(timespec="seconds"), lim))]
@@ -1274,6 +1280,7 @@ def price_edges(con, now):
                 fair = {o1["outcome"]: fair_two_way(o1["price"], o2["price"]), o2["outcome"]: fair_two_way(o2["price"], o1["price"])}
                 lines = {o1["outcome"]: o1["line"], o2["outcome"]: o2["line"]}
             for r in rows:
+                inj = pc = n_con = None          # per-row: never carry one player's checks into the next row
                 if r["book"] not in PRICE_BOOKS or r["outcome"] not in fair or not r["price"]:
                     continue
                 L = lines[r["outcome"]]
@@ -1362,6 +1369,21 @@ def price_edges(con, now):
                         tags.append("PROJECTION NEUTRAL")
                     else:
                         tags.append("NO PROJECTION")
+                # NFL props: nflverse snap counts + injury report (2026-10-29)
+                _nfl_snap = None
+                if evv >= PRICE_EDGE_MIN and player and ev["sport"] == "NFL" and _js:
+                    try:
+                        _nfl_snap, _nfl_inj = _js.nfl_role(con, player)
+                    except Exception:
+                        _nfl_snap, _nfl_inj = None, None
+                    if _nfl_inj and _nfl_inj.lower() in ("out", "doubtful", "injured reserve"):
+                        continue
+                    if _nfl_inj and _nfl_inj.lower() == "questionable":
+                        tags.append("QUESTIONABLE")
+                    if _nfl_snap is not None and _nfl_snap < 0.35:
+                        tags.append(f"LOW SNAPS ({_nfl_snap:.0%})")
+                    elif _nfl_snap is None:
+                        tags.append("SNAPS UNVERIFIED")
                 # line move since open on a prop: a large move is news, not a price to fade
                 if evv >= PRICE_EDGE_MIN and player and r["line"] is not None:
                     o_ = con.execute("""select line from opens where event_id=? and market=? and outcome=? and player=?
@@ -1376,10 +1398,43 @@ def price_edges(con, now):
                         if big:
                             tags.append(f"LINE MOVED {float(o_[0]):g}->{float(r['line']):g}")
                 activity = " · ".join(t for t in tags if t) or None
+                _signals = None
+                if evv >= PRICE_EDGE_MIN and _js:
+                    try:
+                        _ex = {"injury": locals().get("inj"), "snap_pct": _nfl_snap,
+                               "n_books": locals().get("n_con") if "CONSENSUS" in (activity or "") else None}
+                        if player and ev["sport"] in ("NBA", "NHL") and isinstance(locals().get("pc"), dict):
+                            _ex["pc"] = pc
+                            if ev["sport"] == "NBA" and pc.get("proj") is not None:
+                                _sp = con.execute("""select line from last_quote where event_id=? and book='pinnacle' and market='spreads'
+                                                     and outcome=?""", (ev["event_id"], ev["home"])).fetchone()
+                                _tt = con.execute("""select line from last_quote where event_id=? and book='pinnacle' and market='totals'
+                                                     and outcome='Over'""", (ev["event_id"],)).fetchone()
+                                _stat = {"player_points": "pts"}.get(market, "count")
+                                _ex["sim_p"] = round(_js.sim_prop(pc["proj"], r["line"], r["outcome"],
+                                                                  _sp[0] if _sp else None, _tt[0] if _tt else None, _stat), 3)
+                        if ev["sport"] == "NFL":
+                            _ex["weather"] = _js.weather_for(con, ev["event_id"], ev["home"], ev["commence"], now)
+                            if player:
+                                _pos, _opp = _js.nfl_player_context(con, player, ev["home"], ev["away"])
+                                _season = now.year if now.month >= 8 else now.year - 1
+                                _ex["matchup"] = _js.nfl_matchup(con, _season, _opp, _pos, market)
+                        _signals = _js.capture(con, ev, market, r["outcome"], player, r["line"], r["price"], f_use, _ex)
+                        if _learned:
+                            _f_adj = _js.adjust(f_use, _signals, _learned)
+                            if _f_adj and abs(_f_adj - f_use) > 1e-6:
+                                tags.append(f"LEARNED {(_f_adj - f_use) * 100:+.1f}pp")
+                                activity = " · ".join(t for t in tags if t)
+                                f_use = _f_adj
+                                evv = float(r["price"]) * f_use - 1
+                    except Exception as _e:
+                        con.execute("insert or replace into meta(k,v) values(?,?)",
+                                    ("signals_error_last", f"{now.isoformat(timespec='seconds')} {str(_e)[:150]}"))
                 if evv >= PRICE_EDGE_MIN:
                     row = dict(event_id=ev["event_id"], market=market, outcome=r["outcome"], player=player, line=r["line"], book=r["book"],
                                price=r["price"], fair=round(f_use, 4), ev=round(evv, 4), sport=ev["sport"], home=ev["home"], away=ev["away"],
-                               commence=ev["commence"], line_adj=bool(adj), pin_line=L, activity=activity)
+                               commence=ev["commence"], line_adj=bool(adj), pin_line=L, activity=activity,
+                               signals=_signals)
                     try:
                         _sig = jr.sharp_signal(con, ev["event_id"], market, r["outcome"], player)
                     except Exception:
@@ -1408,6 +1463,11 @@ def price_edges(con, now):
                      (f"price edge (line-adj from {row['pin_line']}) {row['ev']:+.1%} vs translated fair {row['fair']:.1%}"
                       if row.get("line_adj") else f"price edge {row['ev']:+.1%} vs pinnacle fair {row['fair']:.1%}")))
         _s = row.get("_sig") or {}
+        try:
+            con.execute("update bets set signals=? where id=last_insert_rowid()",
+                        (json.dumps(row.get("signals")) if row.get("signals") else None,))
+        except Exception:
+            pass
         con.execute("""update bets set evidence_kind=?, corr_group=?, sharp_flag=?, dk_bets_pct=?, dk_handle_pct=?,
                        model_version=?, hours_to_start=?, edge=?, fair_prob=?
                        where id=last_insert_rowid()""",
@@ -1427,7 +1487,7 @@ CARD_MAX_PER_GAME = 2
 CARD_MAX_SAME_DIRECTION = 0.6
 CARD_LOCK_MIN = 90          # a pick locks 90 minutes before its start, from the freshest numbers
 CARD_PRIOR_N = 100          # shrink toward zero by n/(n+100): the biggest raw edges are the likeliest errors
-CARD_EXCLUDE = ("ROLE CHANGE", "MINUTES UNVERIFIED", "QUESTIONABLE", "NO PROJECTION", "STALE?")
+CARD_EXCLUDE = ("ROLE CHANGE", "MINUTES UNVERIFIED", "QUESTIONABLE", "NO PROJECTION", "STALE?", "LOW SNAPS", "SNAPS UNVERIFIED")
 
 
 def _category_record(con, sport, is_prop):
