@@ -1778,7 +1778,7 @@ form input,form select{font:14px Georgia,serif;margin:2px 0}
 <script>
 const SPORTS=["NFL","EPL","UCL","NBA","NHL","UFC"];let sport="NFL";let BOARD=[],EDGES=[];
 const am=d=>d==null?"—":(d>=2?"+"+Math.round((d-1)*100):Math.round(-100/(d-1)));
-const t=s=>new Date(s).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
+const t=s=>new Date(s).toLocaleString("en-US", {weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/New_York"})+" ET";
 const pct=x=>(x*100).toFixed(0)+"%";
 const sgn=x=>(x>0?"+":"")+(x*100).toFixed(1)+"%";
 const TWO=["Maple Leafs","Golden Knights","Blue Jackets","Red Wings","Red Sox","White Sox","Blue Jays","Trail Blazers"];
