@@ -3545,6 +3545,1562 @@ def refresh(db_path, now=None):
         con.close()
 '''
 
+_SOCCER_SRC = r'''"""
+kronos_soccer — KRONOS soccer model for EPL and UCL (soccer-v1, 2026-11-01). Paper only, capped at Lean.
+
+Data: ESPN public scoreboards (free, no key): results, shots on target and corners for the Premier
+League, Championship, the other big European leagues, the three UEFA competitions and the English
+cups, back to July 2025. Cups, Europe and promotion are what link the leagues together.
+
+Model:
+  * Poisson team ratings: log(goals) = base + home + league prior + team attack − (league prior + team defence)
+    fitted with time decay (half-life 150 days) and ridge shrinkage (teams toward their league,
+    leagues toward zero). The target blends goals with shots on target x the conversion rate, because
+    goals alone are too noisy over a few months.
+  * Dixon-Coles low-score correction (draws are under-predicted by plain Poisson).
+  * Matchup priors, logged in the reasoning, not fitted yet: short rest (<=3 days since last match in any
+    competition), set-piece edge (corners won vs corners conceded), both capped small.
+  * Anchored to Pinnacle: 35% model / 65% market for EPL, 30/70 for UCL, until the ledger shows the model
+    beats the market. Calls are capped at Lean while unvalidated.
+Outputs: model_probs rows (h2h home/draw/away, totals at Pinnacle's line, Asian handicap at Pinnacle's
+line), Jerry's spin numbers (expected goals each side), paper rows via the normal path.
+"""
+import json, math, os, re, unicodedata
+from datetime import datetime, timezone, timedelta, date
+
+UTC = timezone.utc
+BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer"
+DOMESTIC = ["eng.1", "eng.2", "esp.1", "ger.1", "ita.1", "fra.1", "por.1", "ned.1", "bel.1", "tur.1", "sco.1"]
+EUROPE = ["uefa.champions", "uefa.europa", "uefa.europa.conf"]
+CUPS = ["eng.fa", "eng.league_cup"]
+LEAGUES = DOMESTIC + EUROPE + CUPS
+SPORT_LEAGUE = {"EPL": "eng.1", "UCL": "uefa.champions"}
+BACKFILL_FROM = date(2025, 7, 1)
+HALF_LIFE_D = 150.0
+MODEL_WEIGHT = {"EPL": 0.35, "UCL": 0.30}
+RHO = -0.08                      # Dixon-Coles
+SOT_BLEND = 0.4                  # weight on shots-on-target x conversion in the fitting target
+REST_DAYS = 3
+REST_ATT, REST_DEF = 0.96, 1.04  # short-rest prior: score 4% less, concede 4% more
+CORNER_CAP = 0.06                # set-piece prior: at most +/-6% on expected goals
+LEAN_EDGE = 0.02
+VERSION = "soccer-v1-2026-11-01"
+ALIASES = {"inter milan": "internazionale", "inter": "internazionale", "sporting lisbon": "sporting cp",
+           "sporting": "sporting cp", "atletico madrid": "atletico madrid", "psg": "paris saint germain",
+           "bayern munchen": "bayern munich", "man city": "manchester city", "man utd": "manchester united",
+           "man united": "manchester united", "spurs": "tottenham hotspur", "wolves": "wolverhampton wanderers",
+           "nottm forest": "nottingham forest", "brighton": "brighton and hove albion",
+           "ac milan": "ac milan", "milan": "ac milan", "fc copenhagen": "fc copenhagen", "kobenhavn": "fc copenhagen",
+           "red star belgrade": "crvena zvezda", "slavia praha": "slavia prague", "qarabag fk": "qarabag"}
+STOP = {"fc", "afc", "cf", "sc", "the", "and", "de", "club", "calcio", "ac", "as", "ssc", "sv", "fk", "sk", "1", "04", "cp"}
+
+
+# --------------------------------------------------------------------------- names
+def norm(s):
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    s = s.replace("&", " and ").replace("-", " ").replace(".", " ").replace("'", "")
+    s = re.sub(r"[^a-z0-9 ]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return ALIASES.get(s, s)
+
+
+def _tokens(s):
+    t = set(norm(s).split())
+    core = t - STOP
+    return core or t
+
+
+def name_score(a, b):
+    na, nb = norm(a), norm(b)
+    if na == nb:
+        return 1.0
+    ta, tb = _tokens(a), _tokens(b)
+    if not ta or not tb:
+        return 0.0
+    j = len(ta & tb) / len(ta | tb)
+    if ta <= tb or tb <= ta:
+        j = max(j, 0.75)
+    return j
+
+
+def best_name(name, candidates, min_score=0.5):
+    best, sc = None, 0.0
+    for c in candidates:
+        s = name_score(name, c)
+        if s > sc:
+            best, sc = c, s
+    return (best, sc) if sc >= min_score else (None, sc)
+
+
+# --------------------------------------------------------------------------- data
+def _get(url, timeout=25):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.json()
+
+
+def ensure(con):
+    con.executescript("""
+    create table if not exists soccer_matches(source_id text primary key, league text, game_date text, home text,
+        away text, hg real, ag real, hsot real, asot real, hsh real, ash real, hc real, ac real, neutral int,
+        detail text, ts text);
+    create index if not exists soccer_matches_d on soccer_matches(game_date);
+    create table if not exists soccer_fetch(league text, month text, ts text, n int, primary key(league, month));
+    """)
+
+
+def _stat(stats, *names):
+    for s in stats or []:
+        if str(s.get("name", "")).lower() in names or str(s.get("abbreviation", "")).lower() in names:
+            try:
+                v = s.get("value") if s.get("value") is not None else s.get("displayValue")
+                return float(str(v).replace("%", ""))
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def parse_scoreboard(js, league):
+    out = []
+    for ev in js.get("events", []):
+        comp = (ev.get("competitions") or [{}])[0]
+        st = (comp.get("status") or ev.get("status") or {}).get("type", {})
+        if not st.get("completed"):
+            continue
+        teams = {c.get("homeAway"): c for c in comp.get("competitors", [])}
+        if "home" not in teams or "away" not in teams:
+            continue
+        h, a = teams["home"], teams["away"]
+        try:
+            hg, ag = float(h.get("score")), float(a.get("score"))
+        except (TypeError, ValueError):
+            continue
+        hs, as_ = h.get("statistics") or [], a.get("statistics") or []
+        out.append(dict(source_id=str(ev.get("id")), league=league, game_date=str(ev.get("date", ""))[:10],
+                        home=(h.get("team") or {}).get("displayName", ""), away=(a.get("team") or {}).get("displayName", ""),
+                        hg=hg, ag=ag, hsot=_stat(hs, "shotsontarget", "sot"), asot=_stat(as_, "shotsontarget", "sot"),
+                        hsh=_stat(hs, "totalshots", "shots"), ash=_stat(as_, "totalshots", "shots"),
+                        hc=_stat(hs, "woncorners", "corners", "cornerkicks"), ac=_stat(as_, "woncorners", "corners", "cornerkicks"),
+                        neutral=1 if comp.get("neutralSite") else 0, detail=str(st.get("detail") or st.get("shortDetail") or "")))
+    return out
+
+
+def ingest_month(con, league, y, m, get=_get):
+    last = (date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)).day
+    js = get(f"{BASE}/{league}/scoreboard?dates={y}{m:02d}01-{y}{m:02d}{last:02d}&limit=500")
+    rows = parse_scoreboard(js, league)
+    now = datetime.now(UTC).isoformat(timespec="seconds")
+    for r in rows:
+        con.execute("""insert or replace into soccer_matches values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (r["source_id"], r["league"], r["game_date"], r["home"], r["away"], r["hg"], r["ag"], r["hsot"],
+                     r["asot"], r["hsh"], r["ash"], r["hc"], r["ac"], r["neutral"], r["detail"], now))
+    return len(rows)
+
+
+def backfill(con, now=None, budget=40, get=_get):
+    """Fetch missing months (past months once, the current and previous month every pass)."""
+    ensure(con)
+    now = now or datetime.now(UTC)
+    cur = date(now.year, now.month, 1)
+    prev = (cur - timedelta(days=1)).replace(day=1)
+    months, d = [], BACKFILL_FROM
+    while d <= cur:
+        months.append(d)
+        d = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
+    calls, got, errs = 0, 0, []
+    for mo in reversed(months):                # newest first: the recent form matters most
+        for lg in LEAGUES:
+            key = f"{mo.year}-{mo.month:02d}"
+            done = con.execute("select 1 from soccer_fetch where league=? and month=?", (lg, key)).fetchone()
+            if done and mo not in (cur, prev):
+                continue
+            if calls >= budget:
+                break
+            calls += 1
+            try:
+                n = ingest_month(con, lg, mo.year, mo.month, get=get)
+                got += n
+                if mo not in (cur, prev):
+                    con.execute("insert or replace into soccer_fetch values(?,?,?,?)",
+                                (lg, key, now.isoformat(timespec="seconds"), n))
+            except Exception as e:                             # noqa: BLE001
+                errs.append(f"{lg} {key}: {str(e)[:60]}")
+    con.commit()
+    left = 0
+    for mo in months:
+        for lg in LEAGUES:
+            if mo in (cur, prev):
+                continue
+            if not con.execute("select 1 from soccer_fetch where league=? and month=?",
+                               (lg, f"{mo.year}-{mo.month:02d}")).fetchone():
+                left += 1
+    return {"calls": calls, "rows": got, "months_left": left, "errors": errs[:3]}
+
+
+# --------------------------------------------------------------------------- fit
+def fit(con, now=None):
+    import numpy as np
+    from scipy.optimize import minimize
+    now = now or datetime.now(UTC)
+    lo = (now - timedelta(days=540)).date().isoformat()
+    rows = [dict(r) for r in con.execute("select * from soccer_matches where game_date>=? order by game_date", (lo,))]
+    if len(rows) < 200:
+        return None
+    teams = sorted({r["home"] for r in rows} | {r["away"] for r in rows})
+    ti = {t: i for i, t in enumerate(teams)}
+    # each team's league = its most recent domestic league; teams seen only in Europe/cups get 'other'
+    tl = {}
+    for r in rows:
+        if r["league"] in DOMESTIC:
+            tl[r["home"]] = r["league"]; tl[r["away"]] = r["league"]
+    leagues = sorted(set(tl.values()) | {"other"})
+    li = {l: i for i, l in enumerate(leagues)}
+    team_lg = np.array([li[tl.get(t, "other")] for t in teams])
+    # conversion rate for the shots-on-target half of the target
+    g = sum(r["hg"] + r["ag"] for r in rows if r["hsot"] is not None and r["asot"] is not None)
+    s = sum(r["hsot"] + r["asot"] for r in rows if r["hsot"] is not None and r["asot"] is not None)
+    conv = (g / s) if s else 0.3
+    H = np.array([ti[r["home"]] for r in rows]); A = np.array([ti[r["away"]] for r in rows])
+    def target(goals, sot):
+        return goals if sot is None else (1 - SOT_BLEND) * goals + SOT_BLEND * sot * conv
+    yh = np.array([target(r["hg"], r["hsot"]) for r in rows]); ya = np.array([target(r["ag"], r["asot"]) for r in rows])
+    age = np.array([(now.date() - date.fromisoformat(r["game_date"])).days for r in rows], dtype=float)
+    w = 0.5 ** (age / HALF_LIFE_D)
+    home_on = np.array([0.0 if r["neutral"] else 1.0 for r in rows])
+    nT, nL = len(teams), len(leagues)
+    RT, RL = 3.0, 1.0
+
+    def unpack(x):
+        return x[0], x[1], x[2:2 + nT], x[2 + nT:2 + 2 * nT], x[2 + 2 * nT:2 + 2 * nT + nL], x[2 + 2 * nT + nL:]
+
+    def f(x):
+        mu, hm, at, de, la, ld = unpack(x)
+        ath, ata = at[H] + la[team_lg[H]], at[A] + la[team_lg[A]]
+        deh, dea = de[H] + ld[team_lg[H]], de[A] + ld[team_lg[A]]
+        eh = mu + hm * home_on + ath - dea
+        ea = mu + ata - deh
+        lh, lam = np.exp(eh), np.exp(ea)
+        nll = np.sum(w * (lh - yh * eh)) + np.sum(w * (lam - ya * ea))
+        nll += RT * (np.sum(at ** 2) + np.sum(de ** 2)) + RL * (np.sum(la ** 2) + np.sum(ld ** 2))
+        rh, ra = w * (lh - yh), w * (lam - ya)
+        gmu = rh.sum() + ra.sum(); ghm = (rh * home_on).sum()
+        gat = np.zeros(nT); gde = np.zeros(nT); gla = np.zeros(nL); gld = np.zeros(nL)
+        np.add.at(gat, H, rh); np.add.at(gat, A, ra)
+        np.add.at(gde, A, -rh); np.add.at(gde, H, -ra)
+        np.add.at(gla, team_lg[H], rh); np.add.at(gla, team_lg[A], ra)
+        np.add.at(gld, team_lg[A], -rh); np.add.at(gld, team_lg[H], -ra)
+        gat += 2 * RT * at; gde += 2 * RT * de; gla += 2 * RL * la; gld += 2 * RL * ld
+        return nll, np.concatenate([[gmu, ghm], gat, gde, gla, gld])
+
+    x0 = np.zeros(2 + 2 * nT + 2 * nL); x0[0] = math.log(1.35); x0[1] = 0.2
+    res = minimize(f, x0, jac=True, method="L-BFGS-B", options={"maxiter": 500})
+    mu, hm, at, de, la, ld = unpack(res.x)
+    # corners for / against per team (decayed), and last match date per team
+    cf, ca, cw, last = {}, {}, {}, {}
+    for r, wi in zip(rows, w):
+        last[r["home"]] = max(last.get(r["home"], ""), r["game_date"]); last[r["away"]] = max(last.get(r["away"], ""), r["game_date"])
+        if r["hc"] is None or r["ac"] is None:
+            continue
+        for t, f_, a_ in ((r["home"], r["hc"], r["ac"]), (r["away"], r["ac"], r["hc"])):
+            cf[t] = cf.get(t, 0) + wi * f_; ca[t] = ca.get(t, 0) + wi * a_; cw[t] = cw.get(t, 0) + wi
+    games = {}
+    for r in rows:
+        games[r["home"]] = games.get(r["home"], 0) + 1; games[r["away"]] = games.get(r["away"], 0) + 1
+    model = {"ts": now.isoformat(timespec="seconds"), "mu": float(mu), "home": float(hm), "conv": conv,
+             "att": {t: float(at[i] + la[team_lg[i]]) for t, i in ti.items()},
+             "def": {t: float(de[i] + ld[team_lg[i]]) for t, i in ti.items()},
+             "league_of": {t: leagues[team_lg[i]] for t, i in ti.items()},
+             "corners_for": {t: cf[t] / cw[t] for t in cw if cw[t] > 0.5},
+             "corners_against": {t: ca[t] / cw[t] for t in cw if cw[t] > 0.5},
+             "last": last, "games": games, "n_matches": len(rows), "converged": bool(res.success)}
+    vals = list(model["corners_for"].values())
+    model["corners_avg"] = sum(vals) / len(vals) if vals else None
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("soccer_model", json.dumps(model)))
+    con.commit()
+    return model
+
+
+def load(con):
+    r = con.execute("select v from meta where k='soccer_model'").fetchone()
+    return json.loads(r[0]) if r else None
+
+
+# --------------------------------------------------------------------------- probabilities
+def score_matrix(lh, la, rho=RHO, n=11):
+    def pois(l, k):
+        return math.exp(-l) * l ** k / math.factorial(k)
+    M = [[pois(lh, i) * pois(la, j) for j in range(n)] for i in range(n)]
+    M[0][0] *= max(0.0, 1 - lh * la * rho); M[0][1] *= max(0.0, 1 + lh * rho)
+    M[1][0] *= max(0.0, 1 + la * rho); M[1][1] *= max(0.0, 1 - rho)
+    s = sum(map(sum, M))
+    return [[v / s for v in row] for row in M]
+
+
+def _split(line):
+    """A quarter line is half on each neighbouring half-goal line."""
+    q = round(float(line) * 4) % 2
+    return [line - 0.25, line + 0.25] if q == 1 else [line]
+
+
+def p_1x2(M):
+    n = len(M)
+    h = sum(M[i][j] for i in range(n) for j in range(n) if i > j)
+    d = sum(M[i][i] for i in range(n))
+    return h, d, 1 - h - d
+
+
+def p_cover(M, f):
+    """Effective win probability of a bet whose result per score is f(i,j) -> margin (>0 win, 0 push, <0 lose)."""
+    n = len(M)
+    win = sum(M[i][j] for i in range(n) for j in range(n) if f(i, j) > 1e-9)
+    lose = sum(M[i][j] for i in range(n) for j in range(n) if f(i, j) < -1e-9)
+    return win / (win + lose) if win + lose > 0 else 0.5
+
+
+def p_over(M, line):
+    return sum(p_cover(M, lambda i, j, L=L: (i + j) - L) for L in _split(line)) / len(_split(line))
+
+
+def p_home_ah(M, line):
+    return sum(p_cover(M, lambda i, j, L=L: (i - j) + L) for L in _split(line)) / len(_split(line))
+
+
+def market_lambdas(fh, fa, f_over, line):
+    """Expected goals implied by the market's 1X2 and total (used for the market side of Jerry's spin)."""
+    from scipy.optimize import minimize
+    def loss(x):
+        lh, la = math.exp(x[0]), math.exp(x[1])
+        M = score_matrix(lh, la)
+        h, d, a = p_1x2(M)
+        e = (h - fh) ** 2 + (a - fa) ** 2
+        if f_over is not None and line is not None:
+            e += (p_over(M, line) - f_over) ** 2
+        return e
+    r = minimize(loss, [math.log(1.4), math.log(1.1)], method="Nelder-Mead", options={"xatol": 1e-4, "fatol": 1e-9})
+    return math.exp(r.x[0]), math.exp(r.x[1])
+
+
+def _devig(prices):
+    inv = [1 / p for p in prices]
+    s = sum(inv)
+    return [x / s for x in inv]
+
+
+def _pin(con, eid):
+    """Sharp quotes {market: {outcome: (line, price)}} from the first sharp book that has them."""
+    out = {}
+    for bk in ("pinnacle", "lowvig", "betonlineag"):
+        for r in con.execute("""select market, outcome, line, price from last_quote where event_id=? and book=?
+                                and coalesce(player,'')=''""", (eid, bk)):
+            out.setdefault(r[0], {}).setdefault(r[1], (r[2], r[3]))
+    return out
+
+
+def _days_since(last, commence):
+    try:
+        return (date.fromisoformat(str(commence)[:10]) - date.fromisoformat(last)).days
+    except Exception:                                          # noqa: BLE001
+        return None
+
+
+def predict(model, home_e, away_e, commence, neutral=False):
+    """Expected goals for an ESPN-named fixture, with the matchup priors and a note of each."""
+    mu, hm = model["mu"], model["home"]
+    att, de = model["att"], model["def"]
+    lh = math.exp(mu + (0 if neutral else hm) + att[home_e] - de[away_e])
+    la = math.exp(mu + att[away_e] - de[home_e])
+    notes = []
+    for side, team in (("h", home_e), ("a", away_e)):
+        ds = _days_since(model["last"].get(team, ""), commence)
+        if ds is not None and 0 < ds <= REST_DAYS:
+            if side == "h":
+                lh *= REST_ATT; la *= REST_DEF
+            else:
+                la *= REST_ATT; lh *= REST_DEF
+            notes.append(f"{team} on {ds} days' rest")
+    cavg = model.get("corners_avg")
+    cfor, cag = model.get("corners_for", {}), model.get("corners_against", {})
+    if cavg:
+        for side, t, o in (("h", home_e, away_e), ("a", away_e, home_e)):
+            if t in cfor and o in cag:
+                idx = (cfor[t] / cavg) * (cag[o] / cavg)
+                adj = max(-CORNER_CAP, min(CORNER_CAP, 0.10 * (idx - 1)))
+                if abs(adj) >= 0.02:
+                    if side == "h":
+                        lh *= 1 + adj
+                    else:
+                        la *= 1 + adj
+                    notes.append(f"set pieces: {t} {cfor[t]:.1f} corners/game vs {o} conceding {cag[o]:.1f} ({adj * 100:+.0f}% xG)")
+    return lh, la, notes
+
+
+def likely_scorers(con, team_espn, lam, n=2):
+    """Top recent scorers for a team from ESPN boxes the grader stored, with anytime chances."""
+    try:
+        rows = con.execute("""select player, sum(goals) g from soccer_box where team=? group by player_norm
+                              order by g desc limit 6""", (team_espn,)).fetchall()
+        tot = con.execute("select sum(goals) from soccer_box where team=?", (team_espn,)).fetchone()[0] or 0
+    except Exception:                                          # noqa: BLE001
+        return []
+    if not tot or tot < 3:
+        return []
+    out = []
+    for r in rows[:n]:
+        share = r[1] / tot
+        out.append(f"{r[0]} {1 - math.exp(-lam * share):.0%}")
+    return out
+
+
+def refresh(con, now=None, L=None, jr=None, fit_every_h=6):
+    """Hourly: top up data, refit every few hours, write model rows for EPL/UCL matches in the next 48h."""
+    ensure(con)
+    now = now or datetime.now(UTC)
+    status = {"data": None, "fit": None, "rows": 0, "matched": 0, "unmatched": []}
+    try:
+        status["data"] = backfill(con, now)
+    except Exception as e:                                     # noqa: BLE001
+        status["data"] = f"error: {str(e)[:100]}"
+    model = load(con)
+    stale = (not model) or (datetime.fromisoformat(model["ts"]) < now - timedelta(hours=fit_every_h))
+    if stale:
+        try:
+            model = fit(con, now) or model
+            status["fit"] = "refit" if model else "not enough data yet"
+        except Exception as e:                                 # noqa: BLE001
+            status["fit"] = f"error: {str(e)[:100]}"
+    else:
+        status["fit"] = f"cached {model['ts']}"
+    if not model:
+        return status
+    teams = list(model["att"].keys())
+    evs = [dict(r) for r in con.execute("""select * from events where sport in ('EPL','UCL') and commence>? and commence<?
+                                           order by commence""", (now.isoformat(timespec="seconds"),
+                                                                  (now + timedelta(hours=48)).isoformat(timespec="seconds")))]
+    rows = []
+    for ev in evs:
+        he, _s1 = best_name(ev["home"], teams); ae, _s2 = best_name(ev["away"], teams)
+        if not he or not ae or he == ae:
+            status["unmatched"].append(f"{ev['away']} @ {ev['home']}")
+            continue
+        status["matched"] += 1
+        q = _pin(con, ev["event_id"])
+        h2h = q.get("h2h", {})
+        lh, la, notes = predict(model, he, ae, ev["commence"])
+        M = score_matrix(lh, la)
+        ph, pd, pa = p_1x2(M)
+        wgt = MODEL_WEIGHT.get(ev["sport"], 0.3)
+        if L is not None and hasattr(L, "fitted_anchor"):
+            try:
+                wgt = L.fitted_anchor(con, ev["sport"], "h2h", default=wgt)
+            except Exception:                                  # noqa: BLE001
+                pass
+        ts = now.isoformat(timespec="seconds")
+        detail = (f"xG {lh:.2f}-{la:.2f}; ratings att/def {he} {model['att'][he]:+.2f}/{model['def'][he]:+.2f}, "
+                  f"{ae} {model['att'][ae]:+.2f}/{model['def'][ae]:+.2f}; games {model['games'].get(he, 0)}/{model['games'].get(ae, 0)}"
+                  + (f"; {'; '.join(notes)}" if notes else ""))
+        sc_h, sc_a = likely_scorers(con, he, lh), likely_scorers(con, ae, la)
+        if sc_h or sc_a:
+            detail += f"; likely scorers {', '.join(sc_h + sc_a)}"
+        mkt = {}
+        if ev["home"] in h2h and ev["away"] in h2h and "Draw" in h2h:
+            fh, fd, fa = _devig([h2h[ev["home"]][1], h2h["Draw"][1], h2h[ev["away"]][1]])
+            mkt["h2h"] = (fh, fd, fa)
+            for oc, pm, pf in ((ev["home"], ph, fh), ("Draw", pd, fd), (ev["away"], pa, fa)):
+                pb = wgt * pm + (1 - wgt) * pf
+                e = pb - pf
+                call = f"Lean {oc}" if e >= LEAN_EDGE else "Sit"
+                rows.append(dict(event_id=ev["event_id"], market="h2h", outcome=oc, player="", line=None,
+                                 model_prob=round(pb, 4), fair_prob=round(pf, 4), edge=round(e, 4), call=call,
+                                 note=f"{VERSION} raw {pm:.3f}", reasoning=f"KRONOS soccer: {detail}; model weight {wgt:.2f}",
+                                 model_number=round(lh - la, 3), market_number=None, components={"lh": lh, "la": la}))
+        tot = q.get("totals", {})
+        if "Over" in tot and "Under" in tot and tot["Over"][0] is not None and abs(tot["Over"][0] - (tot["Under"][0] or 0)) < 1e-9:
+            L_ = float(tot["Over"][0])
+            fo, fu = _devig([tot["Over"][1], tot["Under"][1]])
+            mkt["tot"] = (fo, L_)
+            pm = p_over(M, L_)
+            pb = wgt * pm + (1 - wgt) * fo
+            e = pb - fo
+            call = "Lean Over" if e >= LEAN_EDGE else "Lean Under" if e <= -LEAN_EDGE else "Sit"
+            rows.append(dict(event_id=ev["event_id"], market="totals", outcome="Over", player="", line=L_,
+                             model_prob=round(pb, 4), fair_prob=round(fo, 4), edge=round(e, 4), call=call,
+                             note=f"{VERSION} raw {pm:.3f}", reasoning=f"KRONOS soccer: {detail}",
+                             model_number=round(lh + la, 3), market_number=L_, components={"lh": lh, "la": la}))
+        sp = q.get("spreads", {})
+        if ev["home"] in sp and ev["away"] in sp and sp[ev["home"]][0] is not None:
+            hl = float(sp[ev["home"]][0])
+            fh_, fa_ = _devig([sp[ev["home"]][1], sp[ev["away"]][1]])
+            pm = p_home_ah(M, hl)
+            pb = wgt * pm + (1 - wgt) * fh_
+            e = pb - fh_
+            call = f"Lean {ev['home']}" if e >= LEAN_EDGE else f"Lean {ev['away']}" if e <= -LEAN_EDGE else "Sit"
+            rows.append(dict(event_id=ev["event_id"], market="spreads", outcome=ev["home"], player="", line=hl,
+                             model_prob=round(pb, 4), fair_prob=round(fh_, 4), edge=round(e, 4), call=call,
+                             note=f"{VERSION} raw {pm:.3f}", reasoning=f"KRONOS soccer: {detail}",
+                             model_number=round(lh - la, 3), market_number=-hl, components={"lh": lh, "la": la}))
+        if jr is not None:
+            try:
+                mlh = mla = None
+                if "h2h" in mkt:
+                    fo_, L2 = mkt.get("tot", (None, None))
+                    mlh, mla = market_lambdas(mkt["h2h"][0], mkt["h2h"][2], fo_, L2)
+                jr.record_numbers(con, event_id=ev["event_id"], sport=ev["sport"], home=ev["home"], away=ev["away"],
+                                  commence=ev["commence"], margin=lh - la, total=lh + la, p_home=ph,
+                                  mkt_margin=None if mlh is None else mlh - mla, mkt_total=None if mlh is None else mlh + mla,
+                                  mkt_p_home=mkt["h2h"][0] if "h2h" in mkt else None,
+                                  checks={"team_data": min(model["games"].get(he, 0), model["games"].get(ae, 0)) >= 8},
+                                  detail=detail)
+            except Exception:                                  # noqa: BLE001
+                pass
+    if rows and L is not None:
+        try:
+            L.write_probs(con, rows, now); con.commit()
+        except Exception as e:                                 # noqa: BLE001
+            status["write_error"] = str(e)[:100]
+        try:
+            L.paper_log(con, rows, now); con.commit()
+        except Exception as e:                                 # noqa: BLE001
+            status["paper_error"] = str(e)[:100]
+    status["rows"] = len(rows)
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("soccer_status", json.dumps(status)[:2000]))
+    con.commit()
+    return status
+'''
+
+_LEDGER_SRC = r'''"""
+kronos_ledger — one KRONOS prediction for every tracked match, logged before kickoff, graded for free.
+(ledger-v1, 2026-11-01)
+
+Every event in the desk (NFL, NBA, NHL, EPL, UCL, UFC) gets a paper pick in each game-line market it
+has (moneyline/1X2, total, spread/handicap), logged LEDGER_LEAD minutes before kickoff so it uses the
+latest lineup-driven prices. Never "no bet": every market gets a side.
+
+Side choice: the sport model's probability vs Pinnacle's de-vigged fair (model_probs). With no model
+row, the market model: the side sharp money is on (sharp_signal score), else the market favourite.
+Grades/stakes (paper units): A 1u (edge >= 5%), B 0.5u (>= 3%), C 0.25u (>= 1.5%), D 0.1u (otherwise and
+every market-model pick). Unvalidated models are capped at B; a model-vs-market gap over 8% is capped at C and tagged
+"check team news" (the biggest gaps have been the biggest misses).
+Ledger rows are stored as paper=2 so they stay out of the desk's existing model/price-edge report and
+are reported in their own KRONOS LEDGER block.
+Price: best of DraftKings/FanDuel/Fanatics at the same line; if none, Pinnacle's price, marked
+"no CT price"; with no price anywhere the pick is logged at zero stake, marked "no posted line".
+Every row carries the 22 KRONOS signals, so the learning layer can measure them.
+
+Grading: ESPN public scoreboards (free, no Odds API credits) for every sport; closing line value from
+the desk's own Pinnacle tape. Extra-time / penalty finishes in soccer are left for the desk's grader
+(1X2 settles on 90 minutes).
+"""
+import json, math, os, re, unicodedata
+from datetime import datetime, timezone, timedelta
+
+UTC = timezone.utc
+VERSION = "ledger-v1-2026-11-01"
+LEDGER_LEAD = int(os.environ.get("LEDGER_LEAD_MIN", "90"))
+CT_BOOKS = ("draftkings", "fanduel", "fanatics")
+SHARP = ("pinnacle", "lowvig", "betonlineag")
+MARKETS = {"NFL": ("h2h", "spreads", "totals"), "NBA": ("h2h", "spreads", "totals"), "NHL": ("h2h", "spreads", "totals"),
+           "EPL": ("h2h", "spreads", "totals"), "UCL": ("h2h", "spreads", "totals"), "UFC": ("h2h",),
+           "MLB": ("h2h", "spreads", "totals")}
+GRADES = ((0.05, "A", 1.0), (0.03, "B", 0.5), (0.015, "C", 0.25))
+D_STAKE = 0.1
+BIG_GAP = float(os.environ.get("LEDGER_BIG_GAP", "0.08"))
+CAP_GRADE = os.environ.get("LEDGER_CAP_GRADE", "B")
+ESPN = {"NFL": "football/nfl", "NBA": "basketball/nba", "NHL": "hockey/nhl", "MLB": "baseball/mlb",
+        "EPL": "soccer/eng.1", "UCL": "soccer/uefa.champions", "UFC": "mma/ufc"}
+GRADE_AFTER_MIN = {"NFL": 170, "NBA": 120, "NHL": 120, "MLB": 150, "EPL": 105, "UCL": 105, "UFC": 30}
+
+
+def _iso(t):
+    return t.isoformat(timespec="seconds")
+
+
+def _ts(s):
+    t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    return t if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def _same(a, b):
+    if a is None and b is None:
+        return True
+    if a is None or b is None:
+        return False
+    return abs(float(a) - float(b)) < 1e-9
+
+
+def _devig(prices):
+    inv = [1 / float(p) for p in prices]
+    s = sum(inv)
+    return [x / s for x in inv]
+
+
+# --------------------------------------------------------------------------- market state
+def sides(con, eid, market):
+    """Current sharp sides for a market: [(outcome, line, price, book)], same-line pairs only."""
+    for bk in SHARP:
+        rows = [tuple(r) for r in con.execute("""select outcome, line, price from last_quote where event_id=? and book=?
+                                                 and market=? and coalesce(player,'')=''""", (eid, bk, market))]
+        if not rows:
+            continue
+        if market == "totals":
+            o = [r for r in rows if r[0] == "Over"]; u = [r for r in rows if r[0] == "Under"]
+            if o and u and _same(o[0][1], u[0][1]):
+                return [(o[0][0], o[0][1], o[0][2], bk), (u[0][0], u[0][1], u[0][2], bk)]
+            continue
+        if market == "spreads":
+            if len(rows) == 2 and rows[0][1] is not None and rows[1][1] is not None and _same(rows[0][1], -rows[1][1]):
+                return [(r[0], r[1], r[2], bk) for r in rows]
+            continue
+        return [(r[0], r[1], r[2], bk) for r in rows]
+    # no sharp book: any book that has the full market
+    rows = [tuple(r) for r in con.execute("""select outcome, line, price, book from last_quote where event_id=? and market=?
+                                             and coalesce(player,'')='' order by book""", (eid, market))]
+    by = {}
+    for r in rows:
+        by.setdefault(r[3], []).append(r)
+    for bk, rs in by.items():
+        if market == "h2h" or len(rs) == 2:
+            return [(r[0], r[1], r[2], bk) for r in rs]
+    return []
+
+
+def best_ct(con, eid, market, outcome, line):
+    rows = con.execute(f"""select book, line, price from last_quote where event_id=? and market=? and outcome=?
+                           and coalesce(player,'')='' and book in ({','.join('?' * len(CT_BOOKS))})""",
+                       (eid, market, outcome, *CT_BOOKS)).fetchall()
+    rows = [r for r in rows if market == "h2h" or _same(r[1], line)]
+    if not rows:
+        return None
+    r = max(rows, key=lambda r: r[2])
+    return {"book": r[0], "line": r[1], "price": float(r[2])}
+
+
+def model_probs_for(con, eid, market, outs):
+    """{outcome: model prob} from model_probs, completing two-way markets from one stored row."""
+    rows = {r[0]: (r[1], r[2]) for r in con.execute("""select outcome, model_prob, line from model_probs where event_id=?
+                                                       and market=? and coalesce(player,'')='' and model_prob is not null""",
+                                                    (eid, market))}
+    if not rows:
+        return {}
+    out = {}
+    for o, line, *_ in outs:
+        if o in rows:
+            out[o] = float(rows[o][0])
+    if len(outs) == 2 and len(out) == 1:
+        o1 = next(iter(out)); o2 = [o for o, *_ in outs if o != o1][0]
+        out[o2] = 1 - out[o1]
+    if market == "spreads":
+        # a stored spread row at a different line than the current one is stale: drop it
+        for o, line, *_ in outs:
+            if o in rows and rows[o][1] is not None and line is not None and not _same(rows[o][1], line):
+                return {}
+    return out
+
+
+def grade_for(edge, has_model):
+    if not has_model:
+        return "D", D_STAKE
+    for th, g, st in GRADES:
+        if edge >= th:
+            order = "ABCD"
+            if order.index(g) < order.index(CAP_GRADE):
+                g = CAP_GRADE; st = dict((x[1], x[2]) for x in GRADES)[g]
+            return g, st
+    return "D", D_STAKE
+
+
+def model_name(L, sport, market):
+    try:
+        return L.model_version(sport, market) if L is not None else f"{sport.lower()}-model"
+    except Exception:                                          # noqa: BLE001
+        return f"{sport.lower()}-model"
+
+
+# --------------------------------------------------------------------------- logging
+def ensure(con):
+    cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    for c, t in (("paper", "int"), ("signals", "text"), ("model_version", "text"), ("hours_to_start", "real"),
+                 ("edge", "real"), ("fair_prob", "real"), ("evidence_kind", "text"), ("logged_call", "text"),
+                 ("sharp_flag", "text"), ("card_tags", "text"), ("comp_json", "text")):
+        if c not in cols:
+            con.execute(f"alter table bets add column {c} {t}")
+    con.execute("create index if not exists bets_ledger on bets(evidence_kind, event_id, market)")
+
+
+def log_event(con, ev, now, L=None, jr=None, js=None):
+    """Log one ledger pick per game-line market for this event. Returns the number logged."""
+    n = 0
+    for market in MARKETS.get(ev["sport"], ("h2h",)):
+        if con.execute("select 1 from bets where evidence_kind='ledger' and event_id=? and market=?",
+                       (ev["event_id"], market)).fetchone():
+            continue
+        outs = sides(con, ev["event_id"], market)
+        if len(outs) < 2:
+            continue
+        fair = _devig([o[2] for o in outs])
+        fp = {o[0]: f for o, f in zip(outs, fair)}
+        mp = model_probs_for(con, ev["event_id"], market, outs)
+        has_model = len(mp) == len(outs)
+        why = []
+        if has_model:
+            pick = max(outs, key=lambda o: mp[o[0]] - fp[o[0]])
+            edge = mp[pick[0]] - fp[pick[0]]
+            why.append(f"model {mp[pick[0]]:.1%} vs fair {fp[pick[0]]:.1%}")
+            kind = "model"
+        else:
+            # market model: the sharp side, else the favourite
+            scores = {}
+            for o in outs:
+                try:
+                    s = jr.sharp_signal(con, ev["event_id"], market, o[0]) if jr else {}
+                except Exception:                              # noqa: BLE001
+                    s = {}
+                scores[o[0]] = (s.get("score") or 0, fp[o[0]])
+            pick = max(outs, key=lambda o: scores[o[0]])
+            edge = 0.0
+            why.append(f"no model row: market model, {'sharp side' if scores[pick[0]][0] > 0 else 'market favourite'}")
+            kind = "market"
+        sel, line = pick[0], pick[1]
+        q = best_ct(con, ev["event_id"], market, sel, line)
+        tags = []
+        if q:
+            price, book = q["price"], q["book"]
+        else:
+            price, book = float(pick[2]), pick[3]
+            tags.append("no CT price")
+        grade, stake = grade_for(edge, has_model)
+        if has_model and edge > BIG_GAP and grade in ("A", "B"):
+            # the biggest model-vs-market gaps are usually missing information, not value (2026-10-27)
+            grade, stake = "C", dict((x[1], x[2]) for x in GRADES)["C"]
+            tags.append(f"big gap {edge:.0%}: check team news")
+        ev_pct = price * fp[sel] - 1
+        try:
+            sig = jr.sharp_signal(con, ev["event_id"], market, sel) if jr else {}
+        except Exception:                                      # noqa: BLE001
+            sig = {}
+        signals = None
+        if js is not None:
+            try:
+                extra = {"sig": sig}
+                if has_model:
+                    extra["pc"] = {"p_side": mp[sel]}
+                signals = json.dumps(js.capture(con, ev, market, sel, "", line, price, fp[sel], extra))
+            except Exception:                                  # noqa: BLE001
+                signals = None
+        mver = model_name(L, ev["sport"], market) if has_model else "market"
+        try:
+            hrs = round((_ts(ev["commence"]) - now).total_seconds() / 3600, 2)
+        except Exception:                                      # noqa: BLE001
+            hrs = None
+        note = (f"KRONOS ledger | grade {grade} | {kind} ({mver}) | " + "; ".join(why) +
+                f" | EV {ev_pct * 100:+.1f}% at {book}" + (f" | {', '.join(tags)}" if tags else ""))
+        con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price,
+                       book, stake, model_prob, note, paper, signals, model_version, hours_to_start, edge, fair_prob,
+                       evidence_kind, logged_call, sharp_flag, card_tags)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,2,?,?,?,?,?,?,?,?,?)""",
+                    (_iso(now), ev["sport"], ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], market, sel, "",
+                     line, price, book, stake, round(mp[sel], 4) if has_model else round(fp[sel], 4), note[:300],
+                     signals, f"{VERSION}+{mver}", hrs, round(edge, 4), round(fp[sel], 4), "ledger",
+                     f"Grade {grade}", (sig or {}).get("label"), json.dumps({"grade": grade, "kind": kind, "tags": tags})))
+        n += 1
+    return n
+
+
+def log_due(con, now=None, L=None, jr=None, js=None, lead_min=None):
+    """Every event starting within the lead window (and not yet started) gets its ledger picks."""
+    ensure(con)
+    now = now or datetime.now(UTC)
+    lead = LEDGER_LEAD if lead_min is None else lead_min
+    evs = [dict(r) for r in con.execute("select * from events where commence>? and commence<=? order by commence",
+                                        (_iso(now), _iso(now + timedelta(minutes=lead))))]
+    n = 0
+    for ev in evs:
+        try:
+            n += log_event(con, ev, now, L, jr, js)
+        except Exception as e:                                 # noqa: BLE001
+            con.execute("insert or replace into meta(k,v) values(?,?)",
+                        ("ledger_error", f"{_iso(now)} {ev.get('event_id')} {str(e)[:150]}"))
+    con.commit()
+    return n
+
+
+# --------------------------------------------------------------------------- free grading (ESPN)
+def _norm(s):
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    s = s.replace("&", " and ").replace("-", " ").replace(".", " ").replace("'", "")
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", s)).strip()
+
+
+_STOP = {"fc", "afc", "cf", "sc", "the", "and", "de", "club", "calcio", "ac", "as", "fk", "sk", "cp"}
+_ALIAS = {"inter milan": "internazionale", "la clippers": "los angeles clippers", "la lakers": "los angeles lakers",
+          "sporting lisbon": "sporting cp", "paris saint germain": "paris saint germain"}
+
+
+def _tok(s):
+    n = _ALIAS.get(_norm(s), _norm(s))
+    t = set(n.split())
+    return (t - _STOP) or t
+
+
+def _match(a, b):
+    ta, tb = _tok(a), _tok(b)
+    if not ta or not tb:
+        return 0.0
+    j = len(ta & tb) / len(ta | tb)
+    return max(j, 0.75) if (ta <= tb or tb <= ta) else j
+
+
+def _get(url, timeout=20):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.json()
+
+
+def espn_finals(sport, day, get=_get):
+    """[(home, away, hs, as, detail)] for team sports, [(fighter_a, fighter_b, winner, detail)] for UFC."""
+    path = ESPN[sport]
+    js = get(f"https://site.api.espn.com/apis/site/v2/sports/{path}/scoreboard?dates={day.replace('-', '')}&limit=300")
+    out = []
+    for ev in js.get("events", []):
+        for comp in ev.get("competitions", []) or []:
+            st = (comp.get("status") or ev.get("status") or {}).get("type", {})
+            if not st.get("completed"):
+                continue
+            detail = str(st.get("detail") or st.get("shortDetail") or st.get("description") or "")
+            cs = comp.get("competitors", [])
+            if sport == "UFC":
+                names = [((c.get("athlete") or {}).get("displayName") or (c.get("team") or {}).get("displayName", "")) for c in cs]
+                win = [n for n, c in zip(names, cs) if c.get("winner")]
+                if len(names) == 2:
+                    out.append(("ufc", names[0], names[1], win[0] if win else None, detail))
+                continue
+            t = {c.get("homeAway"): c for c in cs}
+            if "home" in t and "away" in t:
+                try:
+                    out.append(("team", t["home"]["team"]["displayName"], t["away"]["team"]["displayName"],
+                                float(t["home"]["score"]), float(t["away"]["score"]), detail))
+                except (KeyError, TypeError, ValueError):
+                    pass
+    return out
+
+
+def settle(market, selection, line, home, away, hs, as_):
+    if hs is None or as_ is None:
+        return None
+    if market == "h2h" and selection == "Draw":
+        return "W" if hs == as_ else "L"
+    mine = hs if selection == home else as_ if selection == away else None
+    theirs = as_ if selection == home else hs if selection == away else None
+    if market == "h2h" and mine is not None:
+        return "W" if mine > theirs else "L" if mine < theirs else "P"
+    if market == "spreads" and mine is not None and line is not None:
+        parts = [float(line) - 0.25, float(line) + 0.25] if round(float(line) * 4) % 2 == 1 else [float(line)]
+        res = [("W" if mine + p - theirs > 0 else "L" if mine + p - theirs < 0 else "P") for p in parts]
+        return _combine(res)
+    if market == "totals" and line is not None and selection in ("Over", "Under"):
+        t = hs + as_
+        parts = [float(line) - 0.25, float(line) + 0.25] if round(float(line) * 4) % 2 == 1 else [float(line)]
+        res = [("P" if t == p else ("W" if (t > p) == (selection == "Over") else "L")) for p in parts]
+        return _combine(res)
+    return None
+
+
+def _combine(res):
+    if len(res) == 1:
+        return res[0]
+    s = set(res)
+    if s == {"W"}: return "W"
+    if s == {"L"}: return "L"
+    if s == {"W", "P"}: return "HW"      # half win (quarter line)
+    if s == {"L", "P"}: return "HL"      # half loss
+    return "P"
+
+
+def pnl_for(res, stake, price):
+    stake = float(stake or 0); price = float(price or 1)
+    return {"W": stake * (price - 1), "L": -stake, "P": 0.0, "HW": stake * (price - 1) / 2, "HL": -stake / 2}[res]
+
+
+def closing(con, b):
+    """Pinnacle's last pre-kickoff price on this side (same line if possible), plus a de-vigged close."""
+    for extra, args in (("and line is ?", (b["line"],)), ("", ())):
+        r = con.execute(f"""select book, line, price, ts from ticks where event_id=? and market=? and outcome=? and player=''
+                            and ts<=? and book in ('pinnacle','lowvig','betonlineag') {extra}
+                            order by (book='pinnacle') desc, ts desc limit 1""",
+                        (b["event_id"], b["market"], b["selection"], b["commence"], *args)).fetchone()
+        if r:
+            break
+    else:
+        return None
+    others = []
+    for o in con.execute("""select distinct outcome from ticks where event_id=? and market=? and player='' and outcome<>?""",
+                         (b["event_id"], b["market"], b["selection"])):
+        ol = r[1]
+        if b["market"] == "spreads" and ol is not None:
+            ol = -float(ol)
+        q = con.execute("""select price from ticks where event_id=? and market=? and outcome=? and player='' and book=?
+                           and line is ? and ts<=? order by ts desc limit 1""",
+                        (b["event_id"], b["market"], o[0], r[0], None if b["market"] == "h2h" else ol, b["commence"])).fetchone()
+        if q:
+            others.append(float(q[0]))
+    fair = None
+    if others:
+        fair = _devig([float(r[2])] + others)[0]
+    return {"book": r[0], "line": r[1], "price": float(r[2]), "fair": fair}
+
+
+def grade_pending(con, now=None, jr=None, get=_get):
+    """Grade every pending game-line bet (ledger, model, price-edge, real) from ESPN finals."""
+    now = now or datetime.now(UTC)
+    pend = [dict(r) for r in con.execute("""select * from bets where result='pending' and coalesce(player,'')=''
+                                            and market in ('h2h','spreads','totals') and commence<=?""", (_iso(now),))]
+    due = [b for b in pend if _ts(b["commence"]) + timedelta(minutes=GRADE_AFTER_MIN.get(b["sport"], 150)) <= now]
+    cache, graded, held = {}, 0, 0
+    for b in due:
+        if b["sport"] not in ESPN:
+            continue
+        ev = con.execute("select home, away from events where event_id=?", (b["event_id"],)).fetchone()
+        if not ev:
+            continue
+        home, away = ev[0], ev[1]
+        d0 = _ts(b["commence"])
+        hit = None
+        for day in sorted({(d0 - timedelta(hours=8)).date().isoformat(), d0.date().isoformat()}):
+            k = (b["sport"], day)
+            if k not in cache:
+                try:
+                    cache[k] = espn_finals(b["sport"], day, get=get)
+                except Exception:                              # noqa: BLE001
+                    cache[k] = []
+            for g in cache[k]:
+                if g[0] == "ufc":
+                    s = min(_match(home, g[1]), _match(away, g[2])) if True else 0
+                    s2 = min(_match(home, g[2]), _match(away, g[1]))
+                    if max(s, s2) >= 0.5:
+                        hit = g; break
+                else:
+                    if min(_match(home, g[1]), _match(away, g[2])) >= 0.5:
+                        hit = g; break
+            if hit:
+                break
+        if not hit:
+            continue
+        if hit[0] == "ufc":
+            winner = hit[3]
+            if winner is None:
+                res = "P"
+            else:
+                res = "W" if _match(b["selection"], winner) >= 0.5 else "L"
+            hs = as_ = None
+        else:
+            _, eh, ea, hs, as_, detail = hit
+            if b["sport"] in ("EPL", "UCL") and re.search(r"aet|pen|extra", detail, re.I):
+                held += 1
+                continue                                       # 1X2 settles on 90 minutes: leave for the desk / manual
+            res = settle(b["market"], b["selection"], b["line"], home, away, hs, as_)
+        if not res:
+            continue
+        c = closing(con, b)
+        clv = None
+        if c and jr is not None:
+            try:
+                clv = jr.clv_pp(b["line"], b["price"], c["line"], c["price"], b["market"], b["selection"], close_fair=c["fair"])
+            except Exception:                                  # noqa: BLE001
+                clv = None
+        stored = {"HW": "W", "HL": "L"}.get(res, res)
+        con.execute("""update bets set result=?, pnl=?, home_score=?, away_score=?, close_book=?, close_line=?, close_price=?,
+                       clv_pp=coalesce(clv_pp, ?), graded_ts=?, note=coalesce(note,'')||? where id=? and result='pending'""",
+                    (stored, round(pnl_for(res, b["stake"], b["price"]), 4), hs, as_, c["book"] if c else None,
+                     c["line"] if c else None, c["price"] if c else None, clv, _iso(now),
+                     (" | half " + ("win" if res == "HW" else "loss") if res in ("HW", "HL") else "") + " | graded (ESPN)",
+                     b["id"]))
+        if hs is not None:
+            try:
+                con.execute("insert or replace into final_scores values(?,?,?,?,?)", (b["event_id"], b["sport"], hs, as_, _iso(now)))
+            except Exception:                                  # noqa: BLE001
+                pass
+        graded += 1
+    con.commit()
+    return {"due": len(due), "graded": graded, "held_extra_time": held}
+
+
+# --------------------------------------------------------------------------- learning dedupe
+def install(js):
+    """The learning layer counts each (event, market, side) once, preferring the ledger row, so a game
+    that has both a model paper row and a ledger row is not double-counted."""
+    if js is None or getattr(js, "_ledger_installed", False):
+        return False
+
+    def _graded_rows(con):
+        rows, seen = [], {}
+        for b in con.execute("""select result, fair_prob, model_prob, price, clv_pp, signals, sport, market, evidence_kind,
+                                       hours_to_start, event_id, selection, coalesce(player,'') player
+                                from bets where paper in (1, 2) and result in ('W','L') and signals is not null
+                                order by (evidence_kind='ledger') desc, id"""):
+            key = (b["event_id"], b["market"], b["selection"], b["player"])
+            if key in seen:
+                continue
+            seen[key] = 1
+            try:
+                sg = json.loads(b["signals"])
+            except Exception:                                  # noqa: BLE001
+                continue
+            f = b["fair_prob"] or b["model_prob"]
+            if not f:
+                continue
+            rows.append((1 if b["result"] == "W" else 0, float(f), sg, b))
+        return rows
+
+    js._graded_rows = _graded_rows
+    js._ledger_installed = True
+    return True
+
+
+# --------------------------------------------------------------------------- reporting
+def coverage(con, now=None, L=None):
+    """For every tracked sport: events in the next 48h, how many have model rows, and ledger status."""
+    now = now or datetime.now(UTC)
+    out = {}
+    for sp in ("NFL", "NBA", "NHL", "EPL", "UCL", "UFC"):
+        evs = [r[0] for r in con.execute("select event_id from events where sport=? and commence>? and commence<?",
+                                         (sp, _iso(now), _iso(now + timedelta(hours=48))))]
+        with_model = 0
+        for e in evs:
+            if con.execute("select 1 from model_probs where event_id=? and coalesce(player,'')='' limit 1", (e,)).fetchone():
+                with_model += 1
+        out[sp] = {"events_48h": len(evs), "with_model_rows": with_model,
+                   "model": model_name(L, sp, "h2h") if L is not None else "?"}
+    return out
+
+
+def feed_block(con, now=None, L=None):
+    now = now or datetime.now(UTC)
+    lines = ["", "", f"KRONOS LEDGER ({VERSION}: one paper pick per market for every tracked match, logged {LEDGER_LEAD} min "
+             "before kickoff, graded free from ESPN; grades A 1u / B 0.5u / C 0.25u / D 0.1u, models capped at "
+             f"{CAP_GRADE} until validated):"]
+    try:
+        cov = coverage(con, now, L)
+        lines.append("  model coverage next 48h: " + "; ".join(
+            f"{sp} {c['with_model_rows']}/{c['events_48h']} games ({c['model']})" for sp, c in cov.items()))
+    except Exception as e:                                     # noqa: BLE001
+        lines.append(f"  coverage unavailable ({str(e)[:80]})")
+    try:
+        rows = con.execute("""select sport, coalesce(json_extract(card_tags,'$.kind'),'?') kind, count(*) n,
+                                     sum(result='pending') p, sum(result='W') w, sum(result='L') l, sum(result='P') pu,
+                                     round(sum(case when result in ('W','L','P') then pnl else 0 end),2) u,
+                                     round(sum(case when result in ('W','L','P') then stake else 0 end),2) st,
+                                     round(avg(clv_pp),2) clv, sum(clv_pp>0) bc, sum(clv_pp is not null) nc
+                              from bets where evidence_kind='ledger' group by sport, kind order by sport, kind""").fetchall()
+        if not rows:
+            lines.append("  no ledger picks yet (the first ones log 90 min before the next kickoff)")
+        for r in rows:
+            roi = f"{(r['u'] / r['st']) * 100:+.1f}%" if r["st"] else "n/a"
+            bc = f"{r['bc'] / r['nc']:.0%}" if r["nc"] else "n/a"
+            lines.append(f"  {r['sport']} {r['kind']}: {r['n']} picks, {r['p']} pending | {r['w']}-{r['l']}-{r['pu']} | "
+                         f"{r['u']:+.2f}u on {r['st']:.2f}u ({roi}) | CLV avg {r['clv'] if r['clv'] is not None else 'n/a'}pp, beat close {bc}")
+        g = con.execute("""select coalesce(json_extract(card_tags,'$.grade'),'?') g, count(*) n, sum(result='W') w,
+                                  sum(result='L') l, round(sum(case when result in ('W','L','P') then pnl else 0 end),2) u
+                           from bets where evidence_kind='ledger' and result in ('W','L','P') group by g order by g""").fetchall()
+        if g:
+            lines.append("  by grade: " + "; ".join(f"{r['g']} {r['w']}-{r['l']} {r['u']:+.2f}u" for r in g))
+        up = con.execute("""select sport, game, market, selection, line, price, book, stake, logged_call, commence
+                            from bets where evidence_kind='ledger' and result='pending' order by commence limit 40""").fetchall()
+        for r in up:
+            ln = "" if r["line"] is None else (f" {r['line']:+g}" if r["market"] == "spreads" else f" {r['line']:g}")
+            lines.append(f"  pick {r['sport']} {str(r['commence'])[:16]}Z {r['game']} | {r['market']} {r['selection']}{ln} "
+                         f"{r['price']:.2f} {r['book']} | {r['logged_call']} {r['stake']:g}u")
+        st = con.execute("select v from meta where k='ledger_grade'").fetchone()
+        if st:
+            lines.append(f"  last grading pass: {st[0]}")
+        er = con.execute("select v from meta where k='ledger_error'").fetchone()
+        if er:
+            lines.append(f"  last ledger error: {er[0]}")
+        ss = con.execute("select v from meta where k='soccer_status'").fetchone()
+        if ss:
+            lines.append(f"  soccer model: {ss[0][:400]}")
+    except Exception as e:                                     # noqa: BLE001
+        lines.append(f"  ledger report unavailable ({str(e)[:100]})")
+    return "\n".join(lines) + "\n"
+'''
+
+_DROPS_SRC = r'''"""
+kronos_drops — dropping odds for KRONOS (2026-10-31).
+
+KRONOS's own version of a dropping-odds board, built from the desk's 20-book tape (ticks table),
+so no third-party site is scraped. For every tracked game-line side it measures:
+  * odds drop % since open, and over the last 1h / 6h / 24h (decimal-odds change, (old-new)/old),
+    for Pinnacle alone and averaged across all books at the same line
+  * who led: SHARP-LED (Pinnacle/sharp book moved first), RETAIL-ONLY (retail moved, Pinnacle did not),
+    MIXED, or NONE
+  * line moves on spreads/totals (e.g. -1.0 -> -0.75)
+  * whether the drop is already priced in at CT books (best CT price vs Pinnacle de-vigged fair)
+  * STALE CT PRICE: Pinnacle dropped but a CT book still offers a +EV price -> Telegram alert
+
+Reasoning rules (shown in the feed and applied to sharp_signal text/tags; they do NOT change verdicts
+or stakes until the learning layer graduates the new signals):
+  R1 A drop is sharp evidence only if it is SHARP-LED (Pinnacle/sharp book first or alone).
+  R2 A RETAIL-ONLY drop (retail >=5%, Pinnacle <1%) is public money.
+  R3 If the price is already below fair after the drop (best CT EV < 0), it is PRICED IN: do not chase.
+  R4 The only actionable drop is a STALE CT PRICE: Pinnacle dropped >= DROP_ALERT_PCT in the last hour
+     and a CT book still pays >= DROP_ALERT_EV over the new fair price.
+  R5 A drop that follows confirmed team news is information, not an edge, unless a CT price is stale.
+"""
+import json, os
+from datetime import datetime, timezone, timedelta
+
+UTC = timezone.utc
+SHARP = ("pinnacle", "lowvig", "betonlineag")
+CT_BOOKS = ("draftkings", "fanduel", "fanatics")
+GAME_MARKETS = ("h2h", "spreads", "totals")
+WINDOWS_H = (1, 6, 24)
+DROP_FLAG = float(os.environ.get("DROP_FLAG_PCT", "5"))        # "Dropping"
+DROP_HEAVY = float(os.environ.get("DROP_HEAVY_PCT", "10"))     # "Heavy drop"
+ALERT_PCT = float(os.environ.get("DROP_ALERT_PCT", "5"))       # Pinnacle drop in last 60 min
+ALERT_EV = float(os.environ.get("DROP_ALERT_EV", "1"))         # CT EV % still left
+HORIZON_H = float(os.environ.get("DROP_HORIZON_H", "48"))
+BOOK_NAMES = {"draftkings": "DraftKings", "fanduel": "FanDuel", "fanatics": "Fanatics", "pinnacle": "Pinnacle"}
+
+
+def _ts(s):
+    try:
+        t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=UTC)
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
+def _same(a, b):
+    if a is None and b is None:
+        return True
+    if a is None or b is None:
+        return False
+    return abs(float(a) - float(b)) < 1e-9
+
+
+def _drop(old, new):
+    """Decimal-odds drop in %, positive = price shortened (money came in). OddsPortal convention."""
+    try:
+        old, new = float(old), float(new)
+        return (old - new) / old * 100 if old > 1 else None
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
+def _devig(prices):
+    """Proportional de-vig, list of decimal prices -> list of fair probs."""
+    inv = [1 / p for p in prices if p and p > 1]
+    if len(inv) != len(prices):
+        return None
+    s = sum(inv)
+    return [x / s for x in inv]
+
+
+def _fair(con, event_id, market, outcome, line):
+    """Pinnacle (or the first sharp book with a full market) de-vigged fair prob for this side at this line."""
+    for bk in SHARP:
+        rows = con.execute("""select outcome, line, price from last_quote where event_id=? and book=? and market=?
+                              and coalesce(player,'')=''""", (event_id, bk, market)).fetchall()
+        if not rows:
+            continue
+        if market == "h2h":
+            side = [r for r in rows]
+        elif market == "totals":
+            side = [r for r in rows if _same(r[1], line)]
+        else:   # spreads: this side at line, the other side at -line
+            side = [r for r in rows if (r[0] == outcome and _same(r[1], line)) or
+                    (r[0] != outcome and line is not None and r[1] is not None and _same(r[1], -float(line)))]
+        names = [r[0] for r in side]
+        if outcome not in names or len(side) < 2 or len(set(names)) != len(names):
+            continue
+        f = _devig([r[2] for r in side])
+        if f:
+            return f[names.index(outcome)], bk
+    return None, None
+
+
+def side_drops(con, event_id, market, outcome, player="", line=None, now=None):
+    """Full dropping-odds read for one side. line = the side's current sharp line (None for h2h)."""
+    now = now or datetime.now(UTC)
+    player = player or ""
+    ticks = con.execute("""select book, ts, line, price from ticks where event_id=? and market=? and outcome=?
+                           and player=? order by ts""", (event_id, market, outcome, player)).fetchall()
+    by_book = {}
+    for bk, ts, ln, pr in ticks:
+        t = _ts(ts)
+        if t is None or pr is None:
+            continue
+        by_book.setdefault(bk, []).append((t, ln, float(pr)))
+    out = {"event_id": event_id, "market": market, "outcome": outcome, "player": player, "line": line,
+           "books": 0, "pin": {}, "avg": {}, "led": "NONE", "line_move": None, "fair": None,
+           "best_ct": None, "best_ct_book": None, "ct_ev": None, "level": None, "tags": [], "stale_ct": False}
+    if not by_book:
+        return out
+    win = {"open": None, **{f"{h}h": now - timedelta(hours=h) for h in WINDOWS_H}}
+    per_book = {}
+    first_move = {}
+    for bk, seq in by_book.items():
+        at_line = [x for x in seq if _same(x[1], line)] if market != "h2h" else seq
+        if not at_line:
+            continue
+        cur = at_line[-1][2]
+        d = {}
+        for k, t0 in win.items():
+            if t0 is None:
+                ref = at_line[0][2]
+            else:
+                before = [x for x in at_line if x[0] <= t0]
+                ref = before[-1][2] if before else at_line[0][2]
+            d[k] = _drop(ref, cur)
+        per_book[bk] = d
+        # when did this book first shorten in the last 6h (for who-led)
+        t6 = win["6h"]
+        before = [x for x in at_line if x[0] <= t6]
+        ref = before[-1][2] if before else at_line[0][2]
+        mv = next((x[0] for x in at_line if x[0] > t6 and x[2] < ref - 1e-9), None)
+        if mv:
+            first_move[bk] = mv
+    if not per_book:
+        return out
+    out["books"] = len(per_book)
+    pin_bk = next((b for b in SHARP if b in per_book), None)
+    if pin_bk:
+        out["pin"] = {k: (round(v, 1) if v is not None else None) for k, v in per_book[pin_bk].items()}
+        out["pin_book"] = pin_bk
+    for k in win:
+        vals = [d[k] for d in per_book.values() if d.get(k) is not None]
+        out["avg"][k] = round(sum(vals) / len(vals), 1) if vals else None
+    # line move (spreads/totals) from Pinnacle's opening line
+    if market in ("spreads", "totals") and pin_bk:
+        o = con.execute("""select line from opens where event_id=? and book=? and market=? and outcome=? and player=?""",
+                        (event_id, pin_bk, market, outcome, player)).fetchone()
+        if o and o[0] is not None and line is not None and not _same(o[0], line):
+            lf, lt = float(o[0]), float(line)
+            out["line_move"] = (lf, lt)
+            if market == "totals":
+                toward = (lt > lf) if outcome == "Over" else (lt < lf)
+            else:
+                toward = lt < lf          # spread: +0.5 -> +0.25 or -3 -> -3.5 = more support for this side
+            out["line_toward"] = bool(toward)
+    # who led
+    pin6 = (out["pin"].get("6h") or 0) if pin_bk else 0
+    retail = [d.get("6h") for b, d in per_book.items() if b not in SHARP and d.get("6h") is not None]
+    ret6 = sum(retail) / len(retail) if retail else 0
+    sharp_first = [first_move[b] for b in SHARP if b in first_move]
+    retail_first = [first_move[b] for b in first_move if b not in SHARP]
+    if pin6 >= 1.0 and (not retail_first or (sharp_first and min(sharp_first) <= min(retail_first))):
+        out["led"] = "SHARP-LED"
+    elif ret6 >= DROP_FLAG and pin6 < 1.0:
+        out["led"] = "RETAIL-ONLY"
+    elif pin6 >= 1.0 or ret6 >= 1.0:
+        out["led"] = "MIXED"
+    # level, from the bigger of Pinnacle's and the average move since open
+    big = max([v for v in (out["pin"].get("open"), out["avg"].get("open")) if v is not None] or [0])
+    out["level"] = "HEAVY DROP" if big >= DROP_HEAVY else "DROPPING" if big >= DROP_FLAG else None
+    # priced in / stale CT price
+    fair, _fb = _fair(con, event_id, market, outcome, line)
+    out["fair"] = round(fair, 4) if fair else None
+    cts = con.execute(f"""select book, line, price from last_quote where event_id=? and market=? and outcome=?
+                          and player=? and book in ({','.join('?' * len(CT_BOOKS))})""",
+                      (event_id, market, outcome, player, *CT_BOOKS)).fetchall()
+    cts = [r for r in cts if market == "h2h" or _same(r[1], line)]
+    if cts:
+        best = max(cts, key=lambda r: r[2])
+        out["best_ct"], out["best_ct_book"] = float(best[2]), best[0]
+        if fair:
+            out["ct_ev"] = round((float(best[2]) * fair - 1) * 100, 1)
+    if out["level"] or (out["pin"].get("1h") or 0) >= ALERT_PCT:
+        if out["ct_ev"] is not None and out["ct_ev"] < 0:
+            out["tags"].append("PRICED IN")
+        if (out["pin"].get("1h") or 0) >= ALERT_PCT and out["ct_ev"] is not None and out["ct_ev"] >= ALERT_EV:
+            out["stale_ct"] = True
+            out["tags"].append("STALE CT PRICE")
+    if out.get("line_toward"):
+        out["tags"].append("LINE MOVE")
+    if out["level"]:
+        out["tags"].insert(0, out["level"])
+    if out["led"] in ("SHARP-LED", "RETAIL-ONLY") and (out["level"] or out["led"] == "RETAIL-ONLY"):
+        out["tags"].insert(1 if out["level"] else 0, out["led"] + " DROP")
+    return out
+
+
+def _sides(con, now):
+    lo, hi = now.isoformat(timespec="seconds"), (now + timedelta(hours=HORIZON_H)).isoformat(timespec="seconds")
+    evs = [dict(r) for r in con.execute("select * from events where commence>? and commence<? order by commence",
+                                        (lo, hi))]
+    for ev in evs:
+        for m in GAME_MARKETS:
+            rows = None
+            for bk in SHARP:
+                rows = con.execute("""select outcome, line from last_quote where event_id=? and book=? and market=?
+                                      and coalesce(player,'')=''""", (ev["event_id"], bk, m)).fetchall()
+                if rows:
+                    break
+            if not rows:   # no sharp book: fall back to any book's lines
+                rows = con.execute("""select outcome, line from last_quote where event_id=? and market=? and
+                                      coalesce(player,'')='' group by outcome""", (ev["event_id"], m)).fetchall()
+            for o, ln in rows:
+                yield ev, m, o, (None if m == "h2h" else ln)
+
+
+def board(con, now=None, min_pct=None, limit=60):
+    """All dropping sides in the next HORIZON_H hours, ranked by the biggest drop."""
+    now = now or datetime.now(UTC)
+    min_pct = DROP_FLAG if min_pct is None else min_pct
+    rows = []
+    for ev, m, o, ln in _sides(con, now):
+        try:
+            d = side_drops(con, ev["event_id"], m, o, "", ln, now)
+        except Exception as e:                                     # noqa: BLE001
+            continue
+        score = max([v for v in (d["pin"].get("open"), d["avg"].get("open")) if v is not None] or [0])
+        hot1 = max([v for v in (d["pin"].get("1h"), d["avg"].get("1h")) if v is not None] or [0])
+        if score >= min_pct or hot1 >= 3 or d["stale_ct"] or d["led"] == "RETAIL-ONLY" or d.get("line_toward"):
+            d.update({"sport": ev["sport"], "home": ev["home"], "away": ev["away"], "commence": ev["commence"],
+                      "score": round(score, 1)})
+            rows.append(d)
+    rows.sort(key=lambda r: (not r["stale_ct"], -r["score"]))
+    return rows[:limit]
+
+
+def _side_label(d):
+    if d["market"] == "h2h":
+        return f"{d['outcome']} to win" if d["outcome"] != "Draw" else "Draw"
+    ln = d["line"]
+    if d["market"] == "totals":
+        return f"{d['outcome']} {ln:g}" if ln is not None else d["outcome"]
+    return f"{d['outcome']} {ln:+g}" if ln is not None else d["outcome"]
+
+
+def _pct(v):
+    return "n/a" if v is None else f"{v:+.1f}%"
+
+
+def _kick(commence):
+    t = _ts(commence)
+    if not t:
+        return str(commence)
+    try:
+        from zoneinfo import ZoneInfo
+        t = t.astimezone(ZoneInfo("America/New_York"))
+        return t.strftime("%a %-I:%M%p ET")
+    except Exception:                                              # noqa: BLE001
+        return t.strftime("%a %H:%MZ")
+
+
+def feed_block(con, now=None):
+    now = now or datetime.now(UTC)
+    rows = board(con, now)
+    out = ["", "", f"DROPPING ODDS (KRONOS's own 20-book tape, next {HORIZON_H:g}h; odds drop % = (old-new)/old, "
+           f"positive = shortened; flag >={DROP_FLAG:g}%, heavy >={DROP_HEAVY:g}%; computed {now.isoformat(timespec='seconds')}; "
+           f"{len(rows)} sides):",
+           "  rules: R1 only SHARP-LED drops count as sharp evidence; R2 RETAIL-ONLY drops are public money; "
+           "R3 PRICED IN (best CT EV < 0) = do not chase; R4 act only on STALE CT PRICE (Pinnacle "
+           f">={ALERT_PCT:g}% in 1h, CT EV >= +{ALERT_EV:g}%); R5 a drop on confirmed team news is information, not an edge"]
+    if not rows:
+        out.append("  no side has dropped past the flag yet")
+    for d in rows:
+        lm = f" | line {d['line_move'][0]:g}->{d['line_move'][1]:g}" if d.get("line_move") else ""
+        ct = (f"best CT {BOOK_NAMES.get(d['best_ct_book'], d['best_ct_book'])} {d['best_ct']:.2f} EV {d['ct_ev']:+.1f}%"
+              if d.get("best_ct") and d.get("ct_ev") is not None else "no CT price")
+        out.append(f"{d['sport']} {_kick(d['commence'])} {d['away']} @ {d['home']} | {d['market']} {_side_label(d)} | "
+                   f"Pinnacle open {_pct(d['pin'].get('open'))} 1h {_pct(d['pin'].get('1h'))} 6h {_pct(d['pin'].get('6h'))} "
+                   f"24h {_pct(d['pin'].get('24h'))} | all books open {_pct(d['avg'].get('open'))} 1h {_pct(d['avg'].get('1h'))} "
+                   f"({d['books']} book{'s' if d['books'] != 1 else ''}) | {d['led']}{lm} | {ct} | [{' · '.join(d['tags']) or 'WATCH'}]")
+    try:
+        st = con.execute("select v from meta where k='telegram_status'").fetchone()
+        out.append(f"  telegram: {st[0] if st else 'no message sent yet'}")
+    except Exception:                                              # noqa: BLE001
+        pass
+    return "\n".join(out) + "\n"
+
+
+# --------------------------------------------------------------------------- Telegram
+def tg_send(text, con=None):
+    """Send to Telegram and record whether it worked (the old sender never checked the reply)."""
+    import requests
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not tok or not chat:
+        status = "not configured (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)"
+        ok = False
+    else:
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{tok}/sendMessage",
+                              json={"chat_id": chat, "text": text[:3900], "disable_web_page_preview": True}, timeout=15)
+            js = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+            ok = bool(js.get("ok"))
+            status = "ok" if ok else f"error {r.status_code}: {js.get('description', r.text[:120])}"
+        except Exception as e:                                     # noqa: BLE001
+            ok, status = False, f"error: {str(e)[:120]}"
+    if con is not None:
+        try:
+            con.execute("insert or replace into meta(k,v) values(?,?)",
+                        ("telegram_status", f"{datetime.now(UTC).isoformat(timespec='seconds')} {status}"))
+            con.commit()
+        except Exception:                                          # noqa: BLE001
+            pass
+    print(f"[telegram] {status}", flush=True)
+    return ok
+
+
+def alert_text(d, base_url=""):
+    pin_book = BOOK_NAMES.get(d.get("pin_book"), d.get("pin_book"))
+    fair_price = (1 / d["fair"]) if d.get("fair") else None
+    lines = [f"KRONOS DROPPING ODDS: {d['sport']} {d['away']} @ {d['home']} ({_kick(d['commence'])})",
+             f"{d['market']}: {_side_label(d)}",
+             f"{pin_book} dropped {d['pin'].get('1h'):.1f}% in the last hour ({d['pin'].get('open'):.1f}% since open), {d['led'].lower()}",
+             f"{BOOK_NAMES.get(d['best_ct_book'], d['best_ct_book'])} still {d['best_ct']:.2f}"
+             + (f" vs fair {fair_price:.2f}" if fair_price else "") + f", EV {d['ct_ev']:+.1f}%"]
+    if d.get("line_move"):
+        lines.append(f"line moved {d['line_move'][0]:g} -> {d['line_move'][1]:g}")
+    lines.append("Stale CT price, R4. Check the lineup and team news before betting; the price can move any minute.")
+    if base_url:
+        lines.append(f"{base_url}/dropping")
+    return "\n".join(lines)
+
+
+def alert_scan(con, now=None, base_url=""):
+    """Send one Telegram per side per 6h when a CT price is stale after a Pinnacle drop."""
+    now = now or datetime.now(UTC)
+    sent = 0
+    for d in board(con, now, min_pct=0):
+        if not d["stale_ct"]:
+            continue
+        k = f"dropalert:{d['event_id']}:{d['market']}:{d['outcome']}:{d['line']}:{now.strftime('%Y%m%d')}{now.hour // 6}"
+        if con.execute("select 1 from meta where k=?", (k,)).fetchone():
+            continue
+        if tg_send(alert_text(d, base_url), con):
+            con.execute("insert or replace into meta(k,v) values(?,?)", (k, now.isoformat(timespec="seconds")))
+            con.commit()
+            sent += 1
+    return sent
+
+
+# --------------------------------------------------------------------------- reasoning + learning hooks
+def signal_values(con, event_id, market, outcome, player, line):
+    """The three new learning-layer signals for one side."""
+    try:
+        d = side_drops(con, event_id, market, outcome, player or "", None if market == "h2h" else line)
+    except Exception:                                              # noqa: BLE001
+        return {"drop_1h": None, "drop_6h": None, "pin_led": None}
+    p = d["pin"] or d["avg"]
+    led = {"SHARP-LED": 1, "RETAIL-ONLY": -1, "MIXED": 0, "NONE": 0}.get(d["led"], 0)
+    return {"drop_1h": None if p.get("1h") is None else round(p["1h"] / 100, 4),
+            "drop_6h": None if p.get("6h") is None else round(p["6h"] / 100, 4),
+            "pin_led": led if d["books"] else None}
+
+
+def install(jr=None, js=None):
+    """Wrap jerry_reason.sharp_signal / flag_label and jerry_signals.capture. Verdicts are untouched."""
+    done = []
+    if jr is not None and not getattr(jr, "_drops_installed", False):
+        _orig_sig, _orig_flag = jr.sharp_signal, jr.flag_label
+
+        def sharp_signal(con, event_id, market, outcome, player=""):
+            out = _orig_sig(con, event_id, market, outcome, player)
+            try:
+                ln = None
+                if market != "h2h":
+                    r = con.execute("""select line from last_quote where event_id=? and market=? and outcome=? and player=?
+                                       and book in ('pinnacle','lowvig','betonlineag') limit 1""",
+                                    (event_id, market, outcome, player or "")).fetchone()
+                    ln = r[0] if r else None
+                d = side_drops(con, event_id, market, outcome, player or "", ln)
+                out["drops"] = {k: d[k] for k in ("pin", "avg", "led", "level", "tags", "ct_ev", "best_ct",
+                                                  "best_ct_book", "line_move", "stale_ct")}
+                p = d["pin"] or d["avg"]
+                if d["level"] or d["led"] == "RETAIL-ONLY" or (p.get("1h") or 0) >= 3:
+                    bit = (f"odds dropping: Pinnacle {_pct(d['pin'].get('open'))} since open, "
+                           f"{_pct(d['pin'].get('1h'))} in 1h, {d['led'].lower()}")
+                    if "PRICED IN" in d["tags"]:
+                        bit += "; already priced in at CT books, do not chase"
+                    if d["stale_ct"]:
+                        bit += f"; {BOOK_NAMES.get(d['best_ct_book'], d['best_ct_book'])} still stale at {d['best_ct']:.2f}"
+                    if d["led"] == "RETAIL-ONLY":
+                        bit += "; retail-only drop = public money"
+                    t = out.get("text") or ""
+                    out["text"] = (t + "; " + bit) if t and t != "no sharp or public signal yet" else bit
+                out["label"] = flag_label(out)
+            except Exception:                                      # noqa: BLE001 - never block a refresh
+                pass
+            return out
+
+        def flag_label(sig):
+            base = _orig_flag(sig)
+            d = (sig or {}).get("drops") or {}
+            extra = [t for t in (d.get("tags") or []) if t]
+            if not extra:
+                return base
+            tags = ([] if base in ("NEUTRAL", "NO READ") else base.split(" · ")) + extra
+            return " · ".join(dict.fromkeys(tags))
+
+        jr.sharp_signal, jr.flag_label = sharp_signal, flag_label
+        jr._drops_installed = True
+        done.append("reasoning")
+    if js is not None and not getattr(js, "_drops_installed", False):
+        for k in ("drop_1h", "drop_6h", "pin_led"):
+            if k not in js.SIGNALS:
+                js.SIGNALS.append(k)
+        _orig_cap = js.capture
+
+        def capture(con, ev, market, outcome, player, line, price, fair, extra=None):
+            s = _orig_cap(con, ev, market, outcome, player, line, price, fair, extra)
+            try:
+                s.update(signal_values(con, ev["event_id"], market, outcome, player, line))
+            except Exception:                                      # noqa: BLE001
+                pass
+            return s
+
+        js.capture = capture
+        js._drops_installed = True
+        done.append("signals")
+    return done
+
+
+# --------------------------------------------------------------------------- desk page
+PAGE_CSS = """
+:root{--bg:#F3F5F2;--card:#fff;--ink:#14213A;--muted:#5A6476;--line:#D9DED8;--up:#22714A;--warn:#B7791F;--bad:#B83A32;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1A16;--card:#16231E;--ink:#E7EDE9;--muted:#9AA8A1;--line:#2A3A33;--up:#5BC48A;--warn:#E5B05A;--bad:#EC7D74;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;
+padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:0 0 4px}p.sub{color:var(--muted);margin:0 0 12px}.rules{background:var(--card);border:1px solid var(--line);
+border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:14px}.rules li{margin:2px 0}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:12px;color:var(--muted);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}.up{color:var(--up);font-weight:600}.tag{display:inline-block;border-radius:4px;padding:1px 6px;
+margin:1px 2px 1px 0;font-size:12px;font-weight:600;background:var(--line)}.t-STALE{background:var(--up);color:#fff}.t-HEAVY{background:var(--bad);color:#fff}
+.t-PRICED{background:var(--warn);color:#fff}tr.stale td{background:rgba(34,113,74,.08)}a{color:inherit}
+"""
+
+
+def page_html(con, now=None):
+    import html as _h
+    now = now or datetime.now(UTC)
+    rows = board(con, now)
+    trs = []
+    for d in rows:
+        tags = "".join(f'<span class="tag t-{_h.escape(t.split()[0])}">{_h.escape(t)}</span>' for t in d["tags"]) or '<span class="tag">WATCH</span>'
+        lm = f"<br><small>line {d['line_move'][0]:g} → {d['line_move'][1]:g}</small>" if d.get("line_move") else ""
+        ct = (f"{BOOK_NAMES.get(d['best_ct_book'], d['best_ct_book'])} {d['best_ct']:.2f}<br><small>EV {d['ct_ev']:+.1f}%</small>"
+              if d.get("best_ct") and d.get("ct_ev") is not None else "—")
+        trs.append(f"""<tr class="{'stale' if d['stale_ct'] else ''}"><td>{_h.escape(d['sport'])}<br><small>{_h.escape(_kick(d['commence']))}</small></td>
+<td>{_h.escape(d['away'])} @ {_h.escape(d['home'])}</td><td>{_h.escape(d['market'])}<br><b>{_h.escape(_side_label(d))}</b>{lm}</td>
+<td class="n up">{_pct(d['pin'].get('open'))}</td><td class="n">{_pct(d['pin'].get('1h'))}</td><td class="n">{_pct(d['pin'].get('6h'))}</td>
+<td class="n">{_pct(d['avg'].get('open'))}<br><small>{d['books']} book{'s' if d['books'] != 1 else ''}</small></td><td>{_h.escape(d['led'])}</td><td class="n">{ct}</td><td>{tags}</td></tr>""")
+    body = "".join(trs) or '<tr><td colspan="10">No side has dropped past the flag yet.</td></tr>'
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="refresh" content="300"><title>KRONOS dropping odds</title><style>{PAGE_CSS}</style></head><body><div class="wrap">
+<p><a href="/">← Desk</a></p><h1>Dropping odds</h1>
+<p class="sub">Next {HORIZON_H:g} hours · decimal odds · odds drop % = (old − new) ÷ old · refreshes every 5 minutes · {now.strftime('%Y-%m-%d %H:%M')} UTC</p>
+<ol class="rules"><li>Only a sharp-led drop (Pinnacle or another sharp book first) counts as sharp evidence.</li>
+<li>A retail-only drop is public money.</li><li>Priced in (best CT price below fair) means don’t chase it.</li>
+<li>Act only on a stale CT price: Pinnacle down {ALERT_PCT:g}%+ in the last hour and a CT book still +{ALERT_EV:g}% EV. These go to Telegram.</li>
+<li>A drop on confirmed team news is information, not an edge.</li></ol>
+<div class="tw"><table><thead><tr><th>Sport</th><th>Game</th><th>Side</th><th class="n">Pinnacle since open</th><th class="n">1h</th><th class="n">6h</th>
+<th class="n">All books since open</th><th>Who led</th><th class="n">Best CT</th><th>Tags</th></tr></thead><tbody>{body}</tbody></table></div>
+</div></body></html>"""
+'''
+
 try:
     jerry_reason = _register("jerry_reason", _REASON_SRC)
     jerry_grade = _register("jerry_grade", _GRADE_SRC)
@@ -3552,6 +5108,15 @@ try:
     jerry_nba = _register("jerry_nba", _NBA_SRC)
     jerry_splits = _register("jerry_splits", _SPLITS_SRC)
     jerry_signals = _register("jerry_signals", _SIGNALS_SRC)
+    kronos_drops = _register("kronos_drops", _DROPS_SRC)
+    print(f"[boot] KRONOS dropping odds installed: {kronos_drops.install(jerry_reason, jerry_signals)}", flush=True)
+    kronos_soccer = _register("kronos_soccer", _SOCCER_SRC)
+    kronos_ledger = _register("kronos_ledger", _LEDGER_SRC)
+    kronos_ledger.install(jerry_signals)
+    # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
+    jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
+                                   ("UCL", "margin"): 1.4, ("UCL", "total"): 1.5})
+    print("[boot] KRONOS soccer model + prediction ledger registered", flush=True)
     print("[boot] KRONOS: reasoning + grading + feeds + nba + splits + signals modules registered", flush=True)
 except Exception:
     traceback.print_exc()
@@ -3775,6 +5340,17 @@ def refresh_all(db_path, sports=None):
             _c.close()
     except Exception as e:   # noqa: BLE001
         res["FEEDS"] = f"error: {e}"
+    # soccer model (EPL + UCL): ESPN data top-up, refit every 6h, model rows + spins + paper rows
+    try:
+        import kronos_soccer as _ks
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        try:
+            res["SOCCER"] = _ks.refresh(_c, datetime.now(UTC), L=L, jr=sys.modules.get("jerry_reason"))
+        finally:
+            _c.close()
+    except Exception as e:   # noqa: BLE001 - never block a refresh
+        res["SOCCER"] = f"error: {e}"
+        traceback.print_exc()
     # NBA model, from the results the feed just stored
     try:
         import jerry_nba as _jn
@@ -3785,6 +5361,11 @@ def refresh_all(db_path, sports=None):
     return res
 if L:
     L.refresh_all = refresh_all
+    try:
+        L.MODEL_VERSIONS[("EPL", "model")] = "epl-soccer-v1-2026-11-01"
+        L.MODEL_VERSIONS[("UCL", "model")] = "ucl-soccer-v1-2026-11-01"
+    except Exception:
+        pass
     print("[boot] fixes active: NHL icetime alias, MLB model, reasoning layer, prop grading", flush=True)
 else:
     print("[boot] fixes NOT active, starting desk unchanged", flush=True)
@@ -4128,7 +5709,7 @@ def game_signals(db_path=None, now=None):
         con.commit()
     finally:
         con.close()
-    hdr = ["", "", f"GAME SIGNALS (all {19} KRONOS signals on both sides of every game line, every tracked game in the next "
+    hdr = ["", "", f"GAME SIGNALS (all {len(_js.SIGNALS)} KRONOS signals on both sides of every game line, every tracked game in the next "
            f"{GS_HORIZON_H}h; {n_sides} sides; computed {now.isoformat(timespec='seconds')}; signals still at weight 0 "
            f"until graduated, so they inform but do not move prices; pick-time copy frozen {GS_FREEZE_MIN} min before start; "
            f"{n_backfill} pending paper bets given signals this pass" + (f"; errors: {'; '.join(errors[:3])}" if errors else "") + "):"]
@@ -4149,7 +5730,7 @@ def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text() + _game_signals_block() + _quarantine_block()
+    txt = _summary_text() + _ledger_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
@@ -4176,6 +5757,174 @@ def _feed_loop():
         time.sleep(FEED_EVERY)
 
 threading.Thread(target=_feed_loop, daemon=True).start()
+
+
+# ---------- dropping odds (2026-10-31): feed block, desk page, Telegram alerts
+DESK_URL = os.environ.get("DESK_URL", "https://jerrybot-production.up.railway.app").rstrip("/")
+DROP_SCAN_SEC = int(os.environ.get("DROP_SCAN_SEC", "300"))
+
+
+def _desk_db():
+    return os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db")
+
+
+def _drops_con():
+    c = sqlite3.connect(_desk_db(), timeout=60); c.row_factory = sqlite3.Row
+    return c
+
+
+def _dropping_block():
+    try:
+        import kronos_drops as _kd
+        c = _drops_con()
+        try:
+            return _kd.feed_block(c)
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nDROPPING ODDS: unavailable ({str(e)[:200]})\n"
+
+
+# Every Telegram message now goes through one sender that checks Telegram's reply and records
+# the result (the feed shows it). Steam alerts are off unless TELEGRAM_STEAM=1: one busy match
+# logged 139 steam events today, which would bury the dropping-odds alerts.
+if L is not None and hasattr(L, "telegram"):
+    def _tg(text):
+        if str(text).startswith("STEAM") and os.environ.get("TELEGRAM_STEAM", "0") != "1":
+            return False
+        try:
+            import kronos_drops as _kd
+            c = _drops_con()
+            try:
+                return _kd.tg_send(text, c)
+            finally:
+                c.close()
+        except Exception as e:                                        # noqa: BLE001
+            print(f"[telegram] failed: {e}", flush=True)
+            return False
+    L.telegram = _tg
+
+
+def _drops_loop():
+    time.sleep(120)
+    try:
+        import kronos_drops as _kd
+        if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
+            c = _drops_con()
+            try:
+                _kd.tg_send("KRONOS is connected. You'll get a message here when Pinnacle drops a price and a "
+                            "CT book is still stale.\n" + DESK_URL + "/dropping", c)
+            finally:
+                c.close()
+    except Exception as e:                                            # noqa: BLE001
+        print(f"[drops] hello failed: {e}", flush=True)
+    while True:
+        try:
+            import kronos_drops as _kd
+            c = _drops_con()
+            try:
+                n = _kd.alert_scan(c, base_url=DESK_URL)
+                c.execute("insert or replace into meta(k,v) values(?,?)",
+                          ("drops_scan", f"{datetime.now(UTC).isoformat(timespec='seconds')} sent {n}"))
+                c.commit()
+            finally:
+                c.close()
+            if n:
+                print(f"[drops] sent {n} alert(s)", flush=True)
+        except Exception as e:                                        # noqa: BLE001
+            print(f"[drops] scan failed: {e}", flush=True)
+        time.sleep(DROP_SCAN_SEC)
+
+
+threading.Thread(target=_drops_loop, daemon=True).start()
+
+
+# ---------- prediction ledger (2026-11-01): a pick for every market of every match before kickoff, graded free
+LEDGER_EVERY_SEC = int(os.environ.get("LEDGER_EVERY_SEC", "300"))
+
+
+def _ledger_block():
+    try:
+        import kronos_ledger as _kl
+        c = _drops_con()
+        try:
+            return _kl.feed_block(c, L=L)
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nKRONOS LEDGER: unavailable ({str(e)[:200]})\n"
+
+
+def _ledger_loop():
+    time.sleep(180)
+    k = 0
+    while True:
+        try:
+            import kronos_ledger as _kl
+            c = _drops_con()
+            try:
+                n = _kl.log_due(c, L=L, jr=sys.modules.get("jerry_reason"), js=sys.modules.get("jerry_signals"))
+                if n:
+                    print(f"[ledger] logged {n} picks", flush=True)
+                if k % 2 == 0:
+                    g = _kl.grade_pending(c, jr=sys.modules.get("jerry_reason"))
+                    c.execute("insert or replace into meta(k,v) values(?,?)",
+                              ("ledger_grade", f"{datetime.now(UTC).isoformat(timespec='seconds')} {json.dumps(g)}"))
+                    c.commit()
+                    if g.get("graded"):
+                        print(f"[ledger] graded {g['graded']}", flush=True)
+            finally:
+                c.close()
+        except Exception as e:                                        # noqa: BLE001
+            print(f"[ledger] pass failed: {e}", flush=True)
+        k += 1
+        time.sleep(LEDGER_EVERY_SEC)
+
+
+threading.Thread(target=_ledger_loop, daemon=True).start()
+
+# Desk routes /dropping and /api/dropping, added without editing jerry_desk.py: the desk builds
+# its server from http.server.ThreadingHTTPServer, so wrap that class to put a route layer in
+# front of the desk's own handler (and add a Dropping odds link to the home page).
+import http.server as _hs
+import urllib.parse as _up
+_OrigTHS = _hs.ThreadingHTTPServer
+
+
+class _KronosServer(_OrigTHS):
+    def __init__(self, addr, handler, *a, **k):
+        class _H(handler):
+            def do_GET(self):
+                p = _up.urlparse(self.path).path
+                if p in ("/dropping", "/api/dropping"):
+                    try:
+                        import kronos_drops as _kd
+                        c = _drops_con()
+                        try:
+                            if p == "/dropping":
+                                return self.send(_kd.page_html(c), "text/html; charset=utf-8")
+                            return self.send(json.dumps(_kd.board(c), default=str))
+                        finally:
+                            c.close()
+                    except Exception as e:                            # noqa: BLE001
+                        return self.send(f"dropping odds error: {e}", "text/plain")
+                self._kronos_home = (p == "/")
+                return super().do_GET()
+
+            def send(self, body, ctype="application/json"):
+                if getattr(self, "_kronos_home", False) and str(ctype).startswith("text/html"):
+                    link = '<a href="/dropping" style="display:inline-block;margin:8px 0;font-weight:600">Dropping odds</a>'
+                    if isinstance(body, bytes):
+                        body = body.decode("utf-8", "replace")
+                    i = body.find("<body")
+                    j = body.find(">", i) if i >= 0 else -1
+                    body = body[:j + 1] + link + body[j + 1:] if j >= 0 else link + body
+                    self._kronos_home = False
+                return super().send(body, ctype)
+        super().__init__(addr, _H, *a, **k)
+
+
+_hs.ThreadingHTTPServer = _KronosServer
 
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
