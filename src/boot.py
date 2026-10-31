@@ -3686,10 +3686,30 @@ def parse_scoreboard(js, league):
     return out
 
 
+def _fetch_range(league, d1, d2, get=_get):
+    """ESPN accepts a date range (dates=YYYYMMDD-YYYYMMDD) with limit up to ~350; a 400 falls back to
+    no limit, then to weekly chunks (2026-11-01: limit=500 was rejected with 400 Bad Request)."""
+    rng = f"{d1.strftime('%Y%m%d')}-{d2.strftime('%Y%m%d')}"
+    last_err = None
+    for q in (f"dates={rng}&limit=300", f"dates={rng}"):
+        try:
+            return parse_scoreboard(get(f"{BASE}/{league}/scoreboard?{q}"), league)
+        except Exception as e:                                 # noqa: BLE001
+            last_err = e
+    if (d2 - d1).days > 7:
+        out, a = [], d1
+        while a <= d2:
+            b = min(a + timedelta(days=6), d2)
+            out += _fetch_range(league, a, b, get)
+            a = b + timedelta(days=1)
+        return out
+    raise last_err
+
+
 def ingest_month(con, league, y, m, get=_get):
-    last = (date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)).day
-    js = get(f"{BASE}/{league}/scoreboard?dates={y}{m:02d}01-{y}{m:02d}{last:02d}&limit=500")
-    rows = parse_scoreboard(js, league)
+    d1 = date(y, m, 1)
+    d2 = date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
+    rows = _fetch_range(league, d1, d2, get)
     now = datetime.now(UTC).isoformat(timespec="seconds")
     for r in rows:
         con.execute("""insert or replace into soccer_matches values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
