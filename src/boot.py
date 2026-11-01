@@ -4190,15 +4190,11 @@ Every event in the desk (NFL, NBA, NHL, EPL, UCL, UFC) gets a paper pick in each
 has (moneyline/1X2, total, spread/handicap), logged LEDGER_LEAD minutes before kickoff so it uses the
 latest lineup-driven prices. Never "no bet": every market gets a side.
 
-Side choice: the sport model's probability vs Pinnacle's de-vigged fair (model_probs). With no model
-row, the market model: the side sharp money is on (sharp_signal score), else the market favourite.
-Grades/stakes (paper units): A 1u (edge >= 5%), B 0.5u (>= 3%), C 0.25u (>= 1.5%), D 0.1u (otherwise and
-every market-model pick). Unvalidated models are capped at B; a model-vs-market gap over 8% is capped at C and tagged
-"check team news" (the biggest gaps have been the biggest misses).
-Ledger rows are stored as paper=2 so they stay out of the desk's existing model/price-edge report and
-are reported in their own KRONOS LEDGER block.
-Price: best of DraftKings/FanDuel/Fanatics at the same line; if none, Pinnacle's price, marked
-"no CT price"; with no price anywhere the pick is logged at zero stake, marked "no posted line".
+Side choice (v2, 2026-11-01): every side is priced at its best CT price (Pinnacle if none) and the pick is the
+side with the best EV at that price by the sport model; with no model row, a CT price that beats Pinnacle's
+fair, else the sharp-money side, else "no view" (the side priced closest to fair, no favourite bias).
+Two tiers only: BET (positive EV at a CT book by the kronos_edge rule, projection agrees with the side)
+staked 0.25u / 0.5u / 1u by EV, and LEAN at 0u, logged for learning and judged on CLV, not units.
 Every row carries the 22 KRONOS signals, so the learning layer can measure them.
 
 Grading: ESPN public scoreboards (free, no Odds API credits) for every sport; closing line value from
@@ -4209,7 +4205,7 @@ import json, math, os, re, unicodedata
 from datetime import datetime, timezone, timedelta
 
 UTC = timezone.utc
-VERSION = "ledger-v1-2026-11-01"
+VERSION = "ledger-v2-2026-11-01"
 LEDGER_LEAD = int(os.environ.get("LEDGER_LEAD_MIN", "90"))
 CT_BOOKS = ("draftkings", "fanduel", "fanatics")
 SHARP = ("pinnacle", "lowvig", "betonlineag")
@@ -4312,6 +4308,42 @@ def model_probs_for(con, eid, market, outs):
     return out
 
 
+def bet_stake(is_bet, ev_mod, ev_mkt, validated=False):
+    """Two tiers (2026-11-01): BET staked by EV at the CT price; everything else LEAN at 0u."""
+    if not is_bet:
+        return "LEAN", 0.0
+    ev = max(x for x in (ev_mod, ev_mkt) if x is not None)
+    if ev >= 0.05 and (validated or (ev_mkt is not None and ev_mkt >= 0.05)):
+        return "BET", 1.0
+    if ev >= 0.03:
+        return "BET", 0.5
+    return "BET", 0.25
+
+
+def projection_agrees(con, ev, market, sel, line):
+    """(True/False/None, text): does KRONOS's projected score back this side?"""
+    try:
+        r = con.execute("select margin, total from jerry_numbers where event_id=?", (ev["event_id"],)).fetchone()
+    except Exception:                                          # noqa: BLE001
+        return None, ""
+    if not r or r[0] is None:
+        return None, ""
+    margin, total = float(r[0]), (float(r[1]) if r[1] is not None else None)
+    home = sel == ev["home"]
+    if market == "totals" and total is not None and line is not None:
+        ok = (total > float(line)) if sel == "Over" else (total < float(line))
+        return ok, f"projection: total {total:.1f} vs {float(line):g} ({'agrees' if ok else 'disagrees'})"
+    if market == "spreads" and line is not None and sel in (ev["home"], ev["away"]):
+        mine = margin if home else -margin
+        ok = mine + float(line) > 0
+        return ok, f"projection: {sel} by {mine:+.1f} vs line {float(line):+g} ({'agrees' if ok else 'disagrees'})"
+    if market == "h2h" and sel in (ev["home"], ev["away"]):
+        mine = margin if home else -margin
+        ok = mine > 0
+        return ok, f"projection: {sel} by {mine:+.1f} ({'agrees' if ok else 'disagrees'})"
+    return None, ""
+
+
 def grade_for(edge, has_model):
     if not has_model:
         return "D", D_STAKE
@@ -4384,9 +4416,14 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
                 except Exception:                              # noqa: BLE001
                     s_ = {}
                 scores[o[0]] = (s_.get("score") or 0, fp[o[0]])
-            pick = max(outs, key=lambda o: scores[o[0]])
+            sharp = [o for o in outs if scores[o[0]][0] > 0]
+            if sharp:
+                pick = max(sharp, key=lambda o: scores[o[0]])
+                why.append("no model row: sharp-money side")
+            else:   # no view: the side whose best price is closest to fair (no favourite bias, 2026-11-01)
+                pick = max(outs, key=lambda o: _ev(o, False))
+                why.append("no model row, no sharp side: no view, best price logged")
             edge = 0.0
-            why.append(f"no model row: market model, {'sharp side' if scores[pick[0]][0] > 0 else 'market favourite'}")
             kind = "market"
         sel, line = pick[0], pick[1]
         price, book, from_ct = quotes[sel]
@@ -4399,10 +4436,16 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
             import kronos_edge as _ke
             is_bet, bet_why, ev_mod, ev_mkt = _ke.bet_check(price, from_ct, fp[sel], mp.get(sel) if has_model else None,
                                                             flag_label=(sig or {}).get("label", ""), gap=edge if has_model else None)
-            grade, stake = _ke.grade_from_ev(ev_mod if ev_mod is not None else -1, has_model, edge if has_model else None)
         except Exception:                                      # noqa: BLE001
             is_bet, bet_why, ev_mod, ev_mkt = False, "", None, price * fp[sel] - 1
-            grade, stake = grade_for(edge, has_model)
+        # rule 13: the projected score must agree with the side, or it can't be a BET
+        proj_ok, proj_txt = projection_agrees(con, ev, market, sel, line)
+        if proj_txt:
+            why.append(proj_txt)
+        if is_bet and proj_ok is False:
+            is_bet = False
+            why.append("BET withheld: projection disagrees with the side")
+        grade, stake = bet_stake(is_bet, ev_mod, ev_mkt)
         if has_model and edge > BIG_GAP:
             tags.append(f"big gap {edge:.0%}: check team news")
         ev_pct = price * fp[sel] - 1
@@ -4424,7 +4467,7 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
             hrs = round((_ts(ev["commence"]) - now).total_seconds() / 3600, 2)
         except Exception:                                      # noqa: BLE001
             hrs = None
-        note = (f"KRONOS ledger | grade {grade} | {kind} ({mver}) | " + "; ".join(why) +
+        note = (f"KRONOS ledger | {'BET ' + format(stake, 'g') + 'u' if is_bet else 'LEAN 0u'} | {kind} ({mver}) | " + "; ".join(why) +
                 f" | EV {ev_pct * 100:+.1f}% at {book}" + (f" | {', '.join(tags)}" if tags else ""))
         try:
             import kronos_master as _km
@@ -4439,13 +4482,13 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
                     (_iso(now), ev["sport"], ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], market, sel, "",
                      line, price, book, stake, round(mp[sel], 4) if has_model else round(fp[sel], 4), note[:600],
                      signals, f"{VERSION}+{mver}", hrs, round(edge, 4), round(fp[sel], 4), "ledger",
-                     (f"BET · Grade {grade}" if is_bet else f"Grade {grade}"), (sig or {}).get("label"),
+                     (f"BET {stake:g}u" if is_bet else "LEAN 0u"), (sig or {}).get("label"),
                      json.dumps({"grade": grade, "kind": kind, "tags": tags, "bet": is_bet,
                                  "ev_model": None if ev_mod is None else round(ev_mod, 4), "ev_market": round(ev_pct, 4)})))
         if is_bet:
             ln = "" if line is None else (f" {line:+g}" if market == "spreads" else f" {line:g}")
             NEW_BETS.append(f"KRONOS BET: {ev['away']} @ {ev['home']} ({ev['sport']})\n{market}: {sel}{ln} at "
-                            f"{book} {price:.2f}, grade {grade} {stake:g}u\n{bet_why}")
+                            f"{book} {price:.2f}, stake {stake:g}u\n{bet_why}")
         n += 1
     return n
 
@@ -4720,9 +4763,8 @@ def coverage(con, now=None, L=None):
 
 def feed_block(con, now=None, L=None):
     now = now or datetime.now(UTC)
-    lines = ["", "", f"KRONOS LEDGER ({VERSION}: one paper pick per market for every tracked match, logged {LEDGER_LEAD} min "
-             "before kickoff, graded free from ESPN; grades A 1u / B 0.5u / C 0.25u / D 0.1u, models capped at "
-             f"{CAP_GRADE} until validated):"]
+    lines = ["", "", f"KRONOS LEDGER ({VERSION}: one pick per market for every tracked match, logged {LEDGER_LEAD} min "
+             "before kickoff, graded free from ESPN; BET = +EV at a CT book (0.25/0.5/1u by EV), LEAN = 0u for learning):"]
     try:
         cov = coverage(con, now, L)
         lines.append("  model coverage next 48h: " + "; ".join(
@@ -4766,6 +4808,358 @@ def feed_block(con, now=None, L=None):
     except Exception as e:                                     # noqa: BLE001
         lines.append(f"  ledger report unavailable ({str(e)[:100]})")
     return "\n".join(lines) + "\n"
+'''
+
+_CHECK_SRC = r'''"""
+kronos_checklist — the owner's 15-point game-analysis checklist, as data (checklist-v1, 2026-11-01).
+
+Every NFL game gets the historical items computed from nflverse's games file (free; closing spreads,
+totals, coaches, referees, rest, back to 1999):
+   5  coaching: each head coach ATS as favourite / underdog (matching today's role) and the coaches' H2H
+   6  officials: the crew chief's home-ATS, over % and primetime-vs-day over % (only once the crew is
+      published; nflverse fills referees in late, so the analysis also checks the weekly assignment)
+   7  spot: bounce-back (after a 14+ point loss) and let-down (after a 14+ point win or an upset win),
+      league-wide and for this team
+   8  role: the team's ATS in today's role (home dog, road fav, ...)
+   9  series H2H: last 10 meetings straight up and ATS
+  12  every trend printed as hits / n, rate, and the break-even at -110 (52.4%), with a small-sample flag
+  10  a date "rhyme" line: shown, weight zero, never moves a pick
+Other sports: these trend items are marked "no free closing-line history" (the analysis covers them from
+sources at analysis time).
+Signals (weight 0 until proven, one per checklist item, no duplicates): coach_ats, role_ats, h2h_ats,
+spot_ats (side picks), ref_over (totals).
+"""
+import csv, io, json, math, os, time
+from datetime import datetime, timezone, timedelta, date
+
+UTC = timezone.utc
+VERSION = "checklist-v1-2026-11-01"
+GAMES_URLS = ["https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+              "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"]
+BREAKEVEN = 0.524
+SEASONS_BACK = 3
+SMALL_N = 20
+NFL_ABBR = {"Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
+            "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
+            "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
+            "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
+            "Los Angeles Rams": "LA", "Los Angeles Chargers": "LAC", "Las Vegas Raiders": "LV", "Miami Dolphins": "MIA",
+            "Minnesota Vikings": "MIN", "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG",
+            "New York Jets": "NYJ", "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "Seattle Seahawks": "SEA",
+            "San Francisco 49ers": "SF", "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WAS"}
+_CACHE = {"ts": 0, "rows": None}
+_INFO = {}
+
+
+def _get_text(url, timeout=60):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.text
+
+
+def games(get_text=_get_text, max_age=6 * 3600):
+    if _CACHE["rows"] is not None and time.time() - _CACHE["ts"] < max_age:
+        return _CACHE["rows"]
+    last = None
+    for u in GAMES_URLS:
+        try:
+            rows = list(csv.DictReader(io.StringIO(get_text(u))))
+            if rows:
+                _CACHE.update(ts=time.time(), rows=rows)
+                return rows
+        except Exception as e:                                 # noqa: BLE001
+            last = e
+    if _CACHE["rows"] is not None:
+        return _CACHE["rows"]
+    raise last or RuntimeError("games file unavailable")
+
+
+def _f(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return None
+
+
+def _played(rows, seasons):
+    out = []
+    for r in rows:
+        if r.get("season") not in seasons:
+            continue
+        res, sl, tot, tl = _f(r.get("result")), _f(r.get("spread_line")), _f(r.get("total")), _f(r.get("total_line"))
+        if res is None or sl is None:
+            continue
+        out.append(dict(r, _res=res, _sl=sl, _tot=tot, _tl=tl))
+    out.sort(key=lambda r: r["gameday"])
+    return out
+
+
+def _ats(r, team):
+    """+1 cover, 0 push, -1 no cover, for `team` in played row r."""
+    m = r["_res"] - r["_sl"]                     # home margin against the spread
+    if team == r["away_team"]:
+        m = -m
+    return 1 if m > 0 else 0 if m == 0 else -1
+
+
+def _role(r, team):
+    home = team == r["home_team"]
+    fav = (r["_sl"] > 0) if home else (r["_sl"] < 0)
+    if r["_sl"] == 0:
+        return ("home" if home else "road") + " pick'em"
+    return f"{'home' if home else 'road'} {'fav' if fav else 'dog'}"
+
+
+def _rate(results):
+    w = sum(1 for x in results if x > 0); l = sum(1 for x in results if x < 0)
+    n = w + l
+    return w, l, n, (w / n if n else None)
+
+
+def _line(label, w, l, n, rate, favors=None, be=BREAKEVEN):
+    if not n:
+        return {"label": label, "n": 0, "text": f"{label}: no games"}
+    z = (rate - 0.5) / math.sqrt(0.25 / n)
+    tag = "small sample" if n < SMALL_N else ("clears break-even" if rate > be else "below break-even")
+    return {"label": label, "n": n, "w": w, "l": l, "rate": round(rate, 3), "z": round(z, 2), "favors": favors,
+            "text": f"{label}: {w}-{l} ({rate:.0%}, n {n}; break-even {be:.1%}; {tag})"}
+
+
+def _spot_of(prev_row, team):
+    mg = prev_row["_res"] if prev_row["home_team"] == team else -prev_row["_res"]
+    was_dog = _role(prev_row, team).endswith("dog")
+    if mg <= -14:
+        return "bounce-back (lost by 14+)"
+    if mg >= 14:
+        return "let-down (won by 14+)"
+    if mg > 0 and was_dog:
+        return "let-down (upset win as an underdog)"
+    return None
+
+
+_SPOTS = {}
+
+
+def _spot_table(rows, season):
+    key = (id(rows), season)
+    if key in _SPOTS:
+        return _SPOTS[key]
+    hist = _played(rows, {str(x) for x in range(season - 10, season + 1)})
+    last = {}
+    acc = {}
+    for r in hist:
+        for t in (r["home_team"], r["away_team"]):
+            q = last.get((t, r["season"]))
+            if q is not None:
+                sp = _spot_of(q, t)
+                if sp:
+                    acc.setdefault(sp, []).append(_ats(r, t))
+        for t in (r["home_team"], r["away_team"]):
+            last[(t, r["season"])] = r
+    out = {k: _rate(v) for k, v in acc.items()}
+    _SPOTS.clear(); _SPOTS[key] = out
+    return out
+
+
+def nfl_game(home_name, away_name, commence, rows=None, line_home=None, total_line=None, referee=None):
+    """The checklist trend items for one NFL game. line_home: today's home spread in nflverse sign
+    (positive = home favoured); if None, taken from the games file."""
+    rows = rows if rows is not None else games()
+    H, A = NFL_ABBR.get(home_name), NFL_ABBR.get(away_name)
+    if not H or not A:
+        return {"ok": False, "why": "team not mapped"}
+    day = str(commence)[:10]
+    cur = next((r for r in rows if r.get("home_team") == H and r.get("away_team") == A and r.get("gameday", "")[:10] in
+                {day, (date.fromisoformat(day) - timedelta(days=1)).isoformat()}), None)
+    season = int(cur["season"]) if cur else date.fromisoformat(day).year
+    seasons = {str(s) for s in range(season - SEASONS_BACK, season + 1)}
+    past = [r for r in _played(rows, seasons) if r["gameday"] < day]
+    allpast = [r for r in _played(rows, {str(s) for s in range(season - 10, season + 1)}) if r["gameday"] < day]
+    sl = line_home if line_home is not None else (_f(cur.get("spread_line")) if cur else None)
+    tl = total_line if total_line is not None else (_f(cur.get("total_line")) if cur else None)
+    hc, ac = (cur.get("home_coach"), cur.get("away_coach")) if cur else (None, None)
+    ref = referee or (cur.get("referee") if cur and cur.get("referee") else None)
+    items = []
+    sig = {}
+    if sl is not None:
+        home_role = "home pick'em" if sl == 0 else ("home fav" if sl > 0 else "home dog")
+        away_role = "road pick'em" if sl == 0 else ("road dog" if sl > 0 else "road fav")
+    else:
+        home_role = away_role = None
+    # 5: coaches ATS as fav / dog, and coach H2H
+    for coach, team, role in ((hc, H, home_role), (ac, A, away_role)):
+        if not coach or not role:
+            continue
+        want_fav = "fav" in role
+        res = []
+        for r in past:
+            if r["home_coach"] == coach or r["away_coach"] == coach:
+                t = r["home_team"] if r["home_coach"] == coach else r["away_team"]
+                rl = _role(r, t)
+                if ("fav" in rl) == want_fav and "pick" not in rl:
+                    res.append(_ats(r, t))
+        w, l, n, rt = _rate(res)
+        if n:
+            items.append(_line(f"#5 {coach} ATS as {'favourite' if want_fav else 'underdog'} (last {SEASONS_BACK}+ seasons)", w, l, n, rt,
+                               favors=team if rt > BREAKEVEN else (A if team == H else H)))
+    if hc and ac:
+        res = []
+        for r in allpast:
+            if {r["home_coach"], r["away_coach"]} == {hc, ac}:
+                t = r["home_team"] if r["home_coach"] == hc else r["away_team"]
+                res.append(_ats(r, t))
+        w, l, n, rt = _rate(res)
+        items.append(_line(f"#5 coach H2H: {hc} vs {ac} ATS (10 seasons)", w, l, n, rt, favors=H if (rt or 0) > 0.5 else A) if n
+                     else {"label": "#5 coach H2H", "n": 0, "text": f"#5 coach H2H: {hc} and {ac} have not met in 10 seasons"})
+    # 6: officials
+    if ref:
+        rr = [r for r in past if r.get("referee") == ref]
+        hw = [_ats(r, r["home_team"]) for r in rr]
+        w, l, n, rt = _rate(hw)
+        if n:
+            items.append(_line(f"#6 {ref}'s crew: home team ATS", w, l, n, rt, favors=H if rt > 0.5 else A))
+        ov = [1 if r["_tot"] > r["_tl"] else -1 if r["_tot"] < r["_tl"] else 0 for r in rr if r["_tot"] is not None and r["_tl"] is not None]
+        w, l, n, rt = _rate(ov)
+        if n:
+            items.append(_line(f"#6 {ref}'s crew: overs", w, l, n, rt, favors="Over" if rt > 0.5 else "Under"))
+            sig["ref_over"] = round(rt - 0.5, 3) if n >= 8 else None
+        prime = [x for x, r in zip(ov, [r for r in rr if r["_tot"] is not None and r["_tl"] is not None]) if (r.get("gametime") or "00:00") >= "19:00"]
+        w, l, n, rt = _rate(prime)
+        if n:
+            items.append(_line(f"#6 {ref}'s crew: overs in primetime", w, l, n, rt, favors="Over" if rt > 0.5 else "Under"))
+    else:
+        items.append({"label": "#6 officials", "n": 0, "text": "#6 officials: crew not in the free data yet (nflverse fills referees in late); check the weekly assignment"})
+    # 7: bounce-back / let-down (league-wide rates precomputed once per games file)
+    spots = _spot_table(rows, season)
+    for team in (H, A):
+        prev = [r for r in past if team in (r["home_team"], r["away_team"])]
+        if not prev:
+            continue
+        spot = _spot_of(prev[-1], team)
+        if not spot or spot not in spots:
+            continue
+        w, l, n, rt = spots[spot]
+        items.append(_line(f"#7 {team} in a {spot} spot: league-wide ATS (10 seasons)", w, l, n, rt,
+                           favors=team if rt > BREAKEVEN else (A if team == H else H)))
+        sig.setdefault("spot", []).append((team, rt, n))
+    # 8: role ATS for each team in today's role
+    for team, role in ((H, home_role), (A, away_role)):
+        if not role or "pick" in role:
+            continue
+        res = [_ats(r, team) for r in past if team in (r["home_team"], r["away_team"]) and _role(r, team) == role]
+        w, l, n, rt = _rate(res)
+        if n:
+            items.append(_line(f"#8 {team} ATS as {role} (last {SEASONS_BACK}+ seasons)", w, l, n, rt,
+                               favors=team if rt > BREAKEVEN else (A if team == H else H)))
+            sig.setdefault("role", []).append((team, rt, n))
+    # 9: series H2H, last 10 meetings
+    mt = [r for r in allpast if {r["home_team"], r["away_team"]} == {H, A}][-10:]
+    if mt:
+        su = [1 if ((r["_res"] > 0) == (r["home_team"] == H)) and r["_res"] != 0 else (-1 if r["_res"] != 0 else 0) for r in mt]
+        w, l, n, rt = _rate(su)
+        items.append(_line(f"#9 series: {H} straight up in the last {len(mt)} meetings", w, l, n, rt, favors=H if (rt or 0) > 0.5 else A))
+        w, l, n, rt = _rate([_ats(r, H) for r in mt])
+        if n:
+            items.append(_line(f"#9 series: {H} ATS in the last {len(mt)} meetings", w, l, n, rt, favors=H if rt > 0.5 else A))
+            sig["h2h"] = (H, rt, n)
+    # 10: rhyme (weight zero)
+    try:
+        d = date.fromisoformat(day)
+        digits = sum(int(c) for c in d.strftime("%m%d"))
+        rhyme = f"#10 rhyme (weight 0, never moves a pick): {d.strftime('%m/%d')} digits sum to {digits}"
+        if sl is not None and abs(abs(sl) - digits) < 1e-9:
+            rhyme += f", the same as the spread ({abs(sl):g})"
+        items.append({"label": "#10 rhyme", "n": 0, "text": rhyme})
+    except Exception:                                          # noqa: BLE001
+        pass
+    return {"ok": True, "home": H, "away": A, "coaches": (hc, ac), "referee": ref, "spread_home": sl, "total": tl,
+            "items": items, "sig": sig}
+
+
+def side_signals(info, market, outcome, home_name):
+    """Checklist signals for a picked side: rate minus break-even for that side, n >= 8 only."""
+    out = {"coach_ats": None, "role_ats": None, "h2h_ats": None, "spot_ats": None, "ref_over": None}
+    if not info or not info.get("ok"):
+        return out
+    if market == "totals":
+        ro = info["sig"].get("ref_over")
+        if ro is not None:
+            out["ref_over"] = ro if outcome == "Over" else -ro
+        return out
+    team = info["home"] if outcome == home_name else info["away"]
+    for it in info["items"]:
+        if it.get("n", 0) >= 8 and it["label"].startswith("#5 ") and "H2H" not in it["label"] and it.get("rate") is not None:
+            mine = it["label"].find(info["coaches"][0] if team == info["home"] else info["coaches"][1] or "~") >= 0
+            if mine:
+                out["coach_ats"] = round(it["rate"] - BREAKEVEN, 3)
+    for key, name in (("role", "role_ats"), ("spot", "spot_ats")):
+        vals = [((rt - BREAKEVEN) if t == team else -(rt - BREAKEVEN)) for t, rt, n in info["sig"].get(key, []) if n >= 8]
+        if vals:
+            out[name] = round(sum(vals), 3)
+    h = info["sig"].get("h2h")
+    if h and h[2] >= 6:
+        v = h[1] - 0.5
+        out["h2h_ats"] = round(v if team == h[0] else -v, 3)
+    return out
+
+
+def feed_block(con, now=None, limit=16):
+    now = now or datetime.now(UTC)
+    L = ["", "", f"GAME CHECKLIST ({VERSION}: the owner's 15-point analysis items with data behind them; trends shown as "
+         f"hits-losses, rate, n, against the 52.4% break-even; every trend is weight 0 until the learning layer proves it):"]
+    try:
+        rows = games()
+    except Exception as e:                                     # noqa: BLE001
+        return "\n".join(L + [f"  games file unavailable: {str(e)[:100]}"]) + "\n"
+    evs = [dict(r) for r in con.execute("select * from events where sport='NFL' and commence>? and commence<? order by commence",
+                                        (now.isoformat(timespec="seconds"), (now + timedelta(hours=40)).isoformat(timespec="seconds")))]
+    for ev in evs[:limit]:
+        try:
+            info = nfl_game(ev["home"], ev["away"], ev["commence"], rows)
+        except Exception as e:                                 # noqa: BLE001
+            L.append(f"NFL {ev['away']} @ {ev['home']}: checklist error {str(e)[:80]}")
+            continue
+        if not info.get("ok"):
+            continue
+        L.append(f"NFL {ev['commence'][:16]}Z {ev['away']} @ {ev['home']} | coaches {info['coaches'][1]} @ {info['coaches'][0]} | "
+                 f"referee {info['referee'] or 'not published'} | nflverse line home {info['spread_home']}, total {info['total']}")
+        for it in info["items"]:
+            L.append("   " + it["text"])
+    if not evs:
+        L.append("  no NFL games in the next 40 hours")
+    L.append("  NBA / NHL / soccer: no free closing-line history for these trend items; game analyses cover them from sources at analysis time")
+    return "\n".join(L) + "\n"
+
+
+def install(js):
+    """Add the five checklist signals to capture (NFL game lines only)."""
+    if js is None or getattr(js, "_checklist_installed", False):
+        return False
+    for k in ("coach_ats", "role_ats", "spot_ats", "h2h_ats", "ref_over"):
+        if k not in js.SIGNALS:
+            js.SIGNALS.append(k)
+    _cap = js.capture
+
+    def capture(con, ev, market, outcome, player, line, price, fair, extra=None):
+        s = _cap(con, ev, market, outcome, player, line, price, fair, extra)
+        try:
+            if ev.get("sport") == "NFL" and not player and market in ("h2h", "spreads", "totals"):
+                ck = (ev["event_id"], int(time.time() // 3600))
+                info = _INFO.get(ck)
+                if info is None:
+                    info = nfl_game(ev["home"], ev["away"], ev["commence"])
+                    if len(_INFO) > 400:
+                        _INFO.clear()
+                    _INFO[ck] = info
+                s.update(side_signals(info, market, outcome, ev["home"]))
+        except Exception:                                      # noqa: BLE001
+            pass
+        return s
+
+    js.capture = capture
+    js._checklist_installed = True
+    return True
 '''
 
 _EDGE_SRC = r'''"""
@@ -4850,22 +5244,6 @@ def log(con, kind, sport, eid, text):
 
 
 # --------------------------------------------------------------------------- the BET rule
-def grade_from_ev(ev, has_model, gap):
-    if not has_model:
-        g, st = ("C", 0.25) if ev >= PRICE_EDGE else ("D", 0.1)
-    elif ev >= 0.05:
-        g, st = "B", 0.5            # A is capped at B while the models are unvalidated
-    elif ev >= 0.03:
-        g, st = "B", 0.5
-    elif ev >= 0.015:
-        g, st = "C", 0.25
-    else:
-        g, st = "D", 0.1
-    if has_model and gap is not None and gap > BIG_GAP and g == "B":
-        g, st = "C", 0.25
-    return g, st
-
-
 def bet_check(price, from_ct, fair_p, model_p=None, prop=False, flag_label="", gap=None):
     """Returns (is_bet, reason, ev_model, ev_market)."""
     ev_mkt = fair_p * price - 1 if fair_p else None
@@ -5190,8 +5568,8 @@ def early_scan(con, L=None, jr=None, js=None, tg=None, now=None):
                            book, stake, model_prob, note, paper, model_version, edge, fair_prob, evidence_kind, logged_call, card_tags)
                            values(?,?,?,?,?,?,?,'',?,?,?,?,?,?,2,?,?,?,'early',?,?)""",
                         (_iso(now), "NFL", ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], mk, o[0], o[1],
-                         q["price"], q["book"], 0.25 if ok else 0.1, round(mp.get(o[0], fp[o[0]]), 4), note[:600], VERSION,
-                         round(score, 4), round(fp[o[0]], 4), "BET" if ok else "early lean",
+                         q["price"], q["book"], (0.5 if (ok and score >= 0.03) else 0.25) if ok else 0.0, round(mp.get(o[0], fp[o[0]]), 4), note[:600], VERSION,
+                         round(score, 4), round(fp[o[0]], 4), "BET" if ok else "LEAN 0u",
                          json.dumps({"kind": "early", "bet": ok})))
             n += 1
             if ok:
@@ -5373,7 +5751,7 @@ def bets_reply(con, now=None):
 
 
 HELP = ("KRONOS commands:\n• boost <bet> <odds> — prices a boost, e.g. 'boost Patriots ML + Bills ML 3.5' or "
-        "'boost Josh Allen over 249.5 pass yds 2.10'\n• bets — today's BET picks\n• help — this list")
+        "'boost Josh Allen over 249.5 pass yds 2.10'\n• bets — today's BET picks\n• card — today's play/sit card\n• help — this list")
 
 
 def telegram_poll(get_con, tg_send):
@@ -5403,6 +5781,8 @@ def telegram_poll(get_con, tg_send):
                         reply = boost_reply(c, txt)
                     elif low in ("bets", "/bets"):
                         reply = bets_reply(c)
+                    elif low in ("card", "/card"):
+                        reply = "GAME CARD (play/sit)\n" + "\n".join(card(c) or ["No games locked yet today."])
                     elif low in ("help", "/help", "/start"):
                         reply = HELP
                     else:
@@ -5433,6 +5813,7 @@ def preflight(con):
     chk("ESPN injuries (NFL)", lambda: _espn_injuries("NFL"))
     chk("ESPN scoreboard (NHL)", lambda: requests.get("https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard",
                                                       timeout=20).raise_for_status())
+    chk("nflverse games file", lambda: __import__("kronos_checklist").games())
     chk("football-data.co.uk", lambda: requests.get("https://www.football-data.co.uk/mmz4281/2627/E0.csv", timeout=30,
                                                     headers={"User-Agent": "Mozilla/5.0"}).raise_for_status())
     tok = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -5453,6 +5834,46 @@ def preflight(con):
     return ok, checks
 
 
+def card(con, now=None):
+    """#15: one screen, one line per game today: PLAY (a BET) or SIT (a LEAN), with confidence 1-10."""
+    now = now or datetime.now(UTC)
+    et = timezone(timedelta(hours=-5))
+    d0 = datetime(now.astimezone(et).year, now.astimezone(et).month, now.astimezone(et).day, tzinfo=et)
+    rows = [dict(r) for r in con.execute("""select * from bets where evidence_kind='ledger' and commence>=? and commence<?
+                                            order by commence""", (_iso(d0.astimezone(UTC)), _iso((d0 + timedelta(days=1)).astimezone(UTC))))]
+    games = {}
+    for r in rows:
+        try:
+            t = json.loads(r.get("card_tags") or "{}")
+        except Exception:                                      # noqa: BLE001
+            t = {}
+        evm = t.get("ev_model") if t.get("ev_model") is not None else t.get("ev_market")
+        conf = 5.0
+        if evm is not None:
+            conf += max(-3.0, min(3.0, evm * 100 / 2))
+        lab = str(r.get("sharp_flag") or "")
+        conf += 1 if "SHARP" in lab and "AGAINST" not in lab else 0
+        conf -= 1 if "PUBLIC" in lab and "FADE" not in lab else 0
+        note = str(r.get("note") or "")
+        conf += 1 if "(agrees)" in note else -1 if "(disagrees)" in note else 0
+        r["_bet"] = bool(t.get("bet"))
+        if not r["_bet"]:
+            conf = min(conf, 5.0)            # a SIT is never shown as a confident pick
+        if any("big gap" in str(x) for x in (t.get("tags") or [])):
+            conf = min(conf, 4.0)            # big model-vs-market gaps are usually missing news
+        r["_conf"] = int(round(max(1, min(10, conf))))
+        g = games.setdefault(r["event_id"], [])
+        g.append(r)
+    out = []
+    for eid, rs in games.items():
+        best = max(rs, key=lambda r: (r["_bet"], r["_conf"]))
+        ln = "" if best["line"] is None else (f" {best['line']:+g}" if best["market"] == "spreads" else f" {best['line']:g}")
+        act = f"PLAY {best['stake']:g}u" if best["_bet"] else "SIT"
+        out.append(f"{_et(best['commence'])} {best['game']}: {act} · {best['selection']}{ln} ({best['market']}) "
+                   f"{best['price']:.2f} {BOOKN.get(best['book'], best['book'])} · confidence {best['_conf']}/10")
+    return out
+
+
 # --------------------------------------------------------------------------- feed
 def feed_block(con, now=None):
     now = now or datetime.now(UTC)
@@ -5463,6 +5884,9 @@ def feed_block(con, now=None):
             p = json.loads(pf)
             bad = [c for c in p["checks"] if not c["ok"]]
             L.append(f"  preflight {p['ts']}: " + ("all checks passed" if not bad else "FAILED: " + "; ".join(f"{c['name']}: {c['error']}" for c in bad)))
+        c = card(con, now)
+        L.append("  GAME CARD (checklist #15: play/sit/confidence, one line per game today; game lines only, logged 90 min before start; the prop shadow card is separate):")
+        L.extend("   " + x for x in (c or ["no games locked yet today"]))
         L.append("  " + bets_reply(con, now).replace("\n", "\n  "))
         ns = _meta(con, "news_status")
         if ns:
@@ -5507,15 +5931,16 @@ NEW_SIGNALS = ["out_diff", "out_total", "rest_diff", "rest_min", "b2b_flag"]
 OUT_STATUSES = ("out", "doubtful", "injured reserve", "ir", "suspension", "suspended")
 RULEBOOK = [
     "R1 Market first: Pinnacle's de-vigged price is the baseline; the model moves off it only where the ledger shows it has earned to.",
-    "R2 Every tracked match gets a pick in every game-line market, logged 90 min before start. Never 'no bet'; no line = zero-stake pick.",
-    "R3 Grades: A 1u (edge >= 5%), B 0.5u (>= 3%), C 0.25u (>= 1.5%), D 0.1u. Unvalidated models capped at B; gaps > 8% capped at C (check news).",
-    "R4 Prices: best of DraftKings / FanDuel / Fanatics at the same line; otherwise Pinnacle, marked 'no CT price'. Decimal odds only.",
-    "R5 Every signal starts at weight 0. It graduates after 20 graded picks with a clear effect (|z| >= 2) against the market baseline, and is demoted when its last 60 days fade.",
-    "R6 Closing line value judges a pick before the result does. A model earns weight after 150 graded picks that beat the close.",
-    "R7 Dropping odds: only a sharp-led drop is evidence; retail-only drops are public money; priced-in drops are not chased; act on stale CT prices only.",
-    "R8 Every pick states which layers drove it (market, team strength, roster, matchup, game flow) and what each one lacked.",
-    "R9 Repeating losing patterns become candidate rules on probation (mistake memory); nothing is applied until it is proven.",
-    "R10 Soccer reports use Sports Mole previews; soccer 1X2 settles on 90 minutes; props need confirmed lineups first.",
+    "R2 Every tracked match gets a pick in every game-line market, logged 90 min before start. Never 'no bet': a game with no edge is a LEAN at 0u; no line = a pick marked 'no posted line'.",
+    "R3 Two tiers: BET = +EV at DraftKings/FanDuel/Fanatics (price beats Pinnacle fair by 1.5%+, or model EV +2% / props and alt lines +4% with the price no worse than -1.5% vs fair), staked 0.25u (+1.5-3%), 0.5u (+3-5%), 1u (+5%, price edges or validated models only). Everything else is LEAN 0u.",
+    "R4 No BET with a model gap over 8% (check team news) and no BET when KRONOS's projected score disagrees with the side.",
+    "R5 Every signal starts at weight 0 and graduates only on graded results against the market baseline; graduated signals are demoted when their last 60 days fade. One signal per idea: no duplicates.",
+    "R6 Closing line value judges a pick before the result does; a model earns weight after 150 graded picks that beat the close.",
+    "R7 Price moves are labels, not rules: sharp-led vs retail-only vs priced in. A stale CT price is just a price edge under R3.",
+    "R8 Game analysis = the 15-point checklist: line tape, splits (RLM and steam separate), injuries + EPA/ranking mismatches, weather, coaching H2H and ATS as fav/dog, officials, bounce-back/let-down, role stats, series H2H, date rhyme (weight 0), handicapper board, historical rates as hits-n against the break-even, weighted model whose projected score matches the side, props from positional matchup (posted numbers only), and a one-screen play/sit/confidence card.",
+    "R9 Trends (coaching, officials, spots, roles, series) are shown with hits-losses, rate and n, flagged under 20 games, and carry weight 0 until proven. The date rhyme never moves a pick.",
+    "R10 Repeating losing patterns become candidate rules on probation (mistake memory); nothing is applied until it is proven.",
+    "R11 Soccer reports use Sports Mole previews; soccer 1X2 settles on 90 minutes; props need confirmed lineups first.",
 ]
 
 
@@ -5855,6 +6280,23 @@ def mistake_memory(con):
     con.execute("insert or replace into meta(k,v) values(?,?)", ("candidate_rules", json.dumps(rules[:12])))
     con.commit()
     return rules
+
+
+DUPLICATE_SIGNALS = ("tape_cents", "dk_gap", "proj_p", "sim_p", "matchup", "precip_mm", "n_books",
+                     "drop_6h", "out_total", "rest_min")
+
+
+def finalize_signals(js):
+    """One signal per idea (2026-11-01): drop the duplicates and the dead ones from what is fitted and reported.
+    tape_cents = drop_pct in cents; dk_gap = the EV-at-price rule; proj_p/sim_p = the model (kept as 'edge');
+    matchup = replaced by the matchup layer; precip_mm = weaker than wind; n_books = barely varies;
+    drop_6h = between drop_pct and drop_1h; out_total / rest_min = covered by out_diff / rest_diff."""
+    if js is None:
+        return []
+    removed = [k for k in DUPLICATE_SIGNALS if k in js.SIGNALS]
+    for k in removed:
+        js.SIGNALS.remove(k)
+    return removed
 
 
 def install(js):
@@ -6531,6 +6973,9 @@ try:
     kronos_ledger.install(jerry_signals)
     kronos_master = _register("kronos_master", _MASTER_SRC)
     kronos_edge = _register("kronos_edge", _EDGE_SRC)
+    kronos_checklist = _register("kronos_checklist", _CHECK_SRC)
+    kronos_checklist.install(jerry_signals)
+    print(f"[boot] duplicate signals removed: {kronos_master.finalize_signals(jerry_signals)} -> {len(jerry_signals.SIGNALS)} signals", flush=True)
     kronos_master.install(jerry_signals)
     # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
     jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
@@ -7185,7 +7630,7 @@ def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text() + _edge_block() + _ledger_block() + _master_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
+    txt = _summary_text() + _edge_block() + _checklist_block() + _ledger_block() + _master_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
@@ -7474,6 +7919,18 @@ def _edge_block():
         return f"\n\nKRONOS EDGE: unavailable ({str(e)[:200]})\n"
 
 
+def _checklist_block():
+    try:
+        import kronos_checklist as _kc
+        c = _drops_con()
+        try:
+            return _kc.feed_block(c)
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nGAME CHECKLIST: unavailable ({str(e)[:200]})\n"
+
+
 def _tg_out(msg):
     try:
         if L is not None:
@@ -7555,6 +8012,21 @@ class _KronosServer(_OrigTHS):
         class _H(handler):
             def do_GET(self):
                 p = _up.urlparse(self.path).path
+                if p == "/api/checklist":
+                    try:
+                        import kronos_checklist as _kc
+                        c = _drops_con()
+                        try:
+                            qs = _up.parse_qs(_up.urlparse(self.path).query)
+                            eid = (qs.get("event") or [""])[0]
+                            ev = c.execute("select * from events where event_id=?", (eid,)).fetchone()
+                            if not ev:
+                                return self.send(json.dumps({"error": "event not found"}))
+                            return self.send(json.dumps(_kc.nfl_game(ev["home"], ev["away"], ev["commence"]), default=str))
+                        finally:
+                            c.close()
+                    except Exception as e:                            # noqa: BLE001
+                        return self.send(f"checklist error: {e}", "text/plain")
                 if p in ("/api/backtest", "/api/roster", "/api/rulebook"):
                     try:
                         import kronos_master as _km
