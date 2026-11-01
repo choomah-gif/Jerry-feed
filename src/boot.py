@@ -5815,6 +5815,10 @@ try:
             _rc.execute("""update bets set result='pending', pnl=null, graded_ts=null,
                            note=replace(note, ' | settled', ' | unvoided') where id=?""", (_id,))
         _rc.execute("create table if not exists meta(k text primary key, v text)")
+        # props from earlier weeks that went back to pending need their week re-run by the backfill
+        if _fix or not _rc.execute("select 1 from meta where k='nfl_false_void_rerun'").fetchone():
+            _rc.execute("delete from meta where k like 'backfill_props_%'")
+            _rc.execute("insert or replace into meta(k,v) values('nfl_false_void_rerun', ?)", (datetime.now(UTC).isoformat(timespec='seconds'),))
         _rc.execute("insert or replace into meta(k,v) values(?,?)", ("nfl_false_void_repair",
                     f"{datetime.now(UTC).isoformat(timespec='seconds')} reset {len(_fix)} props voided before their game ended"))
         _rc.commit(); _rc.close()
