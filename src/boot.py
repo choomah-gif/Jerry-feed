@@ -5812,14 +5812,17 @@ def bets_reply(con, now=None):
     now = now or datetime.now(UTC)
     rows = con.execute("""select sport, game, market, selection, line, price, book, stake, logged_call, commence, note from bets
                           where paper=2 and commence>? and commence<? and (logged_call like 'BET%' or logged_call='ALT EDGE')
+                          and coalesce(result, 'pending') <> 'V'
                           order by commence""", (_iso(now - timedelta(hours=3)), _iso(now + timedelta(hours=30)))).fetchall()
     if not rows:
         return "No BET picks right now. Everything on today's board is priced at or below fair at your books."
     out = ["KRONOS BETS"]
-    for r in rows:
+    for r in rows[:15]:
         ln = "" if r["line"] is None else (f" {r['line']:+g}" if r["market"] == "spreads" else f" {r['line']:g}")
         out.append(f"• {_et(r['commence'])} {r['game']}: {r['selection']}{ln} at {BOOKN.get(r['book'], r['book'])} {r['price']:.2f} "
                    f"({r['logged_call']}, {r['stake']:g}u)")
+    if len(rows) > 15:
+        out.append(f"… and {len(rows) - 15} more")
     return "\n".join(out)
 
 
