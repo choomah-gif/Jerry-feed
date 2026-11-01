@@ -5196,7 +5196,7 @@ MODEL_EV_MAIN = float(os.environ.get("BET_MODEL_EV", "0.02"))
 MODEL_EV_PROP = float(os.environ.get("BET_MODEL_EV_PROP", "0.04"))
 MKT_FLOOR = float(os.environ.get("BET_MKT_FLOOR", "-0.015"))
 BIG_GAP = 0.08
-SD = {("NFL", "spreads"): 13.5, ("NFL", "totals"): 10.0, ("NBA", "spreads"): 12.0, ("NBA", "totals"): 17.5}
+SD = {("NFL", "spreads"): 12.7, ("NFL", "totals"): 13.2, ("NBA", "spreads"): 12.0, ("NBA", "totals"): 17.5}   # NFL from nflverse 2016+ residuals; fallback only
 ALT_MAX_DIST = {"NFL": 7.0, "NBA": 10.0}   # far-off alt lines are where the normal model is least reliable
 ALT_MIN_EV = float(os.environ.get("ALT_MIN_EV", "0.04"))
 ALT_MIN_EV_NFL = float(os.environ.get("ALT_MIN_EV_NFL", "0.06"))   # NFL key numbers (3, 7) make the normal model rougher
@@ -5459,6 +5459,68 @@ def alt_prob(sport, market, main_line, main_fair, alt_line, side_is_main_side=Tr
     return 1 - _phi((alt_line - mu) / sd)
 
 
+_RESID = {}
+
+
+def _residuals(sport, market):
+    """NFL: empirical errors of the closing line (result - spread, total - total line) from nflverse, 2016+.
+    These carry the key numbers (3, 7, 10) that a normal model misses (2026-11-01: the normal model with
+    sd 10 on NFL totals flagged whole alt ladders as false edges)."""
+    k = (sport, market)
+    if k in _RESID:
+        return _RESID[k]
+    out = None
+    if sport == "NFL":
+        try:
+            import kronos_checklist as kc
+            rows = kc.games()
+            vals = []
+            for r in rows:
+                try:
+                    if int(r["season"]) < 2016 or not r.get("result"):
+                        continue
+                    if market == "spreads" and r.get("spread_line"):
+                        v = float(r["result"]) - float(r["spread_line"])
+                        vals += [v, -v]                       # symmetric for home and away sides
+                    elif market == "totals" and r.get("total_line") and r.get("total"):
+                        vals.append(float(r["total"]) - float(r["total_line"]))
+                except (TypeError, ValueError):
+                    continue
+            if len(vals) > 1000:
+                out = sorted(vals)
+        except Exception:                                      # noqa: BLE001
+            out = None
+    _RESID[k] = out
+    return out
+
+
+def _p_above(vals, x):
+    """P(v > x) / (P(v > x) + P(v < x)): pushes excluded."""
+    import bisect
+    lo = bisect.bisect_left(vals, x - 1e-9); hi = bisect.bisect_right(vals, x + 1e-9)
+    above, below = len(vals) - hi, lo
+    return above / (above + below) if above + below else 0.5
+
+
+def alt_prob_emp(sport, market, main_line, main_fair, alt_line, over=True):
+    """Empirical version of alt_prob. Spreads: side lines (e.g. -10.5). Totals: Over at main_line."""
+    vals = _residuals(sport, market)
+    if not vals:
+        return None
+    if market == "spreads":
+        gap = float(main_line) - float(alt_line)         # extra points the alt line needs vs the main
+    else:
+        gap = float(alt_line) - float(main_line)
+    best, bd = 0.0, 9
+    for i in range(-800, 801):                           # shift so the main line matches its fair price
+        d = i / 100
+        p = _p_above(vals, -d)
+        if abs(p - main_fair) < bd:
+            bd, best = abs(p - main_fair), d
+    p_over = _p_above(vals, gap - best)
+    return p_over
+
+
 def alt_scan(con, tg=None, now=None):
     """NFL + NBA games starting within 6h: CT alternate lines vs Pinnacle's main line, once per game per 2h."""
     import kronos_ledger as kl
@@ -5484,6 +5546,7 @@ def alt_scan(con, tg=None, now=None):
                 continue
             used += 1
             _meta(con, f"alt_calls:{day}", str(used)); _meta(con, k, _iso(now)); con.commit()
+            best_alt = {}
             for mk_main, mk_alt in (("spreads", "alternate_spreads"), ("totals", "alternate_totals")):
                 main = kl.sides(con, ev["event_id"], mk_main)
                 if len(main) != 2 or not str(main[0][3]) in SHARP:
@@ -5498,24 +5561,34 @@ def alt_scan(con, tg=None, now=None):
                         over_line, over_fair = ref["Over"] if "Over" in ref else (None, None)
                         if over_line is None:
                             continue
-                        p_over = alt_prob(sp, "totals", float(over_line), over_fair, float(ln))
+                        p_over = alt_prob_emp(sp, "totals", float(over_line), over_fair, float(ln))
+                        if p_over is None:
+                            p_over = alt_prob(sp, "totals", float(over_line), over_fair, float(ln))
                         p = p_over if oc == "Over" else 1 - p_over
                         dist = abs(float(ln) - float(over_line))
                     else:
-                        p = alt_prob(sp, "spreads", float(mline), mfair, float(ln))
+                        p = alt_prob_emp(sp, "spreads", float(mline), mfair, float(ln))
+                        if p is None:
+                            p = alt_prob(sp, "spreads", float(mline), mfair, float(ln))
                         dist = abs(float(ln) - float(mline))
                     if dist < 0.5 or dist > ALT_MAX_DIST[sp]:
                         continue
                     evv = p * float(pr) - 1
                     if evv < (ALT_MIN_EV_NFL if sp == "NFL" else ALT_MIN_EV):
                         continue
-                    key = (ev["event_id"], mk_main, oc, float(ln))
-                    if con.execute("""select 1 from bets where evidence_kind='alt' and event_id=? and market=? and selection=?
-                                      and line=?""", key).fetchone():
+                    cand = best_alt.get((mk_main, oc))
+                    if cand is None or evv > cand[0]:
+                        best_alt[(mk_main, oc)] = (evv, bk, ln, pr, p, mline, mfair, mk_alt)
+            for (mk_main, oc), (evv, bk, ln, pr, p, mline, mfair, mk_alt) in best_alt.items():
+                    # one alt pick per game, market and side: the best rung of the ladder only (no duplicates)
+                    if con.execute("""select 1 from bets where evidence_kind='alt' and event_id=? and market=? and selection=?""",
+                                   (ev["event_id"], mk_main, oc)).fetchone():
                         continue
+                    model_txt = ("empirical NFL closing-line errors since 2016 (key numbers included)" if _residuals(sp, mk_main)
+                                 else f"normal model (sd {SD[(sp, mk_main)]})")
                     note = (f"KRONOS alt line | {BOOKN.get(bk, bk)} {mk_alt} {oc} {ln:+g} at {pr:.2f} | fair {p:.1%} from Pinnacle's "
-                            f"main {mline:+g} ({mfair:.1%}) with a normal model (sd {SD[(sp, mk_main)]}) | EV {evv:+.1%} | "
-                            "approximation: ignores key numbers; check the price before betting")
+                            f"main {mline:+g} ({mfair:.1%}) using {model_txt} | EV {evv:+.1%} | best rung of the ladder; "
+                            "check the price before betting")
                     con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price,
                                    book, stake, model_prob, note, paper, model_version, edge, fair_prob, evidence_kind, logged_call, card_tags)
                                    values(?,?,?,?,?,?,?,'',?,?,?,?,?,?,2,?,?,?,'alt',?,?)""",
@@ -6975,8 +7048,20 @@ try:
     kronos_edge = _register("kronos_edge", _EDGE_SRC)
     kronos_checklist = _register("kronos_checklist", _CHECK_SRC)
     kronos_checklist.install(jerry_signals)
-    print(f"[boot] duplicate signals removed: {kronos_master.finalize_signals(jerry_signals)} -> {len(jerry_signals.SIGNALS)} signals", flush=True)
     kronos_master.install(jerry_signals)
+    # finalize last, after every module has added its signals (2026-11-01: running it before kronos_master.install
+    # let out_total and rest_min back in)
+    print(f"[boot] duplicate signals removed: {kronos_master.finalize_signals(jerry_signals)} -> {len(jerry_signals.SIGNALS)} signals", flush=True)
+    try:
+        _vc = sqlite3.connect(os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
+        _n = _vc.execute("""update bets set result='V', pnl=0, graded_ts=?, note=coalesce(note,'') ||
+                            ' | withdrawn: normal-model artifact, replaced by empirical NFL pricing 2026-11-01'
+                            where evidence_kind='alt' and result='pending' and note like '%normal model%'""",
+                         (datetime.now(UTC).isoformat(timespec="seconds"),)).rowcount
+        _vc.commit(); _vc.close()
+        print(f"[boot] withdrew {_n} alt-line picks priced with the old normal model", flush=True)
+    except Exception as _e:                                     # noqa: BLE001
+        print(f"[boot] alt withdrawal skipped: {_e}", flush=True)
     # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
     jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
                                    ("UCL", "margin"): 1.4, ("UCL", "total"): 1.5})
