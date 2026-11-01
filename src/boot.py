@@ -3548,9 +3548,9 @@ def refresh(db_path, now=None):
 _SOCCER_SRC = r'''"""
 kronos_soccer — KRONOS soccer model for EPL and UCL (soccer-v1, 2026-11-01). Paper only, capped at Lean.
 
-Data: ESPN public scoreboards (free, no key): results, shots on target and corners for the Premier
-League, Championship, the other big European leagues, the three UEFA competitions and the English
-cups, back to July 2025. Cups, Europe and promotion are what link the leagues together.
+Data (free): football-data.co.uk season files for the Premier League, Championship and nine other
+European leagues (results, shots on target, corners), plus ESPN day-by-day results for the three UEFA
+competitions and the latest English results. Europe and promotion link the leagues together.
 
 Model:
   * Poisson team ratings: log(goals) = base + home + league prior + team attack − (league prior + team defence)
@@ -3686,76 +3686,144 @@ def parse_scoreboard(js, league):
     return out
 
 
-def _fetch_range(league, d1, d2, get=_get):
-    """ESPN accepts a date range (dates=YYYYMMDD-YYYYMMDD) with limit up to ~350; a 400 falls back to
-    no limit, then to weekly chunks (2026-11-01: limit=500 was rejected with 400 Bad Request)."""
-    rng = f"{d1.strftime('%Y%m%d')}-{d2.strftime('%Y%m%d')}"
-    last_err = None
-    for q in (f"dates={rng}&limit=300", f"dates={rng}"):
+# Data sources (2026-11-01 v2): ESPN's soccer scoreboard rejects date ranges (400 Bad Request) and only
+# answers single days, so league history now comes from football-data.co.uk season files (one request per
+# league-season, with shots on target and corners), and ESPN is used day by day only where it is needed:
+# UEFA match days (Tue/Wed/Thu) and the last few days of the English leagues and Europe.
+FD_CODES = {"E0": "eng.1", "E1": "eng.2", "SP1": "esp.1", "D1": "ger.1", "I1": "ita.1", "F1": "fra.1",
+            "P1": "por.1", "N1": "ned.1", "B1": "bel.1", "T1": "tur.1", "SC0": "sco.1"}
+FD_SEASONS = ("2526", "2627")
+CURRENT_FD = "2627"
+FD_ALIAS = {   # football-data short names -> the full names ESPN and the Odds API use
+    "man city": "Manchester City", "man united": "Manchester United", "nottm forest": "Nottingham Forest",
+    "newcastle": "Newcastle United", "wolves": "Wolverhampton Wanderers", "tottenham": "Tottenham Hotspur",
+    "west ham": "West Ham United", "brighton": "Brighton & Hove Albion", "leeds": "Leeds United",
+    "leicester": "Leicester City", "coventry": "Coventry City", "hull": "Hull City", "ipswich": "Ipswich Town",
+    "luton": "Luton Town", "norwich": "Norwich City", "stoke": "Stoke City", "swansea": "Swansea City",
+    "cardiff": "Cardiff City", "sheffield weds": "Sheffield Wednesday", "west brom": "West Bromwich Albion",
+    "qpr": "Queens Park Rangers", "derby": "Derby County", "oxford": "Oxford United", "plymouth": "Plymouth Argyle",
+    "preston": "Preston North End", "blackburn": "Blackburn Rovers", "birmingham": "Birmingham City",
+    "charlton": "Charlton Athletic", "wrexham": "Wrexham", "bournemouth": "AFC Bournemouth",
+    "ath madrid": "Atletico Madrid", "ath bilbao": "Athletic Club", "betis": "Real Betis", "sociedad": "Real Sociedad",
+    "celta": "Celta Vigo", "espanol": "Espanyol", "vallecano": "Rayo Vallecano", "sevilla": "Sevilla",
+    "bayern munich": "Bayern Munich", "dortmund": "Borussia Dortmund", "leverkusen": "Bayer Leverkusen",
+    "m gladbach": "Borussia Monchengladbach", "mgladbach": "Borussia Monchengladbach", "ein frankfurt": "Eintracht Frankfurt",
+    "rb leipzig": "RB Leipzig", "stuttgart": "VfB Stuttgart", "hoffenheim": "TSG Hoffenheim", "wolfsburg": "VfL Wolfsburg",
+    "freiburg": "SC Freiburg", "inter": "Internazionale", "milan": "AC Milan", "roma": "AS Roma", "napoli": "Napoli",
+    "juventus": "Juventus", "atalanta": "Atalanta", "lazio": "Lazio", "paris sg": "Paris Saint-Germain",
+    "marseille": "Marseille", "lyon": "Lyon", "monaco": "AS Monaco", "lille": "Lille", "nice": "Nice", "lens": "Lens",
+    "sp lisbon": "Sporting CP", "benfica": "Benfica", "porto": "FC Porto", "sp braga": "SC Braga",
+    "psv eindhoven": "PSV Eindhoven", "ajax": "Ajax Amsterdam", "feyenoord": "Feyenoord", "az alkmaar": "AZ Alkmaar",
+    "club brugge": "Club Brugge", "st gilloise": "Union St.-Gilloise", "galatasaray": "Galatasaray",
+    "fenerbahce": "Fenerbahce", "besiktas": "Besiktas", "celtic": "Celtic", "rangers": "Rangers",
+}
+
+
+def canon(name):
+    """One identity per club across football-data, ESPN and the Odds API."""
+    n = norm(name)
+    if n in FD_ALIAS:
+        return FD_ALIAS[n]
+    return str(name).strip()
+
+
+def _get_text(url, timeout=30):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.text
+
+
+def fd_ingest(con, season, code, get_text=_get_text):
+    import csv as _csv, io as _io
+    txt = get_text(f"https://www.football-data.co.uk/mmz4281/{season}/{code}.csv")
+    league, n = FD_CODES[code], 0
+    now = datetime.now(UTC).isoformat(timespec="seconds")
+    for r in _csv.DictReader(_io.StringIO(txt.lstrip("\ufeff"))):
         try:
-            return parse_scoreboard(get(f"{BASE}/{league}/scoreboard?{q}"), league)
-        except Exception as e:                                 # noqa: BLE001
-            last_err = e
-    if (d2 - d1).days > 7:
-        out, a = [], d1
-        while a <= d2:
-            b = min(a + timedelta(days=6), d2)
-            out += _fetch_range(league, a, b, get)
-            a = b + timedelta(days=1)
-        return out
-    raise last_err
+            d = datetime.strptime(r["Date"], "%d/%m/%Y" if len(r["Date"]) > 8 else "%d/%m/%y").date()
+            hg, ag = float(r["FTHG"]), float(r["FTAG"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        f = lambda k: float(r[k]) if r.get(k) not in (None, "") else None
+        h, a = canon(r["HomeTeam"]), canon(r["AwayTeam"])
+        con.execute("""insert or replace into soccer_matches values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (f"fd:{code}:{d.isoformat()}:{norm(h)}:{norm(a)}", league, d.isoformat(), h, a, hg, ag, f("HST"), f("AST"),
+                     f("HS"), f("AS"), f("HC"), f("AC"), 0, "FT", now))
+        n += 1
+    return n
 
 
-def ingest_month(con, league, y, m, get=_get):
-    d1 = date(y, m, 1)
-    d2 = date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
-    rows = _fetch_range(league, d1, d2, get)
+def ingest_day(con, league, day, get=_get):
+    js = get(f"{BASE}/{league}/scoreboard?dates={day.strftime('%Y%m%d')}")
+    rows = parse_scoreboard(js, league)
     now = datetime.now(UTC).isoformat(timespec="seconds")
     for r in rows:
+        h, a = canon(r["home"]), canon(r["away"])
+        # the same domestic match can arrive from football-data: keep one row per date + teams
+        con.execute("delete from soccer_matches where game_date=? and home=? and away=? and source_id like 'fd:%'",
+                    (r["game_date"], h, a))
         con.execute("""insert or replace into soccer_matches values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (r["source_id"], r["league"], r["game_date"], r["home"], r["away"], r["hg"], r["ag"], r["hsot"],
+                    (f"espn:{r['source_id']}", r["league"], r["game_date"], h, a, r["hg"], r["ag"], r["hsot"],
                      r["asot"], r["hsh"], r["ash"], r["hc"], r["ac"], r["neutral"], r["detail"], now))
     return len(rows)
 
 
-def backfill(con, now=None, budget=40, get=_get):
-    """Fetch missing months (past months once, the current and previous month every pass)."""
+def backfill(con, now=None, budget=40, get=_get, get_text=_get_text):
+    """football-data seasons (last season once, current season every 12h) + ESPN single days for Europe
+    (Tue/Wed/Thu since Sept 2025) and the last 4 days of the English leagues and Europe."""
     ensure(con)
     now = now or datetime.now(UTC)
-    cur = date(now.year, now.month, 1)
-    prev = (cur - timedelta(days=1)).replace(day=1)
-    months, d = [], BACKFILL_FROM
-    while d <= cur:
-        months.append(d)
-        d = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
-    calls, got, errs = 0, 0, []
-    for mo in reversed(months):                # newest first: the recent form matters most
-        for lg in LEAGUES:
-            key = f"{mo.year}-{mo.month:02d}"
-            done = con.execute("select 1 from soccer_fetch where league=? and month=?", (lg, key)).fetchone()
-            if done and mo not in (cur, prev):
+    calls, rows, errs = 0, 0, []
+    for season in FD_SEASONS:
+        for code in FD_CODES:
+            key = f"fd:{season}"
+            last = con.execute("select ts from soccer_fetch where league=? and month=?", (code, key)).fetchone()
+            fresh = last and (season != CURRENT_FD or datetime.fromisoformat(last[0]) > now - timedelta(hours=12))
+            if fresh:
                 continue
-            if calls >= budget:
-                break
-            calls += 1
             try:
-                n = ingest_month(con, lg, mo.year, mo.month, get=get)
-                got += n
-                if mo not in (cur, prev):
-                    con.execute("insert or replace into soccer_fetch values(?,?,?,?)",
-                                (lg, key, now.isoformat(timespec="seconds"), n))
+                n = fd_ingest(con, season, code, get_text)
+                rows += n
+                con.execute("insert or replace into soccer_fetch values(?,?,?,?)", (code, key, now.isoformat(timespec="seconds"), n))
             except Exception as e:                             # noqa: BLE001
-                errs.append(f"{lg} {key}: {str(e)[:60]}")
+                errs.append(f"football-data {code} {season}: {str(e)[:60]}")
     con.commit()
-    left = 0
-    for mo in months:
-        for lg in LEAGUES:
-            if mo in (cur, prev):
-                continue
-            if not con.execute("select 1 from soccer_fetch where league=? and month=?",
-                               (lg, f"{mo.year}-{mo.month:02d}")).fetchone():
-                left += 1
-    return {"calls": calls, "rows": got, "months_left": left, "errors": errs[:3]}
+    days = []
+    d = date(2025, 9, 1)
+    while d <= now.date():
+        if d.weekday() in (1, 2, 3):
+            for lg in EUROPE:
+                days.append((lg, d))
+        d += timedelta(days=1)
+    recent = [(lg, now.date() - timedelta(days=k)) for k in range(0, 4) for lg in ["eng.1", "eng.2"] + EUROPE]
+    todo = []
+    for lg, d in recent + list(reversed(days)):
+        key = d.isoformat()
+        done = con.execute("select ts from soccer_fetch where league=? and month=?", (lg, key)).fetchone()
+        if done and d < now.date() - timedelta(days=3):
+            continue
+        if done and datetime.fromisoformat(done[0]) > now - timedelta(hours=3):
+            continue
+        todo.append((lg, d))
+    seen = set()
+    for lg, d in todo:
+        if (lg, d) in seen:
+            continue
+        seen.add((lg, d))
+        if calls >= budget:
+            break
+        calls += 1
+        try:
+            rows += ingest_day(con, lg, d, get)
+            con.execute("insert or replace into soccer_fetch values(?,?,?,?)", (lg, d.isoformat(), now.isoformat(timespec="seconds"), 0))
+        except Exception as e:                                 # noqa: BLE001
+            errs.append(f"{lg} {d}: {str(e)[:60]}")
+    con.commit()
+    left = sum(1 for lg, d in days if not con.execute("select 1 from soccer_fetch where league=? and month=?",
+                                                       (lg, d.isoformat())).fetchone())
+    total = con.execute("select count(*) from soccer_matches").fetchone()[0]
+    return {"espn_calls": calls, "rows": rows, "europe_days_left": left, "matches_on_file": total, "errors": errs[:3]}
 
 
 # --------------------------------------------------------------------------- fit
@@ -3764,7 +3832,14 @@ def fit(con, now=None):
     from scipy.optimize import minimize
     now = now or datetime.now(UTC)
     lo = (now - timedelta(days=540)).date().isoformat()
-    rows = [dict(r) for r in con.execute("select * from soccer_matches where game_date>=? order by game_date", (lo,))]
+    raw = [dict(r) for r in con.execute("select * from soccer_matches where game_date>=? order by game_date", (lo,))]
+    rows, seen = [], set()
+    for r in raw:                      # one identity per club (norm of the canonical name), one row per match
+        r["home"], r["away"] = norm(canon(r["home"])), norm(canon(r["away"]))
+        k = (r["game_date"], r["home"], r["away"])
+        if k in seen:
+            continue
+        seen.add(k); rows.append(r)
     if len(rows) < 200:
         return None
     teams = sorted({r["home"] for r in rows} | {r["away"] for r in rows})
@@ -3955,9 +4030,13 @@ def predict(model, home_e, away_e, commence, neutral=False):
     return lh, la, notes
 
 
-def likely_scorers(con, team_espn, lam, n=2):
+def likely_scorers(con, team_key, lam, n=2):
     """Top recent scorers for a team from ESPN boxes the grader stored, with anytime chances."""
     try:
+        names = [r[0] for r in con.execute("select distinct team from soccer_box")]
+        team_espn, _sc = best_name(team_key, names, 0.6)
+        if not team_espn:
+            return []
         rows = con.execute("""select player, sum(goals) g from soccer_box where team=? group by player_norm
                               order by g desc limit 6""", (team_espn,)).fetchall()
         tot = con.execute("select sum(goals) from soccer_box where team=?", (team_espn,)).fetchone()[0] or 0
@@ -3999,7 +4078,7 @@ def refresh(con, now=None, L=None, jr=None, fit_every_h=6):
                                                                   (now + timedelta(hours=48)).isoformat(timespec="seconds")))]
     rows = []
     for ev in evs:
-        he, _s1 = best_name(ev["home"], teams); ae, _s2 = best_name(ev["away"], teams)
+        he, _s1 = best_name(norm(canon(ev["home"])), teams, 0.6); ae, _s2 = best_name(norm(canon(ev["away"])), teams, 0.6)
         if not he or not ae or he == ae:
             status["unmatched"].append(f"{ev['away']} @ {ev['home']}")
             continue
@@ -4016,8 +4095,8 @@ def refresh(con, now=None, L=None, jr=None, fit_every_h=6):
             except Exception:                                  # noqa: BLE001
                 pass
         ts = now.isoformat(timespec="seconds")
-        detail = (f"xG {lh:.2f}-{la:.2f}; ratings att/def {he} {model['att'][he]:+.2f}/{model['def'][he]:+.2f}, "
-                  f"{ae} {model['att'][ae]:+.2f}/{model['def'][ae]:+.2f}; games {model['games'].get(he, 0)}/{model['games'].get(ae, 0)}"
+        detail = (f"xG {lh:.2f}-{la:.2f}; ratings att/def {ev['home']} {model['att'][he]:+.2f}/{model['def'][he]:+.2f}, "
+                  f"{ev['away']} {model['att'][ae]:+.2f}/{model['def'][ae]:+.2f}; games {model['games'].get(he, 0)}/{model['games'].get(ae, 0)}"
                   + (f"; {'; '.join(notes)}" if notes else ""))
         sc_h, sc_a = likely_scorers(con, he, lh), likely_scorers(con, ae, la)
         if sc_h or sc_a:
@@ -5111,9 +5190,10 @@ def backtest_soccer(sport="EPL", seasons=("2425", "2526", "2627"), get_text=_get
             continue
         week_rows = [r for r in rows if wk <= r["date"] < wk + timedelta(days=7)]
         for r in week_rows:
-            if r["home"] not in model["att"] or r["away"] not in model["att"]:
+            hk, ak = ks.norm(ks.canon(r["home"])), ks.norm(ks.canon(r["away"]))
+            if hk not in model["att"] or ak not in model["att"]:
                 continue
-            lh, la, _n = ks.predict(model, r["home"], r["away"], r["date"].isoformat())
+            lh, la, _n = ks.predict(model, hk, ak, r["date"].isoformat())
             ph, pd, pa = ks.p_1x2(ks.score_matrix(lh, la))
             fo = ks._devig([r["oh"], r["od"], r["oa"]]); fc = ks._devig([r["ch"], r["cd"], r["ca"]])
             res = 0 if r["hg"] > r["ag"] else 1 if r["hg"] == r["ag"] else 2
