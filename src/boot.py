@@ -3786,6 +3786,7 @@ def backfill(con, now=None, budget=40, get=_get, get_text=_get_text):
                 n = fd_ingest(con, season, code, get_text)
                 rows += n
                 con.execute("insert or replace into soccer_fetch values(?,?,?,?)", (code, key, now.isoformat(timespec="seconds"), n))
+                con.commit()
             except Exception as e:                             # noqa: BLE001
                 errs.append(f"football-data {code} {season}: {str(e)[:60]}")
     con.commit()
@@ -3817,6 +3818,7 @@ def backfill(con, now=None, budget=40, get=_get, get_text=_get_text):
         try:
             rows += ingest_day(con, lg, d, get)
             con.execute("insert or replace into soccer_fetch values(?,?,?,?)", (lg, d.isoformat(), now.isoformat(timespec="seconds"), 0))
+            con.commit()
         except Exception as e:                                 # noqa: BLE001
             errs.append(f"{lg} {d}: {str(e)[:60]}")
     con.commit()
@@ -4789,9 +4791,11 @@ def _match(a, b):
 
 
 def ensure(con):
+    # injuries uses the desk's existing table (jerry_feeds already fills NBA + NHL hourly); this module
+    # only adds NFL (and MLB when tracked) in the same shape. Fixed 2026-11-01 after a schema clash.
     con.executescript("""
-    create table if not exists injuries(sport text, team text, player text, status text, detail text, ts text);
-    create index if not exists injuries_sport on injuries(sport, team);
+    create table if not exists injuries(sport text, player_norm text, player text, team text,
+        status text, detail text, ts text, primary key(sport, player_norm));
     create table if not exists team_games(sport text, team text, game_date text, opponent text, home int,
         primary key(sport, team, game_date));
     create table if not exists master_fetch(k text primary key, ts text);
@@ -4799,19 +4803,35 @@ def ensure(con):
 
 
 # --------------------------------------------------------------------------- roster layer
+OWN_INJURY_SPORTS = ("NFL", "MLB")     # NBA + NHL injuries are already ingested by jerry_feeds
+
+
+def _pnorm(s):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z]", "", s)
+
+
 def pull_injuries(con, sport, get=_get):
+    if sport not in OWN_INJURY_SPORTS:
+        r = con.execute("select count(*) from injuries where sport=?", (sport,)).fetchone()
+        return r[0] if r else 0
     js = get(f"https://site.api.espn.com/apis/site/v2/sports/{ESPN[sport]}/injuries")
     rows = []
-    for team in js.get("injuries", []) or []:
+    for team in js.get("injuries", []) or js.get("teams", []) or []:
         tname = (team.get("team") or {}).get("displayName") or team.get("displayName", "")
         for inj in team.get("injuries", []) or []:
             ath = inj.get("athlete") or {}
+            name = ath.get("displayName") or ath.get("fullName") or ""
+            status = str(inj.get("status") or (inj.get("type") or {}).get("description") or "").strip()
+            if not name or not status:
+                continue
             det = inj.get("details") or {}
-            rows.append((sport, tname, ath.get("displayName", ""), str(inj.get("status", "")),
-                         str(det.get("type") or det.get("detail") or inj.get("shortComment") or "")[:120]))
+            rows.append((sport, _pnorm(name), name, tname, status,
+                         str(det.get("type") or inj.get("shortComment") or "")[:160]))
     now = _iso(datetime.now(UTC))
     con.execute("delete from injuries where sport=?", (sport,))
-    con.executemany("insert into injuries values(?,?,?,?,?,?)", [r + (now,) for r in rows])
+    con.executemany("insert or replace into injuries values(?,?,?,?,?,?,?)", [r + (now,) for r in rows])
     con.execute("insert or replace into master_fetch values(?,?)", (f"inj:{sport}", now))
     con.commit()
     return len(rows)
@@ -4862,6 +4882,7 @@ def pull_schedule(con, sport, days_back=10, get=_get):
                 if "home" in t and "away" in t:
                     con.execute("insert or replace into team_games values(?,?,?,?,?)", (sport, t["home"], gd, t["away"], 1))
                     con.execute("insert or replace into team_games values(?,?,?,?,?)", (sport, t["away"], gd, t["home"], 0))
+            con.commit()
         except Exception:                                      # noqa: BLE001
             pass
         d += timedelta(days=1)
@@ -5933,7 +5954,7 @@ def refresh_all(db_path, sports=None):
     _spl = None
     try:
         import jerry_splits as _js
-        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row; _c.execute('pragma busy_timeout=60000')
         try:
             _spl = _js.run(_c)
         finally:
@@ -5946,7 +5967,7 @@ def refresh_all(db_path, sports=None):
     # plus soccer grading, DK public-betting-trends splits and nflverse snaps/injuries/matchups
     try:
         import jerry_signals as _jsig
-        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row; _c.execute('pragma busy_timeout=60000')
         try:
             res["LEARN"] = _jsig.run(_c, datetime.now(UTC))
         finally:
@@ -5982,7 +6003,7 @@ def refresh_all(db_path, sports=None):
     # NBA/NHL box scores: grade their props, fill the roster cache, store results
     try:
         import jerry_feeds as _jf
-        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row; _c.execute('pragma busy_timeout=60000')
         try:
             res["FEEDS"] = _jf.run(_c, datetime.now(UTC))
         finally:
@@ -5992,7 +6013,7 @@ def refresh_all(db_path, sports=None):
     # master engine: ESPN injury reports + recent schedules (rest / back-to-backs)
     try:
         import kronos_master as _km
-        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row; _c.execute('pragma busy_timeout=60000')
         try:
             res["ROSTER"] = _km.refresh(_c, datetime.now(UTC))
         finally:
@@ -6002,7 +6023,7 @@ def refresh_all(db_path, sports=None):
     # soccer model (EPL + UCL): ESPN data top-up, refit every 6h, model rows + spins + paper rows
     try:
         import kronos_soccer as _ks
-        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row; _c.execute('pragma busy_timeout=60000')
         try:
             res["SOCCER"] = _ks.refresh(_c, datetime.now(UTC), L=L, jr=sys.modules.get("jerry_reason"))
         finally:
@@ -6429,7 +6450,20 @@ def _desk_db():
 
 def _drops_con():
     c = sqlite3.connect(_desk_db(), timeout=60); c.row_factory = sqlite3.Row
+    try:
+        c.execute("pragma busy_timeout=60000")
+    except Exception:                                                 # noqa: BLE001
+        pass
     return c
+
+
+# WAL lets the desk keep reading while the new KRONOS jobs write (2026-11-01: 'database is locked').
+try:
+    _wc = sqlite3.connect(_desk_db(), timeout=60)
+    print(f"[boot] desk.db journal mode: {_wc.execute('pragma journal_mode=WAL').fetchone()[0]}", flush=True)
+    _wc.close()
+except Exception as _e:                                               # noqa: BLE001
+    print(f"[boot] WAL not set: {_e}", flush=True)
 
 
 def _dropping_block():
