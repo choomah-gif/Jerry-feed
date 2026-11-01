@@ -4314,12 +4314,18 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
             hrs = None
         note = (f"KRONOS ledger | grade {grade} | {kind} ({mver}) | " + "; ".join(why) +
                 f" | EV {ev_pct * 100:+.1f}% at {book}" + (f" | {', '.join(tags)}" if tags else ""))
+        try:
+            import kronos_master as _km
+            ctx = _km.event_context(con, ev)
+            note += f" | roster/schedule: {ctx['text']}" if ctx.get("text") else " | roster/schedule: nothing flagged"
+        except Exception:                                      # noqa: BLE001
+            pass
         con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price,
                        book, stake, model_prob, note, paper, signals, model_version, hours_to_start, edge, fair_prob,
                        evidence_kind, logged_call, sharp_flag, card_tags)
                        values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,2,?,?,?,?,?,?,?,?,?)""",
                     (_iso(now), ev["sport"], ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], market, sel, "",
-                     line, price, book, stake, round(mp[sel], 4) if has_model else round(fp[sel], 4), note[:300],
+                     line, price, book, stake, round(mp[sel], 4) if has_model else round(fp[sel], 4), note[:600],
                      signals, f"{VERSION}+{mver}", hrs, round(edge, 4), round(fp[sel], 4), "ledger",
                      f"Grade {grade}", (sig or {}).get("label"), json.dumps({"grade": grade, "kind": kind, "tags": tags})))
         n += 1
@@ -4555,7 +4561,7 @@ def install(js):
     def _graded_rows(con):
         rows, seen = [], {}
         for b in con.execute("""select result, fair_prob, model_prob, price, clv_pp, signals, sport, market, evidence_kind,
-                                       hours_to_start, event_id, selection, coalesce(player,'') player
+                                       hours_to_start, event_id, selection, coalesce(player,'') player, graded_ts
                                 from bets where paper in (1, 2) and result in ('W','L') and signals is not null
                                 order by (evidence_kind='ledger') desc, id"""):
             key = (b["event_id"], b["market"], b["selection"], b["player"])
@@ -4642,6 +4648,547 @@ def feed_block(con, now=None, L=None):
     except Exception as e:                                     # noqa: BLE001
         lines.append(f"  ledger report unavailable ({str(e)[:100]})")
     return "\n".join(lines) + "\n"
+'''
+
+_MASTER_SRC = r'''"""
+kronos_master — the shared KRONOS engine, batch 1 (master-v1, 2026-11-01).
+
+One rulebook and one learning loop for every sport. This batch adds:
+  * Roster layer: ESPN injury reports for NFL, NBA, NHL (MLB when tracked), refreshed hourly, matched to
+    each event. Signals out_diff (opponent outs minus our outs), out_total. Names go into the pick note.
+  * Schedule layer: each team's recent games from ESPN scoreboards -> rest days, back-to-backs.
+    Signals rest_diff, rest_min, b2b_flag.
+  * Learning upgrades: autopsy covers the ledger (paper=2) and is split by sport; a decay check demotes a
+    graduated signal whose last-60-day effect has faded; a layer scorecard shows, for every signal, the
+    win rate and CLV when it is high vs low; a mistake memory turns repeating losing patterns
+    (sport x market x flag, n>=20, ROI < -10%, CLV < -1pp) into candidate rules on probation, never
+    applied automatically.
+  * Backtest harness (soccer first): football-data.co.uk seasons with Pinnacle closing odds, walk-forward
+    weekly refits, model vs market log loss and CLV of model picks. Runs nightly; /api/backtest?sport=EPL.
+  * Rulebook: the universal decision rules, printed in the feed so every report quotes the same ones.
+The matchup layer (player vs defender / scheme) is batch 2 and is NOT in this file.
+"""
+import csv, io, json, math, os, re
+from datetime import datetime, timezone, timedelta, date
+
+UTC = timezone.utc
+VERSION = "master-v1-2026-11-01"
+ESPN = {"NFL": "football/nfl", "NBA": "basketball/nba", "NHL": "hockey/nhl", "MLB": "baseball/mlb"}
+NEW_SIGNALS = ["out_diff", "out_total", "rest_diff", "rest_min", "b2b_flag"]
+OUT_STATUSES = ("out", "doubtful", "injured reserve", "ir", "suspension", "suspended")
+RULEBOOK = [
+    "R1 Market first: Pinnacle's de-vigged price is the baseline; the model moves off it only where the ledger shows it has earned to.",
+    "R2 Every tracked match gets a pick in every game-line market, logged 90 min before start. Never 'no bet'; no line = zero-stake pick.",
+    "R3 Grades: A 1u (edge >= 5%), B 0.5u (>= 3%), C 0.25u (>= 1.5%), D 0.1u. Unvalidated models capped at B; gaps > 8% capped at C (check news).",
+    "R4 Prices: best of DraftKings / FanDuel / Fanatics at the same line; otherwise Pinnacle, marked 'no CT price'. Decimal odds only.",
+    "R5 Every signal starts at weight 0. It graduates after 20 graded picks with a clear effect (|z| >= 2) against the market baseline, and is demoted when its last 60 days fade.",
+    "R6 Closing line value judges a pick before the result does. A model earns weight after 150 graded picks that beat the close.",
+    "R7 Dropping odds: only a sharp-led drop is evidence; retail-only drops are public money; priced-in drops are not chased; act on stale CT prices only.",
+    "R8 Every pick states which layers drove it (market, team strength, roster, matchup, game flow) and what each one lacked.",
+    "R9 Repeating losing patterns become candidate rules on probation (mistake memory); nothing is applied until it is proven.",
+    "R10 Soccer reports use Sports Mole previews; soccer 1X2 settles on 90 minutes; props need confirmed lineups first.",
+]
+
+
+def _iso(t):
+    return t.isoformat(timespec="seconds")
+
+
+def _get(url, timeout=20):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.json()
+
+
+def _match(a, b):
+    try:
+        import kronos_ledger as kl
+        return kl._match(a, b)
+    except Exception:                                          # noqa: BLE001
+        return 1.0 if str(a).lower() == str(b).lower() else 0.0
+
+
+def ensure(con):
+    con.executescript("""
+    create table if not exists injuries(sport text, team text, player text, status text, detail text, ts text);
+    create index if not exists injuries_sport on injuries(sport, team);
+    create table if not exists team_games(sport text, team text, game_date text, opponent text, home int,
+        primary key(sport, team, game_date));
+    create table if not exists master_fetch(k text primary key, ts text);
+    """)
+
+
+# --------------------------------------------------------------------------- roster layer
+def pull_injuries(con, sport, get=_get):
+    js = get(f"https://site.api.espn.com/apis/site/v2/sports/{ESPN[sport]}/injuries")
+    rows = []
+    for team in js.get("injuries", []) or []:
+        tname = (team.get("team") or {}).get("displayName") or team.get("displayName", "")
+        for inj in team.get("injuries", []) or []:
+            ath = inj.get("athlete") or {}
+            det = inj.get("details") or {}
+            rows.append((sport, tname, ath.get("displayName", ""), str(inj.get("status", "")),
+                         str(det.get("type") or det.get("detail") or inj.get("shortComment") or "")[:120]))
+    now = _iso(datetime.now(UTC))
+    con.execute("delete from injuries where sport=?", (sport,))
+    con.executemany("insert into injuries values(?,?,?,?,?,?)", [r + (now,) for r in rows])
+    con.execute("insert or replace into master_fetch values(?,?)", (f"inj:{sport}", now))
+    con.commit()
+    return len(rows)
+
+
+def team_outs(con, sport, team_name):
+    """Players listed Out / Doubtful / IR for the team that best matches this name."""
+    teams = [r[0] for r in con.execute("select distinct team from injuries where sport=?", (sport,))]
+    if not teams:
+        return None
+    best, sc = None, 0.0
+    for t in teams:
+        s = _match(team_name, t)
+        if s > sc:
+            best, sc = t, s
+    if sc < 0.5:
+        return None
+    outs, q = [], []
+    for r in con.execute("select player, status, detail from injuries where sport=? and team=?", (sport, best)):
+        st = str(r[1]).lower()
+        if any(k in st for k in OUT_STATUSES):
+            outs.append(r[0])
+        elif "quest" in st or "day" in st or "gtd" in st:
+            q.append(r[0])
+    return {"team": best, "out": outs, "questionable": q}
+
+
+# --------------------------------------------------------------------------- schedule layer
+def pull_schedule(con, sport, days_back=10, get=_get):
+    """Recent completed games per team (for rest days / back-to-backs), one ESPN call per day."""
+    now = datetime.now(UTC)
+    last = con.execute("select ts from master_fetch where k=?", (f"sched:{sport}",)).fetchone()
+    start = (now - timedelta(days=days_back)).date()
+    if last:
+        start = max(start, (datetime.fromisoformat(last[0]) - timedelta(days=2)).date())
+    d, calls = start, 0
+    while d <= now.date():
+        try:
+            js = get(f"https://site.api.espn.com/apis/site/v2/sports/{ESPN[sport]}/scoreboard?dates={d.strftime('%Y%m%d')}")
+            calls += 1
+            for ev in js.get("events", []):
+                comp = (ev.get("competitions") or [{}])[0]
+                st = (comp.get("status") or {}).get("type", {})
+                if not st.get("completed"):
+                    continue
+                t = {c.get("homeAway"): (c.get("team") or {}).get("displayName", "") for c in comp.get("competitors", [])}
+                gd = str(ev.get("date", ""))[:10]
+                if "home" in t and "away" in t:
+                    con.execute("insert or replace into team_games values(?,?,?,?,?)", (sport, t["home"], gd, t["away"], 1))
+                    con.execute("insert or replace into team_games values(?,?,?,?,?)", (sport, t["away"], gd, t["home"], 0))
+        except Exception:                                      # noqa: BLE001
+            pass
+        d += timedelta(days=1)
+    con.execute("insert or replace into master_fetch values(?,?)", (f"sched:{sport}", _iso(now)))
+    con.commit()
+    return calls
+
+
+def rest_days(con, sport, team_name, commence):
+    teams = [r[0] for r in con.execute("select distinct team from team_games where sport=?", (sport,))]
+    best, sc = None, 0.0
+    for t in teams:
+        s = _match(team_name, t)
+        if s > sc:
+            best, sc = t, s
+    if sc < 0.5:
+        return None
+    try:
+        day = datetime.fromisoformat(str(commence).replace("Z", "+00:00")).astimezone(timezone(timedelta(hours=-5))).date()
+    except Exception:                                          # noqa: BLE001
+        return None
+    r = con.execute("select max(game_date) from team_games where sport=? and team=? and game_date<?",
+                    (sport, best, day.isoformat())).fetchone()
+    if not r or not r[0]:
+        return None
+    return (day - date.fromisoformat(r[0])).days
+
+
+def event_context(con, ev):
+    """Roster + schedule read for an event: {'text':..., 'home':{...}, 'away':{...}}."""
+    sp = ev["sport"]
+    out = {"home": {}, "away": {}, "text": ""}
+    if sp not in ESPN:
+        return out
+    bits = []
+    for side in ("home", "away"):
+        o = team_outs(con, sp, ev[side])
+        rd = rest_days(con, sp, ev[side], ev["commence"])
+        out[side] = {"out": (o or {}).get("out", []), "q": (o or {}).get("questionable", []), "rest": rd}
+        if o and (o["out"] or o["questionable"]):
+            s = f"{ev[side]}: out {', '.join(o['out'][:4])}" if o["out"] else f"{ev[side]}:"
+            if len(o["out"]) > 4:
+                s += f" +{len(o['out']) - 4}"
+            if o["questionable"]:
+                s += f"; questionable {', '.join(o['questionable'][:3])}"
+            bits.append(s)
+        if rd is not None and rd <= 1:
+            bits.append(f"{ev[side]} on a back-to-back" if rd == 1 else f"{ev[side]} played today")
+    out["text"] = "; ".join(bits)
+    return out
+
+
+def side_signals(con, ev, market, outcome):
+    """The five roster/schedule signals, relative to the picked side (totals: team-neutral versions)."""
+    ctx = event_context(con, ev)
+    h, a = ctx["home"], ctx["away"]
+    oh, oa = len(h.get("out") or []), len(a.get("out") or [])
+    rh, ra = h.get("rest"), a.get("rest")
+    have_out = bool(h or a) and ev["sport"] in ESPN and con.execute("select 1 from injuries where sport=? limit 1", (ev["sport"],)).fetchone()
+    sig = {"out_total": (oh + oa) if have_out else None,
+           "rest_min": min(x for x in (rh, ra) if x is not None) if (rh is not None or ra is not None) else None,
+           "out_diff": None, "rest_diff": None, "b2b_flag": None}
+    if market in ("h2h", "spreads") and outcome in (ev["home"], ev["away"]):
+        mine_h = outcome == ev["home"]
+        if have_out:
+            sig["out_diff"] = (oa - oh) if mine_h else (oh - oa)
+        mine, theirs = (rh, ra) if mine_h else (ra, rh)
+        if rh is not None and ra is not None:
+            sig["rest_diff"] = mine - theirs
+        if mine is not None and mine <= 1:
+            sig["b2b_flag"] = 1
+        elif theirs is not None and theirs <= 1:
+            sig["b2b_flag"] = -1
+        elif mine is not None and theirs is not None:
+            sig["b2b_flag"] = 0
+    return sig, ctx
+
+
+def refresh(con, now=None, get=_get):
+    """Hourly: injuries for every ESPN sport, recent schedules."""
+    ensure(con)
+    now = now or datetime.now(UTC)
+    st = {}
+    for sp in ESPN:
+        if not con.execute("select 1 from events where sport=? and commence>? limit 1", (sp, _iso(now - timedelta(days=1)))).fetchone():
+            continue
+        try:
+            st[sp] = {"injuries": pull_injuries(con, sp, get), "sched_calls": pull_schedule(con, sp, get=get)}
+        except Exception as e:                                 # noqa: BLE001
+            st[sp] = f"error: {str(e)[:80]}"
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("master_status", json.dumps({"ts": _iso(now), **st})[:1500]))
+    con.commit()
+    return st
+
+
+# --------------------------------------------------------------------------- learning upgrades
+def autopsy(con, days=14):
+    """Every graded paper bet (model rows and ledger rows) sorted into a cause, overall and by sport."""
+    since = _iso(datetime.now(UTC) - timedelta(days=days))
+    causes, by_sport = {}, {}
+    for b in con.execute("""select * from bets where paper in (1,2) and result in ('W','L') and graded_ts>?""", (since,)):
+        try:
+            sg = json.loads(b["signals"] or "{}")
+        except Exception:                                      # noqa: BLE001
+            sg = {}
+        note = str(b["note"] or "")
+        if b["result"] == "W":
+            c = "win: value held" if (b["clv_pp"] or 0) >= 0 else "win: despite losing value"
+        elif b["clv_pp"] is not None and b["clv_pp"] < -1.0:
+            c = "loss: bad price (lost value to the close)"
+        elif sg.get("role_change") == 1 or (sg.get("snap_pct") is not None and sg["snap_pct"] < 40):
+            c = "loss: role / minutes"
+        elif sg.get("b2b_flag") == 1:
+            c = "loss: schedule spot (back-to-back)"
+        elif (sg.get("out_diff") or 0) < 0:
+            c = "loss: roster (more outs than the opponent)"
+        elif "settled" in note and b["line"] is not None and re.search(r"settled ([\d.]+) vs", note):
+            v = float(re.search(r"settled ([\d.]+) vs", note).group(1))
+            c = "loss: narrow (variance)" if abs(v - float(b["line"])) <= max(1.0, 0.1 * abs(float(b["line"]))) else "loss: clear miss"
+        else:
+            c = "loss: other / game script"
+        causes[c] = causes.get(c, 0) + 1
+        d = by_sport.setdefault(b["sport"], {})
+        d[c] = d.get(c, 0) + 1
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("autopsy_by_sport", json.dumps(by_sport)))
+    con.commit()
+    return causes
+
+
+def layer_scorecard(con, js):
+    """For each signal: picks, win rate and CLV when the signal is above its median vs below."""
+    rows = js._graded_rows(con)
+    out = {}
+    for k in js.SIGNALS:
+        vals = [(r[2].get(k), r[0], r[3]["clv_pp"]) for r in rows if r[2].get(k) is not None]
+        if len(vals) < 10:
+            out[k] = {"n": len(vals)}
+            continue
+        xs = sorted(v[0] for v in vals)
+        med = xs[len(xs) // 2]
+        hi = [v for v in vals if v[0] > med]; lo = [v for v in vals if v[0] <= med]
+        if not hi or not lo:
+            out[k] = {"n": len(vals), "note": "no spread"}
+            continue
+        def summ(g):
+            clv = [v[2] for v in g if v[2] is not None]
+            return {"n": len(g), "win": round(sum(v[1] for v in g) / len(g), 3),
+                    "clv": round(sum(clv) / len(clv), 2) if clv else None}
+        out[k] = {"n": len(vals), "median": round(med, 3) if isinstance(med, float) else med, "high": summ(hi), "low": summ(lo)}
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("layer_scorecard", json.dumps(out)))
+    con.commit()
+    return out
+
+
+def decay_check(con, js, weights, days=60):
+    """Demote a graduated signal whose effect over the last `days` has faded (|z| < 1)."""
+    since = _iso(datetime.now(UTC) - timedelta(days=days))
+    rows = [r for r in js._graded_rows(con) if (r[3]["graded_ts"] or "") > since] if js._graded_rows(con) else []
+    status = weights.get("status", {})
+    changed = []
+    for k, st in list(status.items()):
+        if st != "graduated":
+            continue
+        sub = [r for r in rows if r[2].get(k) is not None]
+        if len(sub) < js.GRADUATE_N:
+            continue
+        try:
+            w1, se1 = js._fit(sub, [k], weights["stats"], l2=1.0)
+            z = w1[k] / se1[k] if se1[k] not in (0, float("inf")) else 0.0
+        except Exception:                                      # noqa: BLE001
+            continue
+        if abs(z) < 1.0:
+            status[k] = f"demoted: faded over last {days}d (z {z:+.1f})"
+            weights["weights"][k] = 0.0
+            changed.append(k)
+    if changed:
+        js._meta(con, "signal_weights", weights)
+    return changed
+
+
+def mistake_memory(con):
+    """Repeating losing patterns -> candidate rules on probation (reported, never applied)."""
+    pats = {}
+    for b in con.execute("""select sport, market, result, price, clv_pp, signals, card_tags, logged_call from bets
+                            where paper in (1,2) and result in ('W','L')"""):
+        try:
+            sg = json.loads(b["signals"] or "{}")
+        except Exception:                                      # noqa: BLE001
+            sg = {}
+        flags = []
+        if sg.get("is_fav") is not None:
+            flags.append("favorite" if sg["is_fav"] else "underdog")
+        if sg.get("is_home") is not None:
+            flags.append("home" if sg["is_home"] else "away")
+        if sg.get("b2b_flag") == 1:
+            flags.append("on back-to-back")
+        if (sg.get("hours") or 0) >= 6:
+            flags.append("taken 6h+ early")
+        if sg.get("pin_led") == -1:
+            flags.append("retail-only drop")
+        kind = "props" if str(b["market"]).startswith("player_") else b["market"]
+        for f in flags:
+            k = (b["sport"], kind, f)
+            p = pats.setdefault(k, {"n": 0, "w": 0, "pnl": 0.0, "clv": [], "imp": []})
+            p["n"] += 1; p["w"] += b["result"] == "W"
+            p["pnl"] += (float(b["price"]) - 1) if b["result"] == "W" else -1.0
+            if b["clv_pp"] is not None:
+                p["clv"].append(b["clv_pp"])
+            if b["price"]:
+                p["imp"].append(1 / float(b["price"]))
+    rules = []
+    for (sp, mk, f), p in pats.items():
+        if p["n"] < 20:
+            continue
+        roi = p["pnl"] / p["n"]
+        clv = sum(p["clv"]) / len(p["clv"]) if p["clv"] else None
+        if roi < -0.10 and (clv is None or clv < -1.0):
+            rules.append({"rule": f"{sp} {mk} picks that are {f}", "n": p["n"], "record": f"{p['w']}-{p['n'] - p['w']}",
+                          "roi": round(roi, 3), "clv": None if clv is None else round(clv, 2),
+                          "status": "candidate: review before any action"})
+    rules.sort(key=lambda r: r["roi"])
+    con.execute("insert or replace into meta(k,v) values(?,?)", ("candidate_rules", json.dumps(rules[:12])))
+    con.commit()
+    return rules
+
+
+def install(js):
+    """Wrap jerry_signals: new signals in capture, ledger-aware autopsy, decay check after every weight fit."""
+    if js is None or getattr(js, "_master_installed", False):
+        return False
+    for k in NEW_SIGNALS:
+        if k not in js.SIGNALS:
+            js.SIGNALS.append(k)
+    _cap = js.capture
+
+    def capture(con, ev, market, outcome, player, line, price, fair, extra=None):
+        s = _cap(con, ev, market, outcome, player, line, price, fair, extra)
+        try:
+            if not player:
+                sig, _ctx = side_signals(con, ev, market, outcome)
+                s.update(sig)
+        except Exception:                                      # noqa: BLE001
+            pass
+        return s
+
+    js.capture = capture
+    js.autopsy = autopsy
+    _fit_w = js.fit_weights
+
+    def fit_weights(con, now):
+        out = _fit_w(con, now)
+        try:
+            ch = decay_check(con, js, out)
+            if ch:
+                out["demoted"] = ch
+            layer_scorecard(con, js)
+            mistake_memory(con)
+        except Exception:                                      # noqa: BLE001
+            pass
+        return out
+
+    js.fit_weights = fit_weights
+    js._master_installed = True
+    return True
+
+
+# --------------------------------------------------------------------------- backtest harness (soccer)
+FD = {"EPL": ("E0", "eng.1")}
+
+
+def _fd_csv(season, code, get_text):
+    return get_text(f"https://www.football-data.co.uk/mmz4281/{season}/{code}.csv")
+
+
+def _get_text(url, timeout=30):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.text
+
+
+def backtest_soccer(sport="EPL", seasons=("2425", "2526", "2627"), get_text=_get_text, model_weight=0.35):
+    """Walk-forward: refit weekly on everything before the week, predict the week, score vs Pinnacle closing.
+    Returns log loss (model, market, blend), model picks' CLV vs the close and flat-stake ROI at close."""
+    import sqlite3
+    import kronos_soccer as ks
+    code, league = FD[sport]
+    rows = []
+    for s in seasons:
+        try:
+            txt = _fd_csv(s, code, get_text)
+        except Exception:                                      # noqa: BLE001
+            continue
+        for r in csv.DictReader(io.StringIO(txt)):
+            try:
+                d = datetime.strptime(r["Date"], "%d/%m/%Y").date()
+                rows.append(dict(date=d, home=r["HomeTeam"], away=r["AwayTeam"], hg=float(r["FTHG"]), ag=float(r["FTAG"]),
+                                 hst=float(r["HST"]) if r.get("HST") else None, ast=float(r["AST"]) if r.get("AST") else None,
+                                 hc=float(r["HC"]) if r.get("HC") else None, ac=float(r["AC"]) if r.get("AC") else None,
+                                 oh=float(r["PSH"]), od=float(r["PSD"]), oa=float(r["PSA"]),
+                                 ch=float(r["PSCH"]), cd=float(r["PSCD"]), ca=float(r["PSCA"])))
+            except (KeyError, ValueError):
+                continue
+    rows.sort(key=lambda r: r["date"])
+    if len(rows) < 300:
+        return {"error": f"only {len(rows)} usable rows"}
+    con = sqlite3.connect(":memory:"); con.row_factory = sqlite3.Row
+    ks.ensure(con); con.execute("create table if not exists meta(k text primary key, v text)")
+    def put(r, i):
+        con.execute("insert or replace into soccer_matches values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (f"bt{i}", league, r["date"].isoformat(), r["home"], r["away"], r["hg"], r["ag"], r["hst"], r["ast"],
+                     None, None, r["hc"], r["ac"], 0, "FT", "bt"))
+    n_pred = 0; ll_m = ll_k = ll_b = 0.0; picks = []
+    i = 0
+    weeks = sorted({r["date"] - timedelta(days=r["date"].weekday()) for r in rows})
+    fed = 0
+    for wk in weeks:
+        # feed everything before this week
+        while fed < len(rows) and rows[fed]["date"] < wk:
+            put(rows[fed], fed); fed += 1
+        con.commit()
+        if fed < 200:
+            continue
+        model = ks.fit(con, datetime.combine(wk, datetime.min.time(), UTC))
+        if not model:
+            continue
+        week_rows = [r for r in rows if wk <= r["date"] < wk + timedelta(days=7)]
+        for r in week_rows:
+            if r["home"] not in model["att"] or r["away"] not in model["att"]:
+                continue
+            lh, la, _n = ks.predict(model, r["home"], r["away"], r["date"].isoformat())
+            ph, pd, pa = ks.p_1x2(ks.score_matrix(lh, la))
+            fo = ks._devig([r["oh"], r["od"], r["oa"]]); fc = ks._devig([r["ch"], r["cd"], r["ca"]])
+            res = 0 if r["hg"] > r["ag"] else 1 if r["hg"] == r["ag"] else 2
+            pm = [ph, pd, pa]; pb = [model_weight * m + (1 - model_weight) * k for m, k in zip(pm, fc)]
+            eps = 1e-6
+            ll_m -= math.log(max(pm[res], eps)); ll_k -= math.log(max(fc[res], eps)); ll_b -= math.log(max(pb[res], eps))
+            n_pred += 1
+            # model pick vs the opening price: which side has edge >= 2% at open, measured against the close
+            edges = [m - o for m, o in zip(pm, fo)]
+            j = max(range(3), key=lambda x: edges[x])
+            if edges[j] >= 0.02:
+                open_price = [r["oh"], r["od"], r["oa"]][j]; close_fair = fc[j]
+                clv = (close_fair - 1 / open_price) * 100
+                pnl = (open_price - 1) if res == j else -1.0
+                picks.append((clv, pnl))
+    con.close()
+    if not n_pred:
+        return {"error": "nothing predicted"}
+    out = {"sport": sport, "seasons": list(seasons), "matches": n_pred,
+           "log_loss": {"model": round(ll_m / n_pred, 4), "market_close": round(ll_k / n_pred, 4), "blend": round(ll_b / n_pred, 4)},
+           "picks_vs_open": {"n": len(picks), "clv_avg_pp": round(sum(p[0] for p in picks) / len(picks), 2) if picks else None,
+                             "beat_close": round(sum(p[0] > 0 for p in picks) / len(picks), 3) if picks else None,
+                             "roi_flat": round(sum(p[1] for p in picks) / len(picks), 3) if picks else None},
+           "read": None, "ts": _iso(datetime.now(UTC))}
+    m, k, b = out["log_loss"]["model"], out["log_loss"]["market_close"], out["log_loss"]["blend"]
+    out["read"] = ("blend beats the closing market" if b < k else "market alone is still better than the blend") + \
+                  f"; raw model {'worse' if m > k else 'better'} than market by {abs(m - k):.4f} log loss"
+    return out
+
+
+def run_backtests(con, now=None):
+    now = now or datetime.now(UTC)
+    res = {}
+    for sp in FD:
+        try:
+            res[sp] = backtest_soccer(sp)
+        except Exception as e:                                 # noqa: BLE001
+            res[sp] = {"error": str(e)[:120]}
+        con.execute("insert or replace into meta(k,v) values(?,?)", (f"backtest_{sp}", json.dumps(res[sp])))
+    con.commit()
+    return res
+
+
+# --------------------------------------------------------------------------- feed
+def feed_block(con, js=None):
+    L = ["", "", f"KRONOS MASTER ({VERSION}: shared rulebook, roster + schedule layers, learning upgrades, backtests):"]
+    L.append("  rulebook: " + " | ".join(RULEBOOK))
+    try:
+        st = con.execute("select v from meta where k='master_status'").fetchone()
+        L.append(f"  roster/schedule data: {st[0] if st else 'not pulled yet'}")
+        n = con.execute("select sport, count(*) from injuries group by sport").fetchall()
+        if n:
+            L.append("  injury lists: " + ", ".join(f"{r[0]} {r[1]} players" for r in n))
+        bs = con.execute("select v from meta where k='autopsy_by_sport'").fetchone()
+        if bs:
+            L.append(f"  autopsy by sport (14d): {bs[0][:600]}")
+        cr = con.execute("select v from meta where k='candidate_rules'").fetchone()
+        if cr:
+            rules = json.loads(cr[0])
+            L.append("  mistake memory: " + ("; ".join(f"{r['rule']} {r['record']} ROI {r['roi']:+.2f} CLV {r['clv']}" for r in rules[:6]) if rules else "no repeating losing pattern with n>=20 yet"))
+        sc = con.execute("select v from meta where k='layer_scorecard'").fetchone()
+        if sc:
+            s = json.loads(sc[0])
+            parts = []
+            for k, v in s.items():
+                if v.get("high") and v.get("low"):
+                    parts.append(f"{k}: high {v['high']['win']:.0%}/{v['high']['clv']}pp vs low {v['low']['win']:.0%}/{v['low']['clv']}pp (n{v['n']})")
+            L.append("  layer scorecard (win rate / CLV when signal high vs low): " + ("; ".join(parts) if parts else "needs 10+ graded picks per signal"))
+        for sp in FD:
+            bt = con.execute("select v from meta where k=?", (f"backtest_{sp}",)).fetchone()
+            if bt:
+                L.append(f"  backtest {sp}: {bt[0][:500]}")
+    except Exception as e:                                     # noqa: BLE001
+        L.append(f"  master report unavailable ({str(e)[:100]})")
+    return "\n".join(L) + "\n"
 '''
 
 _DROPS_SRC = r'''"""
@@ -5133,10 +5680,12 @@ try:
     kronos_soccer = _register("kronos_soccer", _SOCCER_SRC)
     kronos_ledger = _register("kronos_ledger", _LEDGER_SRC)
     kronos_ledger.install(jerry_signals)
+    kronos_master = _register("kronos_master", _MASTER_SRC)
+    kronos_master.install(jerry_signals)
     # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
     jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
                                    ("UCL", "margin"): 1.4, ("UCL", "total"): 1.5})
-    print("[boot] KRONOS soccer model + prediction ledger registered", flush=True)
+    print(f"[boot] KRONOS soccer model + prediction ledger + master engine registered ({len(jerry_signals.SIGNALS)} signals)", flush=True)
     print("[boot] KRONOS: reasoning + grading + feeds + nba + splits + signals modules registered", flush=True)
 except Exception:
     traceback.print_exc()
@@ -5360,6 +5909,16 @@ def refresh_all(db_path, sports=None):
             _c.close()
     except Exception as e:   # noqa: BLE001
         res["FEEDS"] = f"error: {e}"
+    # master engine: ESPN injury reports + recent schedules (rest / back-to-backs)
+    try:
+        import kronos_master as _km
+        _c = sqlite3.connect(db_path, timeout=60); _c.row_factory = sqlite3.Row
+        try:
+            res["ROSTER"] = _km.refresh(_c, datetime.now(UTC))
+        finally:
+            _c.close()
+    except Exception as e:   # noqa: BLE001
+        res["ROSTER"] = f"error: {e}"
     # soccer model (EPL + UCL): ESPN data top-up, refit every 6h, model rows + spins + paper rows
     try:
         import kronos_soccer as _ks
@@ -5750,7 +6309,7 @@ def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text() + _ledger_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
+    txt = _summary_text() + _ledger_block() + _master_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
@@ -5903,6 +6462,42 @@ def _ledger_loop():
 
 threading.Thread(target=_ledger_loop, daemon=True).start()
 
+
+# ---------- master engine (2026-11-01): feed block + nightly backtests
+def _master_block():
+    try:
+        import kronos_master as _km
+        c = _drops_con()
+        try:
+            return _km.feed_block(c, sys.modules.get("jerry_signals"))
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nKRONOS MASTER: unavailable ({str(e)[:200]})\n"
+
+
+def _backtest_loop():
+    time.sleep(900)
+    last_day = None
+    while True:
+        try:
+            today = datetime.now(UTC).date()
+            if last_day != today and (last_day is None or datetime.now(UTC).hour >= 9):
+                import kronos_master as _km
+                c = _drops_con()
+                try:
+                    r = _km.run_backtests(c)
+                    print(f"[backtest] {json.dumps(r)[:300]}", flush=True)
+                finally:
+                    c.close()
+                last_day = today
+        except Exception as e:                                        # noqa: BLE001
+            print(f"[backtest] failed: {e}", flush=True)
+        time.sleep(1800)
+
+
+threading.Thread(target=_backtest_loop, daemon=True).start()
+
 # Desk routes /dropping and /api/dropping, added without editing jerry_desk.py: the desk builds
 # its server from http.server.ThreadingHTTPServer, so wrap that class to put a route layer in
 # front of the desk's own handler (and add a Dropping odds link to the home page).
@@ -5916,6 +6511,24 @@ class _KronosServer(_OrigTHS):
         class _H(handler):
             def do_GET(self):
                 p = _up.urlparse(self.path).path
+                if p in ("/api/backtest", "/api/roster", "/api/rulebook"):
+                    try:
+                        import kronos_master as _km
+                        c = _drops_con()
+                        try:
+                            if p == "/api/rulebook":
+                                return self.send(json.dumps(_km.RULEBOOK))
+                            if p == "/api/roster":
+                                rows = [dict(r) for r in c.execute("select * from injuries order by sport, team, player")]
+                                return self.send(json.dumps(rows))
+                            qs = _up.parse_qs(_up.urlparse(self.path).query)
+                            sp = (qs.get("sport") or ["EPL"])[0]
+                            r = c.execute("select v from meta where k=?", (f"backtest_{sp}",)).fetchone()
+                            return self.send(r[0] if r else json.dumps({"status": "no backtest stored yet for " + sp}))
+                        finally:
+                            c.close()
+                    except Exception as e:                            # noqa: BLE001
+                        return self.send(f"master error: {e}", "text/plain")
                 if p in ("/dropping", "/api/dropping"):
                     try:
                         import kronos_drops as _kd
