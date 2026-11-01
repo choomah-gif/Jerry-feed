@@ -1541,6 +1541,19 @@ def grade_nfl_props(con, season, week, now_iso, limit=500):
     # prop is settled against whichever week's box scores happen to be loaded,
     # which silently produces a full ledger of meaningless results.
     pend = [b for b in pend if nfl_week_of(b["commence"]) == (season, week)]
+    # Only grade props whose game is over (kickoff + 4h). The week's stat file fills in game by game:
+    # on Sunday morning it holds Thursday's game only, and every Sunday player looked like a scratch
+    # and was voided (2026-11-01: 169 false voids). Unplayed games stay pending.
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    _UTC = _tz.utc
+    _cut = _dt.now(_UTC) - _td(hours=4)
+    def _done(c):
+        try:
+            t = _dt.fromisoformat(str(c).replace("Z", "+00:00"))
+            return (t if t.tzinfo else t.replace(tzinfo=_UTC)) <= _cut
+        except Exception:                                   # noqa: BLE001
+            return False
+    pend = [b for b in pend if _done(b["commence"])]
     if not pend:
         return {"graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}
 
@@ -5786,6 +5799,28 @@ try:
     # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
     jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
                                    ("UCL", "margin"): 1.4, ("UCL", "total"): 1.5})
+    try:
+        _rc = sqlite3.connect(os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
+        _fix = []
+        for _id, _c, _g in _rc.execute("""select id, commence, graded_ts from bets where sport='NFL' and market like 'player_%'
+                                          and result='V' and graded_ts is not null""").fetchall():
+            try:
+                _ct = datetime.fromisoformat(str(_c).replace("Z", "+00:00")); _ct = _ct if _ct.tzinfo else _ct.replace(tzinfo=UTC)
+                _gt = datetime.fromisoformat(str(_g).replace("Z", "+00:00")); _gt = _gt if _gt.tzinfo else _gt.replace(tzinfo=UTC)
+                if _gt < _ct + timedelta(hours=3):
+                    _fix.append(_id)
+            except Exception:                                   # noqa: BLE001
+                pass
+        for _id in _fix:
+            _rc.execute("""update bets set result='pending', pnl=null, graded_ts=null,
+                           note=replace(note, ' | settled', ' | unvoided') where id=?""", (_id,))
+        _rc.execute("create table if not exists meta(k text primary key, v text)")
+        _rc.execute("insert or replace into meta(k,v) values(?,?)", ("nfl_false_void_repair",
+                    f"{datetime.now(UTC).isoformat(timespec='seconds')} reset {len(_fix)} props voided before their game ended"))
+        _rc.commit(); _rc.close()
+        print(f"[boot] NFL false-void repair: {len(_fix)} props back to pending", flush=True)
+    except Exception as _e:                                     # noqa: BLE001
+        print(f"[boot] NFL false-void repair skipped: {_e}", flush=True)
     print(f"[boot] KRONOS soccer model + prediction ledger + master engine registered ({len(jerry_signals.SIGNALS)} signals)", flush=True)
     print("[boot] KRONOS: reasoning + grading + feeds + nba + splits + signals modules registered", flush=True)
 except Exception:
