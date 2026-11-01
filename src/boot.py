@@ -6521,9 +6521,68 @@ def _dropping_block():
 # the result (the feed shows it). Steam alerts are off unless TELEGRAM_STEAM=1: one busy match
 # logged 139 steam events today, which would bury the dropping-odds alerts.
 if L is not None and hasattr(L, "telegram"):
+    # Health checks (2026-11-01): only problems you need to act on reach Telegram, in plain English,
+    # once per problem per 12h. Known, already-handled conditions stay in the feed only.
+    _HEALTH_RULES = [
+        # (pattern, alert?, plain-English text)
+        ("not a mounted volume", True, "Storage problem: the desk's data folder isn't on a saved volume, so a redeploy would wipe it. Check the Railway volume is attached to /data."),
+        ("model error", True, "A sport model crashed on its last run: {p}. KRONOS keeps logging market-model picks for that sport until it's fixed. Send me 'KRONOS check'."),
+        ("goalie parser broken", True, "NHL goalie feed is broken, so every NHL total is a Sit until it's fixed. Send me 'KRONOS check'."),
+        ("0 confirmed goalies", False, ""),
+        ("goalie feed has not been read", False, ""),
+        ("PAPER ONLY rows tagged Play", True, "A paper-only model produced a live Play call. Don't bet it. Send me 'KRONOS check'."),
+        ("prices present but the model produced 0 rows", True, "{p}. The model ran but made no predictions. Send me 'KRONOS check'."),
+        ("no prices on the board", False, ""),     # normal before lines are posted
+        ("edge above", False, ""),                 # handled: the ledger caps big gaps at grade C
+        ("DK splits: 0 rows", False, ""),
+        ("database is locked", None, "The desk's database was busy {n} times in the last 24 hours. It recovers on its own; tell me if this keeps coming."),
+    ]
+
+    def _health_filter(text):
+        lines = [l[2:].strip() for l in str(text).splitlines()[1:] if l.startswith("- ")]
+        try:
+            c = _drops_con()
+        except Exception:                                             # noqa: BLE001
+            return None
+        out = []
+        try:
+            now = datetime.now(UTC)
+            for p in lines:
+                rule = next((r for r in _HEALTH_RULES if r[0] in p), None)
+                if rule is None:
+                    alert, msg = True, f"{p}. Send me 'KRONOS check' if it repeats."
+                else:
+                    alert, msg = rule[1], rule[2]
+                if alert is None:              # count it; alert only when it keeps happening
+                    k = "tg_lock_seen"
+                    seen = [t for t in json.loads((c.execute("select v from meta where k=?", (k,)).fetchone() or ["[]"])[0])
+                            if datetime.fromisoformat(t) > now - timedelta(hours=24)]
+                    seen.append(now.isoformat(timespec="seconds"))
+                    c.execute("insert or replace into meta(k,v) values(?,?)", (k, json.dumps(seen[-50:])))
+                    alert = len(seen) >= 4
+                    msg = msg.format(n=len(seen))
+                if not alert:
+                    continue
+                key = "tg_health:" + rule[0] if rule else "tg_health:" + p[:60]
+                last = c.execute("select v from meta where k=?", (key,)).fetchone()
+                if last and datetime.fromisoformat(last[0]) > now - timedelta(hours=12):
+                    continue
+                c.execute("insert or replace into meta(k,v) values(?,?)", (key, now.isoformat(timespec="seconds")))
+                out.append("• " + msg.format(p=p))
+            c.commit()
+        finally:
+            c.close()
+        return ("KRONOS needs attention\n" + "\n".join(out)) if out else None
+
     def _tg(text):
         if str(text).startswith("STEAM") and os.environ.get("TELEGRAM_STEAM", "0") != "1":
             return False
+        if str(text).startswith("KRONOS HEALTH CHECK"):
+            if os.environ.get("TELEGRAM_HEALTH", "1") == "0":
+                return False
+            text = _health_filter(text)
+            if not text:
+                return False
         try:
             import kronos_drops as _kd
             c = _drops_con()
@@ -6544,10 +6603,14 @@ def _drops_loop():
         if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
             c = _drops_con()
             try:
+                if c.execute("select v from meta where k='telegram_status' and v like '% ok'").fetchone():
+                    raise StopIteration          # already connected once: no hello on every deploy
                 _kd.tg_send("KRONOS is connected. You'll get a message here when Pinnacle drops a price and a "
                             "CT book is still stale.\n" + DESK_URL + "/dropping", c)
             finally:
                 c.close()
+    except StopIteration:
+        pass
     except Exception as e:                                            # noqa: BLE001
         print(f"[drops] hello failed: {e}", flush=True)
     while True:
