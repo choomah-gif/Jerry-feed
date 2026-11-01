@@ -4219,6 +4219,7 @@ MARKETS = {"NFL": ("h2h", "spreads", "totals"), "NBA": ("h2h", "spreads", "total
 GRADES = ((0.05, "A", 1.0), (0.03, "B", 0.5), (0.015, "C", 0.25))
 D_STAKE = 0.1
 BIG_GAP = float(os.environ.get("LEDGER_BIG_GAP", "0.08"))
+NEW_BETS = []          # BET picks logged since the caller last drained this list (for Telegram)
 CAP_GRADE = os.environ.get("LEDGER_CAP_GRADE", "B")
 ESPN = {"NFL": "football/nfl", "NBA": "basketball/nba", "NHL": "hockey/nhl", "MLB": "baseball/mlb",
         "EPL": "soccer/eng.1", "UCL": "soccer/uefa.champions", "UFC": "mma/ufc"}
@@ -4356,42 +4357,59 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
         mp = model_probs_for(con, ev["event_id"], market, outs)
         has_model = len(mp) == len(outs)
         why = []
+        # price every side at its best CT price (Pinnacle if no CT price) and pick on EV at that price (2026-11-01)
+        quotes = {}
+        for o in outs:
+            q = best_ct(con, ev["event_id"], market, o[0], o[1])
+            quotes[o[0]] = (q["price"], q["book"], True) if q else (float(o[2]), o[3], False)
+        def _ev(o, use_model):
+            pr = quotes[o[0]][0]
+            return ((mp[o[0]] if use_model else fp[o[0]]) * pr) - 1
+        price_edges = [o for o in outs if quotes[o[0]][2] and _ev(o, False) >= 0.015]
         if has_model:
-            pick = max(outs, key=lambda o: mp[o[0]] - fp[o[0]])
+            pick = max(outs, key=lambda o: _ev(o, True))
             edge = mp[pick[0]] - fp[pick[0]]
             why.append(f"model {mp[pick[0]]:.1%} vs fair {fp[pick[0]]:.1%}")
             kind = "model"
+        elif price_edges:
+            pick = max(price_edges, key=lambda o: _ev(o, False))
+            edge = 0.0
+            why.append("no model row: CT price beats Pinnacle fair")
+            kind = "market"
         else:
-            # market model: the sharp side, else the favourite
             scores = {}
             for o in outs:
                 try:
-                    s = jr.sharp_signal(con, ev["event_id"], market, o[0]) if jr else {}
+                    s_ = jr.sharp_signal(con, ev["event_id"], market, o[0]) if jr else {}
                 except Exception:                              # noqa: BLE001
-                    s = {}
-                scores[o[0]] = (s.get("score") or 0, fp[o[0]])
+                    s_ = {}
+                scores[o[0]] = (s_.get("score") or 0, fp[o[0]])
             pick = max(outs, key=lambda o: scores[o[0]])
             edge = 0.0
             why.append(f"no model row: market model, {'sharp side' if scores[pick[0]][0] > 0 else 'market favourite'}")
             kind = "market"
         sel, line = pick[0], pick[1]
-        q = best_ct(con, ev["event_id"], market, sel, line)
-        tags = []
-        if q:
-            price, book = q["price"], q["book"]
-        else:
-            price, book = float(pick[2]), pick[3]
-            tags.append("no CT price")
-        grade, stake = grade_for(edge, has_model)
-        if has_model and edge > BIG_GAP and grade in ("A", "B"):
-            # the biggest model-vs-market gaps are usually missing information, not value (2026-10-27)
-            grade, stake = "C", dict((x[1], x[2]) for x in GRADES)["C"]
-            tags.append(f"big gap {edge:.0%}: check team news")
-        ev_pct = price * fp[sel] - 1
+        price, book, from_ct = quotes[sel]
+        tags = [] if from_ct else ["no CT price"]
         try:
             sig = jr.sharp_signal(con, ev["event_id"], market, sel) if jr else {}
         except Exception:                                      # noqa: BLE001
             sig = {}
+        try:
+            import kronos_edge as _ke
+            is_bet, bet_why, ev_mod, ev_mkt = _ke.bet_check(price, from_ct, fp[sel], mp.get(sel) if has_model else None,
+                                                            flag_label=(sig or {}).get("label", ""), gap=edge if has_model else None)
+            grade, stake = _ke.grade_from_ev(ev_mod if ev_mod is not None else -1, has_model, edge if has_model else None)
+        except Exception:                                      # noqa: BLE001
+            is_bet, bet_why, ev_mod, ev_mkt = False, "", None, price * fp[sel] - 1
+            grade, stake = grade_for(edge, has_model)
+        if has_model and edge > BIG_GAP:
+            tags.append(f"big gap {edge:.0%}: check team news")
+        ev_pct = price * fp[sel] - 1
+        if ev_mod is not None and has_model:
+            why.append(f"model EV {ev_mod:+.1%} at this price")
+        if is_bet:
+            why.append("BET: " + bet_why)
         signals = None
         if js is not None:
             try:
@@ -4421,7 +4439,13 @@ def log_event(con, ev, now, L=None, jr=None, js=None):
                     (_iso(now), ev["sport"], ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], market, sel, "",
                      line, price, book, stake, round(mp[sel], 4) if has_model else round(fp[sel], 4), note[:600],
                      signals, f"{VERSION}+{mver}", hrs, round(edge, 4), round(fp[sel], 4), "ledger",
-                     f"Grade {grade}", (sig or {}).get("label"), json.dumps({"grade": grade, "kind": kind, "tags": tags})))
+                     (f"BET · Grade {grade}" if is_bet else f"Grade {grade}"), (sig or {}).get("label"),
+                     json.dumps({"grade": grade, "kind": kind, "tags": tags, "bet": is_bet,
+                                 "ev_model": None if ev_mod is None else round(ev_mod, 4), "ev_market": round(ev_pct, 4)})))
+        if is_bet:
+            ln = "" if line is None else (f" {line:+g}" if market == "spreads" else f" {line:g}")
+            NEW_BETS.append(f"KRONOS BET: {ev['away']} @ {ev['home']} ({ev['sport']})\n{market}: {sel}{ln} at "
+                            f"{book} {price:.2f}, grade {grade} {stake:g}u\n{bet_why}")
         n += 1
     return n
 
@@ -4742,6 +4766,717 @@ def feed_block(con, now=None, L=None):
     except Exception as e:                                     # noqa: BLE001
         lines.append(f"  ledger report unavailable ({str(e)[:100]})")
     return "\n".join(lines) + "\n"
+'''
+
+_EDGE_SRC = r'''"""
+kronos_edge — where a Connecticut bettor's edge actually is (edge-v1, 2026-11-01).
+
+1. BET tier (rule in one place, used by the ledger, alt lines and the early scan):
+   a pick is a BET only when the price is at DraftKings / FanDuel / Fanatics and either
+     * the price beats Pinnacle's de-vigged fair by >= +1.5%  (a pure price edge), or
+     * the model's probability gives >= +2% EV at that price (props/alt lines >= +4%) and the price
+       is no worse than -1.5% against Pinnacle's fair (the model may not overrule the market by more),
+   and the picked side is not the public side and the model gap is under 8%. Grades are now set on EV
+   at the bettable price, not on the model's edge against fair.
+2. News trigger: ESPN injury lists for NFL / NBA / NHL every 10 minutes for teams playing in the next
+   4 hours. A player newly listed Out / Doubtful re-pulls that game's lines and props through the desk's
+   own pull code (credits accounted the normal way) and alerts any CT price left stale.
+3. Boost checker: send the Telegram bot "boost <bet> <odds>" (legs joined with +) and it replies with
+   Pinnacle's fair odds and the boost's EV. "bets" lists today's BET picks. "help" lists commands.
+4. Alternate lines (NFL, NBA): CT books' alternate spreads and totals priced off Pinnacle's main line
+   with a normal margin/total model; edges >= +4% are logged as paper picks and alerted.
+5. Early-week NFL scan: next week's games once lines are posted, logged as 'early' paper picks so their
+   closing line value shows whether early numbers are softer.
+6. Preflight: on boot, every external call and database write is tested once and reported.
+"""
+import json, math, os, re, time
+from datetime import datetime, timezone, timedelta
+
+UTC = timezone.utc
+VERSION = "edge-v1-2026-11-01"
+CT = ("draftkings", "fanduel", "fanatics")
+SHARP = ("pinnacle", "lowvig", "betonlineag")
+BOOKN = {"draftkings": "DraftKings", "fanduel": "FanDuel", "fanatics": "Fanatics", "pinnacle": "Pinnacle"}
+PRICE_EDGE = float(os.environ.get("BET_PRICE_EDGE", "0.015"))
+MODEL_EV_MAIN = float(os.environ.get("BET_MODEL_EV", "0.02"))
+MODEL_EV_PROP = float(os.environ.get("BET_MODEL_EV_PROP", "0.04"))
+MKT_FLOOR = float(os.environ.get("BET_MKT_FLOOR", "-0.015"))
+BIG_GAP = 0.08
+SD = {("NFL", "spreads"): 13.5, ("NFL", "totals"): 10.0, ("NBA", "spreads"): 12.0, ("NBA", "totals"): 17.5}
+ALT_MAX_DIST = {"NFL": 7.0, "NBA": 10.0}   # far-off alt lines are where the normal model is least reliable
+ALT_MIN_EV = float(os.environ.get("ALT_MIN_EV", "0.04"))
+ALT_MIN_EV_NFL = float(os.environ.get("ALT_MIN_EV_NFL", "0.06"))   # NFL key numbers (3, 7) make the normal model rougher
+ALT_MAX_CALLS_DAY = int(os.environ.get("ALT_MAX_CALLS_DAY", "60"))
+NEWS_MAX_PULLS_DAY = int(os.environ.get("NEWS_MAX_PULLS_DAY", "30"))
+ESPN = {"NFL": "football/nfl", "NBA": "basketball/nba", "NHL": "hockey/nhl"}
+OUT_WORDS = ("out", "doubtful", "injured reserve", "suspension", "suspended")
+
+
+def _iso(t):
+    return t.isoformat(timespec="seconds")
+
+
+def _ts(s):
+    t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    return t if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def _meta(con, k, v=None):
+    if v is None:
+        r = con.execute("select v from meta where k=?", (k,)).fetchone()
+        return r[0] if r else None
+    con.execute("insert or replace into meta(k,v) values(?,?)", (k, v))
+
+
+def _match(a, b):
+    try:
+        import kronos_ledger as kl
+        return kl._match(a, b)
+    except Exception:                                          # noqa: BLE001
+        return 1.0 if str(a).lower() == str(b).lower() else 0.0
+
+
+def ensure(con):
+    con.executescript("""
+    create table if not exists news_snap(sport text, team text, player text, status text, ts text,
+        primary key(sport, team, player));
+    create table if not exists edge_log(ts text, kind text, sport text, event_id text, text text);
+    create index if not exists edge_log_ts on edge_log(ts);
+    """)
+
+
+def log(con, kind, sport, eid, text):
+    con.execute("insert into edge_log values(?,?,?,?,?)", (_iso(datetime.now(UTC)), kind, sport, eid, str(text)[:600]))
+
+
+# --------------------------------------------------------------------------- the BET rule
+def grade_from_ev(ev, has_model, gap):
+    if not has_model:
+        g, st = ("C", 0.25) if ev >= PRICE_EDGE else ("D", 0.1)
+    elif ev >= 0.05:
+        g, st = "B", 0.5            # A is capped at B while the models are unvalidated
+    elif ev >= 0.03:
+        g, st = "B", 0.5
+    elif ev >= 0.015:
+        g, st = "C", 0.25
+    else:
+        g, st = "D", 0.1
+    if has_model and gap is not None and gap > BIG_GAP and g == "B":
+        g, st = "C", 0.25
+    return g, st
+
+
+def bet_check(price, from_ct, fair_p, model_p=None, prop=False, flag_label="", gap=None):
+    """Returns (is_bet, reason, ev_model, ev_market)."""
+    ev_mkt = fair_p * price - 1 if fair_p else None
+    ev_mod = (model_p * price - 1) if model_p is not None else ev_mkt
+    if not from_ct:
+        return False, "no CT price", ev_mod, ev_mkt
+    if "PUBLIC" in str(flag_label).upper():
+        return False, "public side", ev_mod, ev_mkt
+    if gap is not None and gap > BIG_GAP:
+        return False, "model gap over 8%: check news", ev_mod, ev_mkt
+    if ev_mkt is not None and ev_mkt >= PRICE_EDGE:
+        return True, f"price beats Pinnacle fair by {ev_mkt:+.1%}", ev_mod, ev_mkt
+    need = MODEL_EV_PROP if prop else MODEL_EV_MAIN
+    if model_p is not None and ev_mod >= need and (ev_mkt is None or ev_mkt >= MKT_FLOOR):
+        return True, f"model EV {ev_mod:+.1%} at this price, market {ev_mkt:+.1%}", ev_mod, ev_mkt
+    return False, "no edge at a CT price", ev_mod, ev_mkt
+
+
+# --------------------------------------------------------------------------- desk handle (reuse the desk's own pull code)
+def desk():
+    import sys
+    d = getattr(sys.modules.get("__main__"), "DESK", None)
+    if d is not None and hasattr(d, "pull_props"):
+        return d
+    import gc
+    for o in gc.get_objects():
+        try:
+            if type(o).__name__ == "Desk" and hasattr(o, "pull_props"):
+                return o
+        except Exception:                                      # noqa: BLE001
+            continue
+    return None
+
+
+def _sport_key(sport):
+    import sys
+    m = sys.modules.get("__main__")
+    try:
+        return m.SPORTS[sport]["key"]
+    except Exception:                                          # noqa: BLE001
+        return {"NFL": "americanfootball_nfl", "NBA": "basketball_nba", "NHL": "icehockey_nhl",
+                "EPL": "soccer_epl", "UCL": "soccer_uefa_champs_league", "UFC": "mma_mixed_martial_arts"}[sport]
+
+
+def pull_event(con, sport, eid, markets, books=None, label="news", now=None):
+    """One event-odds request through the desk (credit accounting, storage, tape) — same pattern as pull_props."""
+    d = desk()
+    if d is None:
+        raise RuntimeError("desk not found")
+    import sys
+    m = sys.modules.get("__main__")
+    now = now or datetime.now(UTC)
+    nbooks = len((books or getattr(m, "BOOKS", "")).split(",")) or 20
+    cost = len(markets.split(",")) * max(1, -(-nbooks // 10))
+    if not d.can_spend(con, cost, now, floor=0.0, priority="tape"):
+        raise RuntimeError(f"credits: can't spend {cost} now")
+    params = {"bookmakers": books or getattr(m, "BOOKS"), "markets": markets, "oddsFormat": "decimal"}
+    if not d.lock.acquire(timeout=90):
+        raise RuntimeError("desk busy")
+    try:
+        data, hdr = d.get(f"/sports/{_sport_key(sport)}/events/{eid}/odds", params)
+        d._record(con, sport, label, hdr, now)
+        rows = []
+        for b in data.get("bookmakers", []):
+            for mk in b.get("markets", []):
+                for o in mk.get("outcomes", []):
+                    rows.append((data, b["key"], mk["key"], o["name"], o.get("description", ""), o.get("point"), o["price"]))
+        if label != "alt":
+            d.store(con, sport, rows, now, False)
+        con.commit()
+        return data, rows
+    finally:
+        d.lock.release()
+
+
+# --------------------------------------------------------------------------- news trigger
+def _espn_injuries(sport):
+    import requests
+    r = requests.get(f"https://site.api.espn.com/apis/site/v2/sports/{ESPN[sport]}/injuries", timeout=20,
+                     headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    out = []
+    for team in r.json().get("injuries", []) or []:
+        tname = (team.get("team") or {}).get("displayName") or team.get("displayName", "")
+        for inj in team.get("injuries", []) or []:
+            ath = inj.get("athlete") or {}
+            name = ath.get("displayName") or ath.get("fullName") or ""
+            st = str(inj.get("status") or "").strip()
+            if name and st:
+                out.append((tname, name, st))
+    return out
+
+
+def stale_sides(con, eid, min_ev=0.02):
+    """Sides where a CT book now beats the fresh Pinnacle fair price."""
+    import kronos_ledger as kl
+    out = []
+    for mk in ("h2h", "spreads", "totals"):
+        sides = kl.sides(con, eid, mk)
+        if len(sides) < 2:
+            continue
+        fair = kl._devig([s[2] for s in sides])
+        for (o, ln, pr, bk), f in zip(sides, fair):
+            q = kl.best_ct(con, eid, mk, o, ln)
+            if q and q["price"] * f - 1 >= min_ev:
+                out.append((mk, o, ln, q["book"], q["price"], q["price"] * f - 1, f))
+    return out
+
+
+def news_scan(con, tg=None, now=None):
+    ensure(con)
+    now = now or datetime.now(UTC)
+    hi = _iso(now + timedelta(hours=4))
+    report = {}
+    for sp in ESPN:
+        evs = [dict(r) for r in con.execute("select * from events where sport=? and commence>? and commence<?",
+                                            (sp, _iso(now), hi))]
+        if not evs:
+            continue
+        try:
+            rows = _espn_injuries(sp)
+        except Exception as e:                                 # noqa: BLE001
+            report[sp] = f"error {str(e)[:60]}"
+            continue
+        first = not con.execute("select 1 from news_snap where sport=? limit 1", (sp,)).fetchone()
+        prev = {(r[0], r[1]): r[2] for r in con.execute("select team, player, status from news_snap where sport=?", (sp,))}
+        changed = []
+        for team, player, st in rows:
+            was = prev.get((team, player))
+            is_out = any(w in st.lower() for w in OUT_WORDS)
+            was_out = was is not None and any(w in was.lower() for w in OUT_WORDS)
+            if is_out and not was_out and not first:
+                changed.append((team, player, st))
+        con.execute("delete from news_snap where sport=?", (sp,))
+        con.executemany("insert or replace into news_snap values(?,?,?,?,?)", [(sp, t, p, s, _iso(now)) for t, p, s in rows])
+        con.commit()
+        report[sp] = {"listed": len(rows), "new_outs": len(changed)}
+        for team, player, st in changed:
+            ev = next((e for e in evs if max(_match(team, e["home"]), _match(team, e["away"])) >= 0.5), None)
+            if not ev:
+                continue
+            day = now.strftime("%Y%m%d")
+            used = int(_meta(con, f"news_pulls:{day}") or 0)
+            k = f"news:{ev['event_id']}:{player}"
+            if _meta(con, k):
+                continue
+            _meta(con, k, _iso(now))
+            msg = [f"KRONOS NEWS: {player} ({team}) now listed {st}", f"{ev['away']} @ {ev['home']}, {_et(ev['commence'])}"]
+            if used < NEWS_MAX_PULLS_DAY:
+                try:
+                    import sys
+                    m = sys.modules.get("__main__")
+                    pull_event(con, sp, ev["event_id"], "h2h,spreads,totals", label="news", now=now)
+                    props = ",".join(m.SPORTS[sp].get("props", [])) if getattr(m, "SPORTS", None) else ""
+                    if props:
+                        pull_event(con, sp, ev["event_id"], props, label="news-props", now=now)
+                    _meta(con, f"news_pulls:{day}", str(used + 1))
+                    st_sides = stale_sides(con, ev["event_id"])
+                    if st_sides:
+                        msg.append("Stale CT prices after the re-pull:")
+                        for mk, o, ln, bk, pr, ev_, f in st_sides[:5]:
+                            lns = "" if ln is None else (f" {ln:+g}" if mk == "spreads" else f" {ln:g}")
+                            msg.append(f"• {o}{lns} ({mk}) {BOOKN.get(bk, bk)} {pr:.2f}, fair {1 / f:.2f}, EV {ev_:+.1%}")
+                    else:
+                        msg.append("Prices re-pulled: no CT book is stale on game lines right now.")
+                except Exception as e:                         # noqa: BLE001
+                    msg.append(f"Couldn't re-pull prices: {str(e)[:80]}")
+            else:
+                msg.append(f"Daily re-pull limit ({NEWS_MAX_PULLS_DAY}) reached; check prices by hand.")
+            log(con, "news", sp, ev["event_id"], " | ".join(msg))
+            con.commit()
+            if tg:
+                tg("\n".join(msg))
+    _meta(con, "news_status", json.dumps({"ts": _iso(now), **report})[:500])
+    con.commit()
+    return report
+
+
+def _et(c):
+    try:
+        t = _ts(c).astimezone(timezone(timedelta(hours=-5)))
+        return t.strftime("%a %-I:%M %p ET")
+    except Exception:                                          # noqa: BLE001
+        return str(c)
+
+
+# --------------------------------------------------------------------------- alternate lines
+def _phi(x):
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+
+def _phinv(p):
+    # Acklam-free: bisection is plenty here
+    lo, hi = -8.0, 8.0
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        if _phi(mid) < p:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def alt_prob(sport, market, main_line, main_fair, alt_line, side_is_main_side=True):
+    """P(win) at alt_line given the main line and its fair probability (same side), normal model."""
+    sd = SD[(sport, market)]
+    if market == "spreads":
+        # side covers if margin_side + line > 0; P = Phi((mu + line)/sd) where mu = side's expected margin
+        mu = sd * _phinv(main_fair) - main_line
+        return _phi((mu + alt_line) / sd)
+    # totals, Over side: P(T > L) = 1 - Phi((L - mu)/sd)
+    mu = main_line + sd * _phinv(main_fair)
+    return 1 - _phi((alt_line - mu) / sd)
+
+
+def alt_scan(con, tg=None, now=None):
+    """NFL + NBA games starting within 6h: CT alternate lines vs Pinnacle's main line, once per game per 2h."""
+    import kronos_ledger as kl
+    now = now or datetime.now(UTC)
+    day = now.strftime("%Y%m%d")
+    used = int(_meta(con, f"alt_calls:{day}") or 0)
+    found = 0
+    for sp in ("NFL", "NBA"):
+        evs = [dict(r) for r in con.execute("select * from events where sport=? and commence>? and commence<?",
+                                            (sp, _iso(now + timedelta(minutes=20)), _iso(now + timedelta(hours=6))))]
+        for ev in evs:
+            if used >= ALT_MAX_CALLS_DAY:
+                break
+            k = f"alt_pull:{ev['event_id']}"
+            last = _meta(con, k)
+            if last and _ts(last) > now - timedelta(hours=2):
+                continue
+            try:
+                _d, rows = pull_event(con, sp, ev["event_id"], "alternate_spreads,alternate_totals",
+                                      books=",".join(CT), label="alt", now=now)
+            except Exception as e:                             # noqa: BLE001
+                log(con, "alt_error", sp, ev["event_id"], str(e)[:120]); con.commit()
+                continue
+            used += 1
+            _meta(con, f"alt_calls:{day}", str(used)); _meta(con, k, _iso(now)); con.commit()
+            for mk_main, mk_alt in (("spreads", "alternate_spreads"), ("totals", "alternate_totals")):
+                main = kl.sides(con, ev["event_id"], mk_main)
+                if len(main) != 2 or not str(main[0][3]) in SHARP:
+                    continue
+                fair = kl._devig([s[2] for s in main])
+                ref = {s[0]: (s[1], f) for s, f in zip(main, fair)}
+                for _g, bk, mk, oc, _pl, ln, pr in rows:
+                    if mk != mk_alt or ln is None or oc not in ref:
+                        continue
+                    mline, mfair = ref[oc]
+                    if mk_main == "totals":
+                        over_line, over_fair = ref["Over"] if "Over" in ref else (None, None)
+                        if over_line is None:
+                            continue
+                        p_over = alt_prob(sp, "totals", float(over_line), over_fair, float(ln))
+                        p = p_over if oc == "Over" else 1 - p_over
+                        dist = abs(float(ln) - float(over_line))
+                    else:
+                        p = alt_prob(sp, "spreads", float(mline), mfair, float(ln))
+                        dist = abs(float(ln) - float(mline))
+                    if dist < 0.5 or dist > ALT_MAX_DIST[sp]:
+                        continue
+                    evv = p * float(pr) - 1
+                    if evv < (ALT_MIN_EV_NFL if sp == "NFL" else ALT_MIN_EV):
+                        continue
+                    key = (ev["event_id"], mk_main, oc, float(ln))
+                    if con.execute("""select 1 from bets where evidence_kind='alt' and event_id=? and market=? and selection=?
+                                      and line=?""", key).fetchone():
+                        continue
+                    note = (f"KRONOS alt line | {BOOKN.get(bk, bk)} {mk_alt} {oc} {ln:+g} at {pr:.2f} | fair {p:.1%} from Pinnacle's "
+                            f"main {mline:+g} ({mfair:.1%}) with a normal model (sd {SD[(sp, mk_main)]}) | EV {evv:+.1%} | "
+                            "approximation: ignores key numbers; check the price before betting")
+                    con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price,
+                                   book, stake, model_prob, note, paper, model_version, edge, fair_prob, evidence_kind, logged_call, card_tags)
+                                   values(?,?,?,?,?,?,?,'',?,?,?,?,?,?,2,?,?,?,'alt',?,?)""",
+                                (_iso(now), sp, ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], mk_main, oc,
+                                 float(ln), float(pr), bk, 0.25, round(p, 4), note, VERSION, round(evv, 4), round(p, 4),
+                                 "ALT EDGE", json.dumps({"grade": "C", "kind": "alt", "bet": True})))
+                    log(con, "alt", sp, ev["event_id"], note)
+                    con.commit()
+                    found += 1
+                    if tg:
+                        lns = f"{ln:+g}" if mk_main == "spreads" else f"{ln:g}"
+                        tg(f"KRONOS ALT LINE: {ev['away']} @ {ev['home']} ({_et(ev['commence'])})\n{oc} {lns} at "
+                           f"{BOOKN.get(bk, bk)} {pr:.2f}\nFair {1 / p:.2f} (from Pinnacle's main line), EV {evv:+.1%}\n"
+                           "Rough model: check the number before betting.")
+    return {"alt_calls_today": used, "edges": found}
+
+
+# --------------------------------------------------------------------------- early-week NFL scan
+def early_scan(con, L=None, jr=None, js=None, tg=None, now=None):
+    import kronos_ledger as kl
+    now = now or datetime.now(UTC)
+    evs = [dict(r) for r in con.execute("select * from events where sport='NFL' and commence>? and commence<?",
+                                        (_iso(now + timedelta(hours=30)), _iso(now + timedelta(days=8))))]
+    n = bets = 0
+    for ev in evs:
+        for mk in ("h2h", "spreads", "totals"):
+            if con.execute("select 1 from bets where evidence_kind='early' and event_id=? and market=?",
+                           (ev["event_id"], mk)).fetchone():
+                continue
+            outs = kl.sides(con, ev["event_id"], mk)
+            if len(outs) < 2:
+                continue
+            fair = kl._devig([o[2] for o in outs]); fp = {o[0]: f for o, f in zip(outs, fair)}
+            mp = kl.model_probs_for(con, ev["event_id"], mk, outs)
+            best = None
+            for o in outs:
+                q = kl.best_ct(con, ev["event_id"], mk, o[0], o[1])
+                if not q:
+                    continue
+                ok, why, evm, evk = bet_check(q["price"], True, fp[o[0]], mp.get(o[0]))
+                score = evm if evm is not None else -9
+                if best is None or score > best[0]:
+                    best = (score, o, q, ok, why, evk)
+            if not best:
+                continue
+            score, o, q, ok, why, evk = best
+            note = (f"KRONOS early | {why} | model EV {score:+.1%}, market EV {evk:+.1%} | logged {(_ts(ev['commence']) - now).days}d out "
+                    "to measure whether early numbers beat the close")
+            con.execute("""insert into bets(placed_ts, sport, event_id, game, commence, market, selection, player, line, price,
+                           book, stake, model_prob, note, paper, model_version, edge, fair_prob, evidence_kind, logged_call, card_tags)
+                           values(?,?,?,?,?,?,?,'',?,?,?,?,?,?,2,?,?,?,'early',?,?)""",
+                        (_iso(now), "NFL", ev["event_id"], f"{ev['away']} @ {ev['home']}", ev["commence"], mk, o[0], o[1],
+                         q["price"], q["book"], 0.25 if ok else 0.1, round(mp.get(o[0], fp[o[0]]), 4), note[:600], VERSION,
+                         round(score, 4), round(fp[o[0]], 4), "BET" if ok else "early lean",
+                         json.dumps({"kind": "early", "bet": ok})))
+            n += 1
+            if ok:
+                bets += 1
+                if tg:
+                    ln = "" if o[1] is None else (f" {o[1]:+g}" if mk == "spreads" else f" {o[1]:g}")
+                    tg(f"KRONOS EARLY BET: {ev['away']} @ {ev['home']} ({_et(ev['commence'])})\n{mk}: {o[0]}{ln} at "
+                       f"{BOOKN.get(q['book'], q['book'])} {q['price']:.2f}\n{why}")
+    con.commit()
+    return {"logged": n, "bets": bets}
+
+
+# --------------------------------------------------------------------------- boost checker (Telegram)
+MK_WORDS = [
+    (r"pass(ing)? ?(yds|yards)", "player_pass_yds"), (r"pass(ing)? ?(td|tds|touchdowns)", "player_pass_tds"),
+    (r"rush(ing)? ?(yds|yards)?", "player_rush_yds"), (r"rec(eiving)? ?(yds|yards)", "player_reception_yds"),
+    (r"receptions|catches", "player_receptions"), (r"anytime|td scorer|to score a td|touchdown", "player_anytime_td"),
+    (r"\bpoints\b|\bpts\b", "player_points"), (r"rebounds|\breb\b", "player_rebounds"), (r"assists|\bast\b", "player_assists"),
+    (r"blocks|\bblk\b", "player_blocks"), (r"shots on goal|\bsog\b", "player_shots_on_goal"),
+    (r"to score|goal ?scorer|anytime goal", "player_goal_scorer_anytime"),
+]
+
+
+def _parse_odds(tok):
+    tok = tok.strip()
+    if re.fullmatch(r"[+-]\d{3,4}", tok):
+        a = int(tok)
+        return 1 + (a / 100 if a > 0 else 100 / -a)
+    try:
+        v = float(tok)
+        return v if v > 1.0 else None
+    except ValueError:
+        return None
+
+
+def _devig_pair(a, b):
+    ia, ib = 1 / a, 1 / b
+    return ia / (ia + ib)
+
+
+def price_leg(con, text, now=None):
+    """Find the bet described in `text` on the board and return its fair probability."""
+    now = now or datetime.now(UTC)
+    t = text.lower().strip()
+    lo, hi = _iso(now - timedelta(hours=4)), _iso(now + timedelta(hours=72))
+    evs = [dict(r) for r in con.execute("select * from events where commence>? and commence<?", (lo, hi))]
+    num = re.findall(r"[+-]?\d+(?:\.\d+)?", t)
+    line = float(num[-1]) if num else None
+    side_ou = "Over" if re.search(r"\bover\b|\bo\d|\+$", t) else "Under" if re.search(r"\bunder\b|\bu\d", t) else None
+    market = next((m for pat, m in MK_WORDS if re.search(pat, t)), None)
+    stop = {"ml", "moneyline", "to", "win", "wins", "over", "under", "o", "u", "pass", "passing", "rush", "rushing", "rec",
+            "receiving", "yds", "yards", "yard", "receptions", "catches", "anytime", "td", "tds", "touchdown", "touchdowns",
+            "scorer", "score", "a", "points", "pts", "rebounds", "reb", "assists", "ast", "blocks", "blk", "shots", "on", "goal",
+            "sog", "goals", "spread", "total", "alt", "the", "and", "plus", "+"}
+    words = " ".join(w for w in re.sub(r"[^a-z' .-]", " ", t).split() if w not in stop and not re.fullmatch(r"[\d.]+", w))
+
+    def score(name):
+        q = set(words.split()); c = set(re.sub(r"[^a-z' .-]", " ", str(name).lower()).split())
+        if not q or not c:
+            return 0.0
+        return len(q & c) / len(q) + 0.01 * len(q & c) / len(q | c)
+    # player props
+    if market:
+        best = None
+        for ev in evs:
+            for r in con.execute("""select distinct player from last_quote where event_id=? and market=? and player<>''""",
+                                 (ev["event_id"], market)):
+                s_ = score(r[0])
+                if best is None or s_ > best[0]:
+                    best = (s_, ev, r[0])
+        if not best or best[0] < 0.5:
+            return {"ok": False, "why": "couldn't find that player prop on the board"}
+        _s, ev, player = best
+        q = {}
+        for r in con.execute("""select book, outcome, line, price from last_quote where event_id=? and market=? and player=?""",
+                             (ev["event_id"], market, player)):
+            q.setdefault(r[0], []).append((r[1], r[2], r[3]))
+        want = "Yes" if (market.endswith("anytime_td") or market.endswith("scorer_anytime")) else (side_ou or "Over")
+        for bk in SHARP:
+            rows = q.get(bk, [])
+            mine = [r for r in rows if r[0] == want and (line is None or want == "Yes" or r[1] is None or abs(float(r[1]) - line) < 1e-9)]
+            other = [r for r in rows if r[0] != want and (mine and r[1] == mine[0][1])]
+            if mine and other:
+                f = _devig_pair(mine[0][2], other[0][2])
+                return {"ok": True, "desc": f"{player} {want} {'' if mine[0][1] is None else mine[0][1]} {market.replace('player_', '').replace('_', ' ')}",
+                        "fair": f, "src": BOOKN.get(bk, bk), "event": ev}
+        # one-sided (anytime TD etc.): average implied across books, minus a typical 6% prop margin
+        imps = [1 / r[2] for rows in q.values() for r in rows if r[0] == want and
+                (line is None or want == "Yes" or r[1] is None or abs(float(r[1]) - line) < 1e-9)]
+        if imps:
+            f = sum(imps) / len(imps) / 1.06
+            return {"ok": True, "desc": f"{player} {want} {market.replace('player_', '').replace('_', ' ')}", "fair": f,
+                    "src": f"{len(imps)}-book average, margin removed (approximate)", "event": ev}
+        return {"ok": False, "why": f"found {player} but no price at that line"}
+    # game lines: team ML / spread / total
+    best = None
+    for ev in evs:
+        for team in (ev["home"], ev["away"]):
+            s_ = score(team)
+            if best is None or s_ > best[0]:
+                best = (s_, ev, team)
+    if not best or best[0] < 0.5:
+        return {"ok": False, "why": "couldn't find that game on the board"}
+    _s, ev, team = best
+    import kronos_ledger as kl
+    if side_ou:
+        sides = kl.sides(con, ev["event_id"], "totals")
+        if len(sides) == 2:
+            fair = kl._devig([s[2] for s in sides]); d = {s[0]: (s[1], f) for s, f in zip(sides, fair)}
+            ml, f = d[side_ou]
+            if line is not None and ml is not None and abs(line - float(ml)) > 1e-9 and (ev["sport"], "totals") in SD:
+                fo = d["Over"][1]
+                p_over = alt_prob(ev["sport"], "totals", float(d["Over"][0]), fo, line)
+                f = p_over if side_ou == "Over" else 1 - p_over
+                return {"ok": True, "desc": f"{ev['away']} @ {ev['home']} {side_ou} {line:g}", "fair": f,
+                        "src": f"Pinnacle total {ml:g}, converted to {line:g} (approximate)", "event": ev}
+            return {"ok": True, "desc": f"{ev['away']} @ {ev['home']} {side_ou} {ml:g}", "fair": f, "src": "Pinnacle", "event": ev}
+    if line is not None and re.search(r"[+-]\d", t) and not re.search(r"\bml\b|moneyline|to win", t):
+        sides = kl.sides(con, ev["event_id"], "spreads")
+        if len(sides) != 2:
+            return {"ok": False, "why": "no spread on the board for that game yet"}
+        if len(sides) == 2:
+            fair = kl._devig([s[2] for s in sides]); d = {s[0]: (s[1], f) for s, f in zip(sides, fair)}
+            if team in d:
+                ml, f = d[team]
+                if abs(line - float(ml)) > 1e-9 and (ev["sport"], "spreads") in SD:
+                    f = alt_prob(ev["sport"], "spreads", float(ml), f, line)
+                    return {"ok": True, "desc": f"{team} {line:+g}", "fair": f,
+                            "src": f"Pinnacle spread {ml:+g}, converted (approximate)", "event": ev}
+                return {"ok": True, "desc": f"{team} {ml:+g}", "fair": f, "src": "Pinnacle", "event": ev}
+    sides = kl.sides(con, ev["event_id"], "h2h")
+    if sides:
+        fair = kl._devig([s[2] for s in sides]); d = {s[0]: f for s, f in zip(sides, fair)}
+        if team in d:
+            return {"ok": True, "desc": f"{team} to win", "fair": d[team], "src": "Pinnacle", "event": ev}
+    return {"ok": False, "why": "found the game but not that market"}
+
+
+def boost_reply(con, text, now=None):
+    body = re.sub(r"^/?boost\s*", "", text.strip(), flags=re.I)
+    toks = body.split()
+    if not toks:
+        return "Send: boost <bet> <odds>. Example: boost Patriots ML + Bills ML 3.5"
+    odds = _parse_odds(toks[-1])
+    if odds is None:
+        return "I need the boosted odds at the end, e.g. 'boost Josh Allen over 249.5 pass yds 2.10'."
+    legs = [l.strip() for l in re.split(r"\s\+\s|\s&\s|\n", " ".join(toks[:-1])) if l.strip()]
+    priced, p = [], 1.0
+    for l in legs:
+        r = price_leg(con, l, now)
+        if not r["ok"]:
+            return f"Leg '{l}': {r['why']}. Try the player or team name as it appears on the books."
+        priced.append(r); p *= r["fair"]
+    evv = p * odds - 1
+    lines = ["KRONOS BOOST CHECK"]
+    for r in priced:
+        lines.append(f"• {r['desc']}: fair {r['fair']:.1%} ({1 / r['fair']:.2f}) from {r['src']}")
+    if len(priced) > 1:
+        lines.append(f"Combined fair {p:.1%} ({1 / p:.2f}), treating legs as independent: same-game legs that move together make this optimistic or pessimistic.")
+    verdict = "TAKE IT" if evv >= 0.05 else "small edge" if evv > 0 else "PASS"
+    lines.append(f"Boost {odds:.2f} vs fair {1 / p:.2f}: EV {evv:+.1%}. {verdict}.")
+    log(con, "boost", priced[0]["event"]["sport"], priced[0]["event"]["event_id"], " | ".join(lines)); con.commit()
+    return "\n".join(lines)
+
+
+def bets_reply(con, now=None):
+    now = now or datetime.now(UTC)
+    rows = con.execute("""select sport, game, market, selection, line, price, book, stake, logged_call, commence, note from bets
+                          where paper=2 and commence>? and commence<? and (logged_call like 'BET%' or logged_call='ALT EDGE')
+                          order by commence""", (_iso(now - timedelta(hours=3)), _iso(now + timedelta(hours=30)))).fetchall()
+    if not rows:
+        return "No BET picks right now. Everything on today's board is priced at or below fair at your books."
+    out = ["KRONOS BETS"]
+    for r in rows:
+        ln = "" if r["line"] is None else (f" {r['line']:+g}" if r["market"] == "spreads" else f" {r['line']:g}")
+        out.append(f"• {_et(r['commence'])} {r['game']}: {r['selection']}{ln} at {BOOKN.get(r['book'], r['book'])} {r['price']:.2f} "
+                   f"({r['logged_call']}, {r['stake']:g}u)")
+    return "\n".join(out)
+
+
+HELP = ("KRONOS commands:\n• boost <bet> <odds> — prices a boost, e.g. 'boost Patriots ML + Bills ML 3.5' or "
+        "'boost Josh Allen over 249.5 pass yds 2.10'\n• bets — today's BET picks\n• help — this list")
+
+
+def telegram_poll(get_con, tg_send):
+    """Long-poll the bot for commands from your own chat only."""
+    import requests
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not tok or not chat:
+        return
+    c = get_con()
+    try:
+        off = int(_meta(c, "tg_offset") or 0)
+    finally:
+        c.close()
+    while True:
+        try:
+            r = requests.get(f"https://api.telegram.org/bot{tok}/getUpdates", params={"timeout": 25, "offset": off + 1}, timeout=35)
+            for u in r.json().get("result", []):
+                off = max(off, u["update_id"])
+                m = u.get("message") or {}
+                if str((m.get("chat") or {}).get("id")) != str(chat):
+                    continue
+                txt = str(m.get("text") or "").strip()
+                low = txt.lower()
+                c = get_con()
+                try:
+                    if low.startswith(("boost", "/boost")):
+                        reply = boost_reply(c, txt)
+                    elif low in ("bets", "/bets"):
+                        reply = bets_reply(c)
+                    elif low in ("help", "/help", "/start"):
+                        reply = HELP
+                    else:
+                        reply = None
+                    _meta(c, "tg_offset", str(off)); c.commit()
+                finally:
+                    c.close()
+                if reply:
+                    tg_send(reply)
+        except Exception as e:                                 # noqa: BLE001
+            print(f"[telegram poll] {e}", flush=True)
+            time.sleep(15)
+
+
+# --------------------------------------------------------------------------- preflight
+def preflight(con):
+    import requests
+    checks = []
+    def chk(name, fn):
+        try:
+            fn(); checks.append((name, True, ""))
+        except Exception as e:                                 # noqa: BLE001
+            checks.append((name, False, str(e)[:120]))
+    chk("database write/read", lambda: (con.execute("create table if not exists preflight_t(x int)"),
+                                         con.execute("insert into preflight_t values(1)"),
+                                         con.execute("select count(*) from preflight_t").fetchone(),
+                                         con.execute("drop table preflight_t"), con.commit()))
+    chk("ESPN injuries (NFL)", lambda: _espn_injuries("NFL"))
+    chk("ESPN scoreboard (NHL)", lambda: requests.get("https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard",
+                                                      timeout=20).raise_for_status())
+    chk("football-data.co.uk", lambda: requests.get("https://www.football-data.co.uk/mmz4281/2627/E0.csv", timeout=30,
+                                                    headers={"User-Agent": "Mozilla/5.0"}).raise_for_status())
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if tok:
+        chk("Telegram bot", lambda: (lambda r: r.raise_for_status() or (r.json().get("ok") or (_ for _ in ()).throw(Exception(r.text[:80]))))(
+            requests.get(f"https://api.telegram.org/bot{tok}/getMe", timeout=15)))
+    def _desk():
+        d = desk()
+        if d is None:
+            raise RuntimeError("desk object not found: news re-pulls and alt lines are off")
+        if d.remaining is None:
+            raise RuntimeError("desk has not read the credit balance yet")
+    chk("desk handle + credits", _desk)
+    ok = all(c[1] for c in checks)
+    _meta(con, "preflight", json.dumps({"ts": _iso(datetime.now(UTC)), "ok": ok,
+                                        "checks": [{"name": n, "ok": o, "error": e} for n, o, e in checks]}))
+    con.commit()
+    return ok, checks
+
+
+# --------------------------------------------------------------------------- feed
+def feed_block(con, now=None):
+    now = now or datetime.now(UTC)
+    L = ["", "", f"KRONOS EDGE ({VERSION}: BET tier on EV at CT prices, news re-pulls, boost checker, alternate lines, early NFL scan):"]
+    try:
+        pf = _meta(con, "preflight")
+        if pf:
+            p = json.loads(pf)
+            bad = [c for c in p["checks"] if not c["ok"]]
+            L.append(f"  preflight {p['ts']}: " + ("all checks passed" if not bad else "FAILED: " + "; ".join(f"{c['name']}: {c['error']}" for c in bad)))
+        L.append("  " + bets_reply(con, now).replace("\n", "\n  "))
+        ns = _meta(con, "news_status")
+        if ns:
+            L.append(f"  news scan: {ns}")
+        for r in con.execute("select ts, kind, sport, text from edge_log order by ts desc limit 12"):
+            L.append(f"  {r[0]} {r[1]} {r[2]}: {r[3][:300]}")
+        g = con.execute("""select evidence_kind, count(*) n, sum(result='W') w, sum(result='L') l,
+                                  round(sum(case when result in ('W','L','P') then pnl else 0 end),2) u, round(avg(clv_pp),2) clv
+                           from bets where evidence_kind in ('alt','early') group by evidence_kind""").fetchall()
+        for r in g:
+            L.append(f"  {r[0]}: {r[1]} picks, {r[2] or 0}-{r[3] or 0}, {r[4] or 0:+.2f}u, CLV {r[5]}")
+    except Exception as e:                                     # noqa: BLE001
+        L.append(f"  edge report unavailable ({str(e)[:100]})")
+    return "\n".join(L) + "\n"
 '''
 
 _MASTER_SRC = r'''"""
@@ -5795,6 +6530,7 @@ try:
     kronos_ledger = _register("kronos_ledger", _LEDGER_SRC)
     kronos_ledger.install(jerry_signals)
     kronos_master = _register("kronos_master", _MASTER_SRC)
+    kronos_edge = _register("kronos_edge", _EDGE_SRC)
     kronos_master.install(jerry_signals)
     # soccer error bands for Jerry's spin (goals): typical miss on margin / total per match
     jerry_reason.SPORT_MAE.update({("EPL", "margin"): 1.3, ("EPL", "total"): 1.4,
@@ -6449,7 +7185,7 @@ def push_feed():
     token = os.environ.get("FEED_TOKEN")
     if not token:
         return "no FEED_TOKEN set"
-    txt = _summary_text() + _ledger_block() + _master_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
+    txt = _summary_text() + _edge_block() + _ledger_block() + _master_block() + _dropping_block() + _game_signals_block() + _quarantine_block()
     api = f"https://api.github.com/repos/{FEED_REPO}/contents/{FEED_FILE}"
     h = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     cur = requests.get(api, headers=h, timeout=20)
@@ -6661,6 +7397,12 @@ def _ledger_loop():
                 n = _kl.log_due(c, L=L, jr=sys.modules.get("jerry_reason"), js=sys.modules.get("jerry_signals"))
                 if n:
                     print(f"[ledger] logged {n} picks", flush=True)
+                while _kl.NEW_BETS:
+                    _m = _kl.NEW_BETS.pop(0)
+                    try:
+                        L.telegram(_m) if L is not None else None
+                    except Exception:                                   # noqa: BLE001
+                        pass
                 if k % 2 == 0:
                     g = _kl.grade_pending(c, jr=sys.modules.get("jerry_reason"))
                     c.execute("insert or replace into meta(k,v) values(?,?)",
@@ -6713,6 +7455,92 @@ def _backtest_loop():
 
 
 threading.Thread(target=_backtest_loop, daemon=True).start()
+
+
+# ---------- edge layer (2026-11-01): BET tier, news re-pulls, boost checker, alternate lines, early NFL scan, preflight
+EDGE_EVERY_SEC = int(os.environ.get("EDGE_EVERY_SEC", "600"))
+
+
+def _edge_block():
+    try:
+        import kronos_edge as _ke
+        c = _drops_con()
+        try:
+            _ke.ensure(c)
+            return _ke.feed_block(c)
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        return f"\n\nKRONOS EDGE: unavailable ({str(e)[:200]})\n"
+
+
+def _tg_out(msg):
+    try:
+        if L is not None:
+            L.telegram(msg)
+    except Exception:                                                 # noqa: BLE001
+        pass
+
+
+def _edge_loop():
+    time.sleep(200)
+    try:
+        import kronos_edge as _ke
+        c = _drops_con()
+        try:
+            _ke.ensure(c)
+            ok, checks = _ke.preflight(c)
+            print(f"[preflight] {'ok' if ok else 'FAILED'}: {checks}", flush=True)
+            if not ok:
+                _tg_out("KRONOS needs attention\nStartup check failed:\n" +
+                        "\n".join(f"• {n}: {e}" for n, o, e in checks if not o) + "\nSend me 'KRONOS check'.")
+        finally:
+            c.close()
+    except Exception as e:                                            # noqa: BLE001
+        print(f"[preflight] crashed: {e}", flush=True)
+    k = 0
+    while True:
+        try:
+            import kronos_edge as _ke
+            c = _drops_con()
+            try:
+                _ke.ensure(c)
+                r1 = _ke.news_scan(c, tg=_tg_out)
+                r2 = _ke.alt_scan(c, tg=_tg_out)
+                if k % 6 == 0:
+                    r3 = _ke.early_scan(c, L=L, jr=sys.modules.get("jerry_reason"), js=sys.modules.get("jerry_signals"), tg=_tg_out)
+                else:
+                    r3 = None
+                c.execute("insert or replace into meta(k,v) values(?,?)",
+                          ("edge_status", json.dumps({"ts": datetime.now(UTC).isoformat(timespec="seconds"),
+                                                      "news": r1, "alt": r2, "early": r3})[:900]))
+                c.commit()
+            finally:
+                c.close()
+        except Exception as e:                                        # noqa: BLE001
+            print(f"[edge] pass failed: {e}", flush=True)
+        k += 1
+        time.sleep(EDGE_EVERY_SEC)
+
+
+def _tg_poll_loop():
+    time.sleep(60)
+    try:
+        import kronos_edge as _ke
+        import kronos_drops as _kd
+        def _send(text):
+            c = _drops_con()
+            try:
+                return _kd.tg_send(text, c)
+            finally:
+                c.close()
+        _ke.telegram_poll(_drops_con, _send)
+    except Exception as e:                                            # noqa: BLE001
+        print(f"[telegram poll] stopped: {e}", flush=True)
+
+
+threading.Thread(target=_edge_loop, daemon=True).start()
+threading.Thread(target=_tg_poll_loop, daemon=True).start()
 
 # Desk routes /dropping and /api/dropping, added without editing jerry_desk.py: the desk builds
 # its server from http.server.ThreadingHTTPServer, so wrap that class to put a route layer in
