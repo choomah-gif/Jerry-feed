@@ -7035,6 +7035,681 @@ def page_html(con, now=None):
 </div></body></html>"""
 '''
 
+_FIX_SRC = r'''"""
+kronos_fix — the audit batch (fix-v1-2026-11-03).
+
+The 2026-11-03 audit of the paper ledger found:
+  * KRONOS's projections miss by more than the market's own line (NBA margin 12.1 vs 10.9 over 60 games),
+    so model "edges" are mostly model error: every model market loses value to the close.
+  * Price edges are the one thing that works, and they scale with size (0-2% -31%, 2-4% +1%, 4-6% +11%, 6%+ +38%).
+  * The alternate-line method went 3-13 and its CLV was measured against the main line (a fake +18.4pp).
+  * Credits ran out in the last hour, when edges are best (news re-pulls failed 'can't spend').
+  * The NFL props model is 60% of the ledger with 5% beat-close and floods the learning layer.
+  * No checklist signal has graduated, yet analysis cited them as reasons.
+
+What this module changes (one batch, nothing new to install):
+  1. Books: picks only at DraftKings and FanDuel (all books still set the fair price).
+  2. PLAYS: one source of truth. A play is a DK/FD price that beats the sharp fair price by 2%+, inside 2 hours
+     of start, in a market the ledger has made LIVE (50+ graded, CLV > 0, ROI > 0) or PILOT (30+ graded, CLV > 0).
+     Stakes: LIVE 0.25u (+2-4%), 0.5u (+4-6%), 1u (+6%); over +10% is a likely stale/mislabeled price, 0.25u max;
+     PILOT 0.1u. Every play shows book, exact line and a floor price. Correlation caps apply.
+  3. Ledger BETs pass the same gate; models never create a BET.
+  4. Projection gate: a projection may veto a BET only after beating the market's line over 100+ games.
+  5. Alternate lines and the early NFL scan are paper-only; alt CLV is not measured.
+  6. News re-pulls spend at close priority; backfill share cut; last-90-minute game lines every 30 minutes.
+  7. NFL props model rows are excluded from the learning layer.
+  8. Telegram sends only plays, news, health and drop alerts (raw PRICE/STEAM/model/ALT alerts muted).
+  9. A recurring audit block in the feed: the live-money gate, the projection gate, a fair-adjusted signal audit,
+     and the plays scorecard.
+"""
+import json, math, os, sys, time
+from datetime import datetime, timezone, timedelta
+
+UTC = timezone.utc
+VERSION = "fix-v1-2026-11-03"
+BOOKS = ("draftkings", "fanduel")
+BOOKN = {"draftkings": "DraftKings", "fanduel": "FanDuel", "fanatics": "Fanatics", "pinnacle": "Pinnacle"}
+PLAY_EV = float(os.environ.get("PLAY_MIN_EV", "0.02"))          # 0-2% price edges lost 31% (n 30)
+PLAY_WINDOW_H = float(os.environ.get("PLAY_WINDOW_H", "2.0"))   # game lines 6h+ out ran -23%; <1h +7%
+CHECK_EV = 0.10                                                 # bigger than this is usually a bad price feed
+LIVE_N, PILOT_N, PILOT_STAKE = 50, 30, 0.1
+PROJ_GATE_N = 100
+MAX_PER_GAME, MAX_SAME_TOTALS, MAX_DIR_SHARE = 2, 3, 0.60
+BACKFILL_SHARE_FIX, SHARP_EVERY_FIX = 0.05, 30
+ALT_CALLS_FIX = int(os.environ.get("ALT_MAX_CALLS_DAY_FIX", "12"))
+TG = None                     # the unfiltered Telegram sender, set by boot.py
+STATUS = {}
+_GATE = {"ts": 0.0, "groups": {}}
+_PROJ = {"ts": 0.0, "spins": {}}
+MK = {"h2h": "moneyline", "spreads": "spread", "totals": "total", "player_points": "points",
+      "player_rebounds": "rebounds", "player_assists": "assists", "player_blocks": "blocks",
+      "player_threes": "threes", "player_goals": "goals", "player_shots_on_goal": "shots on goal",
+      "player_pass_yds": "passing yards", "player_rush_yds": "rushing yards",
+      "player_reception_yds": "receiving yards", "player_receptions": "receptions",
+      "player_anytime_td": "anytime TD", "player_points_rebounds_assists": "pts+reb+ast"}
+try:
+    from zoneinfo import ZoneInfo
+    ET = ZoneInfo("America/New_York")
+except Exception:                                              # noqa: BLE001
+    ET = timezone(timedelta(hours=-5))
+
+
+def _iso(t):
+    return t.isoformat(timespec="seconds")
+
+
+def _ts(s):
+    t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    return t if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def _et(s):
+    try:
+        return _ts(s).astimezone(ET).strftime("%a %-I:%M %p ET")
+    except Exception:                                          # noqa: BLE001
+        return str(s)[:16]
+
+
+def _fam(market):
+    m = str(market or "")
+    return "props" if m.startswith("player_") else {"h2h": "moneyline", "spreads": "spread", "totals": "total"}.get(m, m)
+
+
+def _kind(note):
+    n = note or ""
+    return "price edge, line-adj" if n.startswith("price edge (line-adj") else "price edge" if n.startswith("price edge") else "model"
+
+
+def _ensure(con):
+    con.execute("""create table if not exists fix_plays(k text primary key, ts text, sport text, event_id text, game text,
+                   commence text, market text, player text, outcome text, line real, book text, price real, floor real,
+                   fair real, ev real, stake real, tier text, grp text, result text, pnl real)""")
+    con.execute("create table if not exists meta(k text primary key, v text)")
+
+
+def _meta_set(con, k, v):
+    try:
+        con.execute("insert or replace into meta(k,v) values(?,?)", (k, str(v)[:900]))
+    except Exception:                                          # noqa: BLE001
+        pass
+
+
+# ------------------------------------------------------------------ 1. live-money gate
+def gate_groups(con, force=False):
+    """Market tiers from the paper ledger: LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0."""
+    if not force and _GATE["groups"] and time.time() - _GATE["ts"] < 1800:
+        return _GATE["groups"]
+    g = {}
+    for r in con.execute("select sport, market, note, result, pnl, stake, clv_pp from bets where paper=1"):
+        k = f"{r['sport']} {_fam(r['market'])} ({_kind(r['note'])})"
+        a = g.setdefault(k, {"n": 0, "w": 0, "l": 0, "pnl": 0.0, "st": 0.0, "clv": []})
+        if r["result"] in ("W", "L", "P"):
+            a["n"] += 1
+            a["w"] += r["result"] == "W"
+            a["l"] += r["result"] == "L"
+            a["pnl"] += float(r["pnl"] or 0)
+            a["st"] += float(r["stake"] or 0)
+        if r["clv_pp"] is not None:
+            a["clv"].append(float(r["clv_pp"]))
+    out = {}
+    for k, a in g.items():
+        roi = a["pnl"] / a["st"] if a["st"] else None
+        clv = sum(a["clv"]) / len(a["clv"]) if a["clv"] else None
+        tier = "PAPER"
+        if a["n"] >= LIVE_N and (clv or 0) > 0 and (roi or 0) > 0:
+            tier = "LIVE"
+        elif a["n"] >= PILOT_N and (clv or 0) > 0:
+            tier = "PILOT"
+        out[k] = {"tier": tier, "n": a["n"], "record": f"{a['w']}-{a['l']}", "units": round(a["pnl"], 2),
+                  "roi": roi, "clv": clv}
+    _GATE.update(ts=time.time(), groups=out)
+    return out
+
+
+def stake_for(tier, ev):
+    if tier == "LIVE":
+        if ev > CHECK_EV:
+            return 0.25
+        return 1.0 if ev >= 0.06 else 0.5 if ev >= 0.04 else 0.25
+    if tier == "PILOT":
+        return PILOT_STAKE
+    return 0.0
+
+
+def _group_line(k, gi):
+    roi = f"{gi['roi']:+.1%}" if gi.get("roi") is not None else "n/a"
+    clv = f"{gi['clv']:+.2f}" if gi.get("clv") is not None else "n/a"
+    return f"{k}: {gi['tier']} | {gi['record']} | {gi['units']:+.2f}u | ROI {roi} | CLV {clv} | graded {gi['n']}"
+
+
+# ------------------------------------------------------------------ 2. projection gate
+def projection_gate(con, sport, market):
+    if time.time() - _PROJ["ts"] > 3600:
+        try:
+            jr = sys.modules.get("jerry_reason")
+            _PROJ["spins"] = jr.grade_spins(con) if jr else {}
+        except Exception:                                      # noqa: BLE001
+            _PROJ["spins"] = {}
+        _PROJ["ts"] = time.time()
+    v = _PROJ["spins"].get(sport) or {}
+    n = v.get("games") or 0
+    if market == "totals":
+        km, mm = v.get("total_mae_jerry"), v.get("total_mae_market")
+    else:
+        km, mm = v.get("margin_mae_jerry"), v.get("margin_mae_market")
+    if km is None or mm is None:
+        return False, f"projection not used for staking: no graded {sport} projections yet"
+    if n >= PROJ_GATE_N and km < mm:
+        return True, f"projection earned: KRONOS miss {km} vs market {mm} over {n} games"
+    return False, (f"projection not used for staking: KRONOS miss {km} vs market {mm} over {n} games "
+                   f"(needs {PROJ_GATE_N}+ games and a smaller miss than the market)")
+
+
+# ------------------------------------------------------------------ 3. plays
+def _line_txt(market, line):
+    if line is None:
+        return ""
+    return f" {float(line):+g}" if market == "spreads" else f" {float(line):g}"
+
+
+def describe(p):
+    m = p["market"]
+    if m == "player_anytime_td":
+        return f"{p['player']} anytime TD"
+    if m.startswith("player_"):
+        return f"{p['player']} {p['outcome']}{_line_txt(m, p['line'])} {MK.get(m, m[7:].replace('_', ' '))}"
+    if m == "h2h":
+        return f"{p['outcome']} moneyline"
+    if m == "totals":
+        return f"{p['outcome']}{_line_txt(m, p['line'])} (game total)"
+    return f"{p['outcome']}{_line_txt(m, p['line'])}"
+
+
+def _key(v):
+    return f"{v['event_id']}|{v['market']}|{v['player'] or ''}|{v['outcome']}|{v['line']}|{v['book']}"
+
+
+def build_plays(con, now=None):
+    """(plays, n_paper): gated DK/FD price edges inside the window, with correlation caps applied."""
+    now = now or datetime.now(UTC)
+    groups = gate_groups(con)
+    rows = con.execute(f"""select v.*, e.sport, e.home, e.away, e.commence from value_edges v join events e using(event_id)
+                           where e.commence>? and e.commence<=? and v.book in ({','.join('?' * len(BOOKS))}) and v.ev>=?
+                           order by v.ev desc""",
+                       (_iso(now), _iso(now + timedelta(hours=PLAY_WINDOW_H)), *BOOKS, PLAY_EV)).fetchall()
+    acc, per_game, tot_dir, ou, paper_n, capped = [], {}, {}, {}, 0, 0
+    for v in rows:
+        if str(v["outcome"]) in ("No",):                       # can't bet a player NOT to score at his books
+            continue
+        if v["fair"] is None or float(v["fair"]) <= 0:
+            continue
+        grp = f"{v['sport']} {_fam(v['market'])} (price edge)"
+        gi = groups.get(grp) or {"tier": "PAPER", "n": 0, "record": "0-0", "units": 0.0, "roi": None, "clv": None}
+        ev = float(v["ev"])
+        st = stake_for(gi["tier"], ev)
+        if st <= 0:
+            paper_n += 1
+            continue
+        if any(p["event_id"] == v["event_id"] and p["market"] == v["market"] and p["player"] == (v["player"] or "")
+               and p["outcome"] == v["outcome"] for p in acc):
+            continue                                           # one book per side: the best price only
+        if per_game.get(v["event_id"], 0) >= MAX_PER_GAME:
+            capped += 1
+            continue
+        d = v["outcome"] if v["outcome"] in ("Over", "Under") else None
+        if d and v["market"] == "totals" and tot_dir.get((v["sport"], d), 0) >= MAX_SAME_TOTALS:
+            capped += 1
+            continue
+        so = ou.setdefault(v["sport"], {"Over": 0, "Under": 0})   # per sport: one sport's scoring environment
+        if d and so["Over"] + so["Under"] >= 4 and (so[d] + 1) / (so["Over"] + so["Under"] + 1) > MAX_DIR_SHARE:
+            capped += 1
+            continue
+        fair = float(v["fair"])
+        floor = math.ceil((1 + PLAY_EV) / fair * 100) / 100
+        p = {"k": _key(v), "sport": v["sport"], "event_id": v["event_id"], "game": f"{v['away']} @ {v['home']}",
+             "commence": v["commence"], "market": v["market"], "player": v["player"] or "", "outcome": v["outcome"],
+             "line": v["line"], "book": v["book"], "price": float(v["price"]), "floor": floor, "fair": fair, "ev": ev,
+             "stake": st, "tier": gi["tier"], "grp": grp, "gi": gi, "check": ev > CHECK_EV, "flag": v["flag"] if "flag" in v.keys() else None}
+        acc.append(p)
+        per_game[v["event_id"]] = per_game.get(v["event_id"], 0) + 1
+        if d:
+            so[d] += 1
+            if v["market"] == "totals":
+                tot_dir[(v["sport"], d)] = tot_dir.get((v["sport"], d), 0) + 1
+    acc.sort(key=lambda p: (p["check"], -p["stake"], -p["ev"]))   # likely-bad prices last
+    STATUS["last_build"] = {"ts": _iso(now), "plays": len(acc), "paper_only": paper_n, "capped": capped}
+    return acc, paper_n
+
+
+def play_message(p):
+    gi = p["gi"]
+    roi = f", {gi['roi']:+.0%} ROI" if gi.get("roi") is not None else ""
+    lines = [f"KRONOS PLAY · {p['stake']:g}u ({p['tier']})",
+             f"{BOOKN.get(p['book'], p['book'])} · {describe(p)}",
+             f"Price {p['price']:.2f} · take {p['floor']:.2f} or better",
+             f"{p['game']} · {_et(p['commence'])}",
+             f"Edge {p['ev']:+.1%} vs sharp fair {p['fair']:.1%}. {p['grp']}: {gi['record']}, {gi['units']:+.1f}u{roi}."]
+    if p["check"]:
+        lines.append("CHECK THE PRICE: an edge this big is usually a stale or mislabeled line. Stake capped at 0.25u.")
+    lines.append(f"Different line or a price below {p['floor']:.2f} at {BOOKN.get(p['book'], p['book'])} = skip.")
+    return "\n".join(lines)
+
+
+def send_new_plays(con, now=None):
+    """Alert each play once and record it so the plays themselves get a scorecard."""
+    _ensure(con)
+    now = now or datetime.now(UTC)
+    plays, _ = build_plays(con, now)
+    sent = 0
+    for p in plays:
+        if con.execute("select 1 from fix_plays where k=?", (p["k"],)).fetchone():
+            continue
+        con.execute("""insert into fix_plays(k, ts, sport, event_id, game, commence, market, player, outcome, line, book,
+                       price, floor, fair, ev, stake, tier, grp, result, pnl) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',null)""",
+                    (p["k"], _iso(now), p["sport"], p["event_id"], p["game"], p["commence"], p["market"], p["player"],
+                     p["outcome"], p["line"], p["book"], p["price"], p["floor"], p["fair"], p["ev"], p["stake"],
+                     p["tier"], p["grp"]))
+        con.commit()
+        if TG is not None:
+            try:
+                TG(play_message(p))
+            except Exception:                                  # noqa: BLE001
+                pass
+        sent += 1
+    return sent
+
+
+def grade_plays(con):
+    """Settle plays from the graded paper rows for the same side and line (any book: same line, same result)."""
+    _ensure(con)
+    n = 0
+    for p in con.execute("select * from fix_plays where result='pending'").fetchall():
+        r = con.execute("""select result from bets where event_id=? and market=? and coalesce(player,'')=? and selection=?
+                           and ((line is null and ? is null) or abs(line-?)<1e-9) and result in ('W','L','P','V')
+                           order by id limit 1""",
+                        (p["event_id"], p["market"], p["player"] or "", p["outcome"], p["line"], p["line"] or 0)).fetchone()
+        if not r:
+            continue
+        res = r["result"]
+        pnl = p["stake"] * (p["price"] - 1) if res == "W" else -p["stake"] if res == "L" else 0.0
+        con.execute("update fix_plays set result=?, pnl=? where k=?", (res, round(pnl, 4), p["k"]))
+        n += 1
+    con.commit()
+    return n
+
+
+def plays_text(con, now=None):
+    now = now or datetime.now(UTC)
+    try:
+        plays, paper_n = build_plays(con, now)
+    except Exception as e:                                     # noqa: BLE001
+        return f"Plays unavailable ({str(e)[:120]})"
+    if not plays:
+        return ("No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, "
+                f"inside {PLAY_WINDOW_H:g} hours of start, in a market the ledger has proven"
+                + (f" ({paper_n} smaller or unproven edges logged on paper)." if paper_n else "."))
+    out = ["KRONOS PLAYS"]
+    for p in plays:
+        out.append(f"• {p['stake']:g}u {p['tier']} · {BOOKN.get(p['book'], p['book'])} · {describe(p)} · {p['price']:.2f} "
+                   f"(take {p['floor']:.2f}+) · {p['game']} {_et(p['commence'])}" + (" · CHECK PRICE" if p["check"] else ""))
+    if paper_n:
+        out.append(f"({paper_n} more edges logged on paper: market not proven yet)")
+    return "\n".join(out)
+
+
+# ------------------------------------------------------------------ 4. ledger gate
+def gate_ledger_rows(con, ev, now):
+    groups = gate_groups(con)
+    rows = con.execute("""select id, sport, market, note, stake, logged_call, card_tags from bets
+                          where evidence_kind='ledger' and event_id=? and placed_ts=?""",
+                       (ev["event_id"], _iso(now))).fetchall()
+    for r in rows:
+        call = str(r["logged_call"] or "")
+        if not call.startswith("BET"):
+            continue
+        note = str(r["note"] or "")
+        try:
+            tags = json.loads(r["card_tags"] or "{}")
+        except Exception:                                      # noqa: BLE001
+            tags = {}
+        evm = tags.get("ev_market")
+        if "BET: price beats" in note and evm is not None:
+            grp = f"{r['sport']} {_fam(r['market'])} (price edge)"
+            gi = groups.get(grp) or {"tier": "PAPER", "n": 0}
+            st = stake_for(gi["tier"], float(evm)) if float(evm) >= PLAY_EV else 0.0
+            why = f"{grp} is {gi['tier']} (graded {gi['n']})" + ("" if float(evm) >= PLAY_EV else f", edge {float(evm):+.1%} under {PLAY_EV:.0%}")
+        else:
+            st, why = 0.0, "models don't create bets until they beat the close"
+        new_call = f"BET {st:g}u" if st > 0 else "LEAN 0u"
+        tags["bet"] = st > 0
+        tags["gate"] = why
+        note2 = note.replace(call, new_call, 1) + f" | gate ({VERSION}): {why}"
+        con.execute("update bets set stake=?, logged_call=?, card_tags=?, note=? where id=?",
+                    (st, new_call, json.dumps(tags), note2[:600], r["id"]))
+    con.commit()
+
+
+def _wrap_ledger():
+    kl = sys.modules["kronos_ledger"]
+    if getattr(kl, "_fix_wrapped", False):
+        return "already"
+    orig_log, orig_proj = kl.log_event, kl.projection_agrees
+
+    def log_event(con, ev, now, L=None, jr=None, js=None):
+        before = len(kl.NEW_BETS)
+        n = orig_log(con, ev, now, L, jr, js)
+        try:
+            gate_ledger_rows(con, ev, now)
+        except Exception as e:                                 # noqa: BLE001
+            _meta_set(con, "fix_ledger_error", f"{_iso(now)} {e}")
+        del kl.NEW_BETS[before:]       # plays are the only bet alerts now (same gate, book + floor shown)
+        return n
+
+    def projection_agrees(con, ev, market, sel, line):
+        ok, why = projection_gate(con, ev["sport"], market)
+        if not ok:
+            return None, why
+        return orig_proj(con, ev, market, sel, line)
+
+    kl.log_event, kl.projection_agrees, kl._fix_wrapped = log_event, projection_agrees, True
+    return "ok"
+
+
+# ------------------------------------------------------------------ 5. learning layer
+def _wrap_learning():
+    js = sys.modules["jerry_signals"]
+    if getattr(js, "_fix_wrapped", False):
+        return "already"
+    orig = js._graded_rows
+
+    def _graded_rows(con):
+        out = []
+        for row in orig(con):
+            b = row[3]
+            try:
+                if (b["sport"] == "NFL" and str(b["market"]).startswith("player_")
+                        and (b["evidence_kind"] or "") not in ("price", "price_adj")):
+                    continue                   # NFL props model: 5% beat-close, 60% of rows; it drowns every signal
+            except Exception:                                  # noqa: BLE001
+                pass
+            out.append(row)
+        return out
+
+    js._graded_rows, js._fix_wrapped = _graded_rows, True
+    return "ok"
+
+
+def signal_audit(con):
+    """Fair-adjusted signal audit: (win rate minus the price's own probability), high half vs low half."""
+    js = sys.modules.get("jerry_signals")
+    if js is None:
+        return ["  signal audit unavailable (no learning module)"]
+    rows = js._graded_rows(con)
+    res = []
+    for k in js.SIGNALS:
+        vals = [(r[2].get(k), r) for r in rows if isinstance(r[2].get(k), (int, float))]
+        if len(vals) < 20:
+            continue
+        xs = sorted(v for v, _ in vals)
+        med = xs[len(xs) // 2]
+        hi = [r for v, r in vals if v > med]
+        lo = [r for v, r in vals if v <= med]
+        if len(hi) < 8 or len(lo) < 8:
+            hi = [r for v, r in vals if v > 0]
+            lo = [r for v, r in vals if v <= 0]
+            if len(hi) < 8 or len(lo) < 8:
+                continue
+
+        def stats(rs):
+            e = sum(y - f for y, f, _s, _b in rs) / len(rs)
+            var = sum(f * (1 - f) for _y, f, _s, _b in rs) / len(rs) ** 2
+            c = [float(b["clv_pp"]) for _y, _f, _s, b in rs if b["clv_pp"] is not None]
+            return e, var, (sum(c) / len(c) if c else None)
+
+        eh, vh, ch = stats(hi)
+        el, vl, cl = stats(lo)
+        z = (eh - el) / math.sqrt(vh + vl) if vh + vl > 0 else 0.0
+        cl_txt = f"{ch:+.2f} vs {cl:+.2f}" if ch is not None and cl is not None else "n/a"
+        res.append((abs(z), f"   {k}: n {len(vals)} | beat the price by {eh * 100:+.1f}pp (high) vs {el * 100:+.1f}pp (low) "
+                            f"| z {z:+.1f}{' REAL' if abs(z) >= 2 else ''} | CLV high vs low {cl_txt}"))
+    res.sort(key=lambda x: -x[0])
+    return [t for _z, t in res] or ["   no signal has 20+ graded spots yet"]
+
+
+# ------------------------------------------------------------------ 6. edge layer: alt/early paper, news priority, card
+def _paper_out(con):
+    con.execute("""update bets set stake=0, logged_call='ALT PAPER' where evidence_kind='alt' and paper=2
+                   and (coalesce(stake,0)>0 or logged_call='ALT EDGE') and coalesce(result,'pending')='pending'""")
+    con.execute("""update bets set stake=0, logged_call='EARLY PAPER' where evidence_kind='early' and paper=2
+                   and coalesce(stake,0)>0 and coalesce(result,'pending')='pending'""")
+    con.execute("update bets set clv_pp=null where evidence_kind='alt' and clv_pp is not null")   # no same-rung close
+    con.commit()
+
+
+def pull_event(con, sport, eid, markets, books=None, label="news", now=None):
+    """kronos_edge.pull_event with news re-pulls at close priority (they failed 'can't spend' in the last hour)."""
+    ke = sys.modules["kronos_edge"]
+    d = ke.desk()
+    if d is None:
+        raise RuntimeError("desk not found")
+    m = sys.modules.get("__main__")
+    now = now or datetime.now(UTC)
+    nbooks = len((books or getattr(m, "BOOKS", "")).split(",")) or 20
+    cost = len(markets.split(",")) * max(1, -(-nbooks // 10))
+    if not d.can_spend(con, cost, now, floor=0.0, priority="close" if label == "news" else "tape"):
+        raise RuntimeError(f"credits: can't spend {cost} now")
+    params = {"bookmakers": books or getattr(m, "BOOKS"), "markets": markets, "oddsFormat": "decimal"}
+    if not d.lock.acquire(timeout=90):
+        raise RuntimeError("desk busy")
+    try:
+        data, hdr = d.get(f"/sports/{ke._sport_key(sport)}/events/{eid}/odds", params)
+        d._record(con, sport, label, hdr, now)
+        rows = []
+        for b in data.get("bookmakers", []):
+            for mk in b.get("markets", []):
+                for o in mk.get("outcomes", []):
+                    rows.append((data, b["key"], mk["key"], o["name"], o.get("description", ""), o.get("point"), o["price"]))
+        if label != "alt":
+            d.store(con, sport, rows, now, False)
+        con.commit()
+    finally:
+        d.lock.release()
+    if label == "news":
+        try:
+            d._scan_price(con, now)            # re-price straight away so a stale DK/FD number becomes a play
+            con.commit()
+        except Exception:                                      # noqa: BLE001
+            pass
+    return data, rows
+
+
+def card(con, now=None):
+    """#15 card, one line per game today. PLAY only when the gated stake is above 0; confidence from EV alone
+    (sharp/public/projection tweaks removed: none of those signals has graduated)."""
+    ke = sys.modules["kronos_edge"]
+    now = now or datetime.now(UTC)
+    et = ET
+    d0 = now.astimezone(et).replace(hour=0, minute=0, second=0, microsecond=0)
+    rows = [dict(r) for r in con.execute("""select * from bets where evidence_kind='ledger' and commence>=? and commence<?
+                                            order by commence""", (_iso(d0.astimezone(UTC)), _iso((d0 + timedelta(days=1)).astimezone(UTC))))]
+    games = {}
+    for r in rows:
+        try:
+            t = json.loads(r.get("card_tags") or "{}")
+        except Exception:                                      # noqa: BLE001
+            t = {}
+        evm = t.get("ev_market")
+        conf = 5.0 + (max(-3.0, min(3.0, evm * 100 / 2)) if evm is not None else 0.0)
+        r["_bet"] = (r.get("stake") or 0) > 0
+        if not r["_bet"]:
+            conf = min(conf, 5.0)
+        r["_conf"] = int(round(max(1, min(10, conf))))
+        games.setdefault(r["event_id"], []).append(r)
+    out = []
+    for _eid, rs in games.items():
+        best = max(rs, key=lambda r: (r["_bet"], r["_conf"]))
+        ln = "" if best["line"] is None else (f" {best['line']:+g}" if best["market"] == "spreads" else f" {best['line']:g}")
+        act = f"PLAY {best['stake']:g}u" if best["_bet"] else "SIT"
+        out.append(f"{ke._et(best['commence'])} {best['game']}: {act} · {best['selection']}{ln} ({best['market']}) "
+                   f"{best['price']:.2f} {BOOKN.get(best['book'], best['book'])} · confidence {best['_conf']}/10")
+    return out
+
+
+def _wrap_edge():
+    ke = sys.modules["kronos_edge"]
+    if getattr(ke, "_fix_wrapped", False):
+        return "already"
+    ke.PRICE_EDGE = PLAY_EV
+    ke.ALT_MAX_CALLS_DAY = min(int(getattr(ke, "ALT_MAX_CALLS_DAY", 60)), ALT_CALLS_FIX)
+    oa, oe, ob = ke.alt_scan, ke.early_scan, ke.bet_check
+
+    def bet_check(price, from_ct, fair_p, model_p=None, prop=False, flag_label="", gap=None):
+        """'FADE PUBLIC' contains 'PUBLIC', so the old check rejected the side AGAINST the public too. Retail books
+        discounting a side is what a price edge is, so nearly every game-line price edge was blocked from BET."""
+        toks = [t.strip() for t in str(flag_label or "").split("·")]
+        lab = " · ".join(t for t in toks if t and t != "FADE PUBLIC")
+        return ob(price, from_ct, fair_p, model_p, prop, lab, gap)
+
+    ke.bet_check = bet_check
+
+    def alt_scan(con, tg=None, now=None):
+        r = oa(con, tg=None, now=now)
+        _paper_out(con)
+        return r
+
+    def early_scan(con, L=None, jr=None, js=None, tg=None, now=None):
+        r = oe(con, L=L, jr=jr, js=js, tg=None, now=now)
+        _paper_out(con)
+        return r
+
+    ke.alt_scan, ke.early_scan, ke.pull_event = alt_scan, early_scan, pull_event
+    ke.bets_reply = lambda con, now=None: plays_text(con, now)
+    ke.card = card
+    ke.HELP = ("KRONOS commands:\n• bets — plays right now (DraftKings/FanDuel, gated, with floor prices)\n"
+               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n• help — this list")
+    ke._fix_wrapped = True
+    return "ok"
+
+
+# ------------------------------------------------------------------ 7. rulebook
+RULES = {
+    "R3": ("R3 Two tiers (fix-v1): a BET is a DraftKings/FanDuel price that beats the sharp fair price by 2%+, inside 2 hours "
+           "of start, in a market the ledger has made LIVE (50+ graded, positive CLV and ROI: 0.25u at +2-4%, 0.5u at +4-6%, "
+           "1u at +6%; over +10% is treated as a likely stale or mislabeled price, 0.25u max) or PILOT (30+ graded, positive "
+           "CLV: 0.1u). Models never create a BET. Everything else is LEAN 0u."),
+    "R4": ("R4 A projection may veto a BET only after it has beaten the market's own line over 100+ graded games for that "
+           "sport (spin scorecard). Until then it is shown and graded, never used for staking."),
+}
+ADDED = [
+    "R12 Every play shows the book, the exact line and a floor price; a different line or a lower price at that book means skip.",
+    "R13 Correlation caps: at most 2 plays per game, 3 same-direction totals per sport per day, and no more than 60% of a slate's Over/Under plays on one side.",
+    "R14 No parlays from the card. Alternate lines and the early NFL scan are paper-only until 50 graded picks; alternate-line CLV is not measured (no same-rung close).",
+    "R15 Analysis may not cite a trend or signal as a reason for a pick until it has graduated under R5; ungraduated items are context only.",
+    "R16 Credits: news re-pulls run at close priority, backfill gets 5% of the daily budget, and game lines are re-pulled every 30 minutes in the last 90.",
+]
+
+
+def _patch_rulebook():
+    km = sys.modules["kronos_master"]
+    rb = km.RULEBOOK
+    for i, r in enumerate(rb):
+        for tag, text in RULES.items():
+            if r.startswith(tag + " "):
+                rb[i] = text
+    for a in ADDED:
+        if not any(r.startswith(a.split(" ", 1)[0] + " ") for r in rb):
+            rb.append(a)
+    return f"{len(rb)} rules"
+
+
+# ------------------------------------------------------------------ 8. books
+def patch_books():
+    os.environ["PRICE_BOOKS"] = ",".join(BOOKS)
+    done = []
+    for mod, attr in (("jerry_reason", "BET_BOOKS"), ("kronos_ledger", "CT_BOOKS"), ("kronos_edge", "CT"),
+                      ("kronos_drops", "CT_BOOKS"), ("jerry_live", "PRICE_BOOKS")):
+        m = sys.modules.get(mod)
+        if m is not None and hasattr(m, attr):
+            setattr(m, attr, BOOKS)
+            done.append(f"{mod}.{attr}")
+    kd = sys.modules.get("kronos_drops")
+    if kd is not None and hasattr(kd, "ALERT_EV"):
+        kd.ALERT_EV = max(float(kd.ALERT_EV), PLAY_EV * 100)
+    return done
+
+
+def patch_desk_globals(g):
+    """jerry_desk.py runs as __main__ via runpy; its functions read these globals at call time."""
+    done = []
+    if "BETTABLE" in g:
+        g["BETTABLE"] = BOOKS; done.append("BETTABLE")
+    if "BACKFILL_SHARE" in g:
+        g["BACKFILL_SHARE"] = min(float(g["BACKFILL_SHARE"]), BACKFILL_SHARE_FIX); done.append("BACKFILL_SHARE")
+    if "SHARP_EVERY" in g:
+        g["SHARP_EVERY"] = min(int(g["SHARP_EVERY"]), SHARP_EVERY_FIX); done.append("SHARP_EVERY")
+    STATUS["desk"] = done
+    return done
+
+
+def install():
+    for name, fn in (("books", patch_books), ("ledger", _wrap_ledger), ("learning", _wrap_learning),
+                     ("edge", _wrap_edge), ("rulebook", _patch_rulebook)):
+        try:
+            STATUS[name] = fn()
+        except Exception as e:                                 # noqa: BLE001
+            STATUS[name] = f"FAILED: {str(e)[:120]}"
+    return STATUS
+
+
+# ------------------------------------------------------------------ 9. feed block
+def feed_block(con, now=None):
+    now = now or datetime.now(UTC)
+    _ensure(con)
+    L = ["", "", f"KRONOS FIX ({VERSION}: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, "
+                 "news credit priority, learning-layer cleanup, signal audit):"]
+    L.append("  patches: " + "; ".join(f"{k} {v}" for k, v in STATUS.items() if k != "last_build"))
+    try:
+        L.append("  " + plays_text(con, now).replace("\n", "\n  "))
+        lb = STATUS.get("last_build")
+        if lb:
+            L.append(f"  last build {lb['ts']}: {lb['plays']} plays, {lb['paper_only']} paper-only edges, {lb['capped']} held by correlation caps")
+        pr = con.execute("""select count(*) n, sum(result='W') w, sum(result='L') l, sum(result='P') p,
+                                   round(sum(coalesce(pnl,0)),2) u, round(sum(case when result in ('W','L','P') then stake else 0 end),2) st,
+                                   sum(result='pending') pend from fix_plays""").fetchone()
+        if pr and pr["n"]:
+            roi = f"{pr['u'] / pr['st']:+.1%}" if pr["st"] else "n/a"
+            L.append(f"  PLAYS SCORECARD (every play sent): {pr['n']} plays | {pr['w'] or 0}-{pr['l'] or 0}-{pr['p'] or 0} | "
+                     f"{pr['u'] or 0:+.2f}u | ROI {roi} | pending {pr['pend'] or 0}")
+        L.append("  LIVE-MONEY GATE (paper ledger by market; LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0):")
+        groups = gate_groups(con, force=True)
+        order = {"LIVE": 0, "PILOT": 1, "PAPER": 2}
+        for k, gi in sorted(groups.items(), key=lambda kv: (order[kv[1]["tier"]], -kv[1]["n"])):
+            if gi["n"] >= 5 or gi["tier"] != "PAPER":
+                L.append("   " + _group_line(k, gi))
+        L.append("  PROJECTION GATE (a projection may veto a BET only after beating the market's line over 100+ games):")
+        for sp in ("NFL", "NBA", "NHL", "EPL", "UCL"):
+            for mk in ("spreads", "totals"):
+                ok, why = projection_gate(con, sp, mk)
+                L.append(f"   {sp} {'margin' if mk == 'spreads' else 'total'}: {'ON' if ok else 'off'} · {why}")
+        L.append("  SIGNAL AUDIT (each signal's high half vs low half, measured as wins beyond what the price expected; "
+                 "|z| >= 2 is a real effect; NFL props model rows excluded):")
+        L.extend(signal_audit(con)[:30])
+        for kind in ("alt", "early"):
+            r = con.execute(f"""select count(*) n, sum(result='W') w, sum(result='L') l,
+                                       sum(case when result='W' then price-1 when result='L' then -1 else 0 end) u
+                                from bets where evidence_kind=?""", (kind,)).fetchone()
+            if r and r["n"]:
+                L.append(f"  {kind} (paper only, flat 1u): {r['n']} picks | {r['w'] or 0}-{r['l'] or 0} | {r['u'] or 0:+.2f}u"
+                         + (" | CLV not measured (no same-rung close)" if kind == "alt" else ""))
+        e = con.execute("select v from meta where k='fix_ledger_error'").fetchone()
+        if e:
+            L.append(f"  last ledger-gate error: {e[0]}")
+    except Exception as ex:                                    # noqa: BLE001
+        L.append(f"  fix report unavailable ({str(ex)[:160]})")
+    return "\n".join(L) + "\n"
+'''
+
+
 try:
     jerry_reason = _register("jerry_reason", _REASON_SRC)
     jerry_grade = _register("jerry_grade", _GRADE_SRC)
@@ -7055,6 +7730,9 @@ try:
     # finalize last, after every module has added its signals (2026-11-01: running it before kronos_master.install
     # let out_total and rest_min back in)
     print(f"[boot] duplicate signals removed: {kronos_master.finalize_signals(jerry_signals)} -> {len(jerry_signals.SIGNALS)} signals", flush=True)
+    # audit batch (2026-11-03): installed last, after every module it patches is registered
+    kronos_fix = _register("kronos_fix", _FIX_SRC)
+    print(f"[boot] {kronos_fix.VERSION}: {kronos_fix.install()}", flush=True)
     try:
         _vc = sqlite3.connect(os.path.join(os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
         _n = _vc.execute("""update bets set result='V', pnl=0, graded_ts=?, note=coalesce(note,'') ||
@@ -8162,6 +8840,76 @@ class _KronosServer(_OrigTHS):
 
 
 _hs.ThreadingHTTPServer = _KronosServer
+
+# ================================================================= audit batch wiring (fix-v1-2026-11-03)
+# Books, Telegram filter, feed block, desk globals and the plays loop. kronos_fix holds the logic.
+FIX_EVERY_SEC = int(os.environ.get("FIX_EVERY_SEC", "300"))
+try:
+    import kronos_fix as _kfx
+    print(f"[fix] books patched: {_kfx.patch_books()}", flush=True)
+    BET_BOOKS_GS = _kfx.BOOKS
+    if L is not None and not getattr(L, "_fix_tg", False):
+        _orig_tg_fix = L.telegram
+        _TG_MUTE = ("PRICE ", "KRONOS — new Play edges", "STEAM ", "KRONOS ALT LINE", "KRONOS BET:", "KRONOS EARLY")
+
+        def _tg_filtered(text):
+            """Only plays, news, health and drop alerts reach the phone (owner: actionable alerts only)."""
+            if str(text).startswith(_TG_MUTE):
+                return False
+            return _orig_tg_fix(text)
+
+        L.telegram = _tg_filtered
+        L._fix_tg = True
+        _kfx.TG = _orig_tg_fix
+
+    _orig_edge_block_fix = _edge_block
+
+    def _edge_block():
+        try:
+            _c = _drops_con()
+            try:
+                _fx = _kfx.feed_block(_c)
+            finally:
+                _c.close()
+        except Exception as _e:                                       # noqa: BLE001
+            _fx = f"\n\nKRONOS FIX: unavailable ({str(_e)[:200]})\n"
+        return _fx + _orig_edge_block_fix()
+
+    def _fix_desk_loop():
+        for _ in range(240):
+            _g = getattr(sys.modules.get("__main__"), "__dict__", {})
+            if "BETTABLE" in _g and "BACKFILL_SHARE" in _g:
+                print(f"[fix] desk globals patched: {_kfx.patch_desk_globals(_g)}", flush=True)
+                return
+            time.sleep(5)
+        print("[fix] desk globals not found; BETTABLE/backfill/sharp-window cadence unchanged", flush=True)
+
+    def _fix_loop():
+        time.sleep(240)
+        while True:
+            try:
+                _c = _drops_con()
+                try:
+                    _kfx._ensure(_c)
+                    _kfx._paper_out(_c)
+                    _n = _kfx.send_new_plays(_c)
+                    _g = _kfx.grade_plays(_c)
+                    _kfx._meta_set(_c, "fix_status", f"{datetime.now(UTC).isoformat(timespec='seconds')} sent {_n} graded {_g}")
+                    _c.commit()
+                    if _n:
+                        print(f"[fix] sent {_n} play(s)", flush=True)
+                finally:
+                    _c.close()
+            except Exception as _e:                                   # noqa: BLE001
+                print(f"[fix] pass failed: {_e}", flush=True)
+            time.sleep(FIX_EVERY_SEC)
+
+    threading.Thread(target=_fix_desk_loop, daemon=True).start()
+    threading.Thread(target=_fix_loop, daemon=True).start()
+    print(f"[fix] {_kfx.VERSION} wiring active", flush=True)
+except Exception:
+    traceback.print_exc()
+    print("[fix] WARNING audit batch wiring failed; desk starts with the previous behaviour", flush=True)
 
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
