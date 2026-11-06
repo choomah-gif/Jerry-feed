@@ -1450,9 +1450,19 @@ class NameResolver:
         self.con.execute("insert or replace into grade_quarantine values(?,?,?,?,?,?)",
                          (bet_id, sport, player, market, reason, now_iso))
 
-    def quarantined(self):
+    def quarantined(self, limit=500, offset=0):
+        """Return quarantine rows with pagination (was hard-capped at 200).
+
+        limit/offset mirror /api/quarantine query params. Pass limit=None for all rows.
+        """
+        if limit is None:
+            return [dict(r) for r in self.con.execute(
+                "select * from grade_quarantine order by seen_ts desc")]
+        limit = max(1, min(int(limit), 5000))
+        offset = max(0, int(offset or 0))
         return [dict(r) for r in self.con.execute(
-            "select * from grade_quarantine order by seen_ts desc limit 200")]
+            "select * from grade_quarantine order by seen_ts desc limit ? offset ?",
+            (limit, offset))]
 
 
 def settle_prop(market, selection, line, value, played=True):
