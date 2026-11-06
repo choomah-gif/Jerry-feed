@@ -1449,6 +1449,29 @@ class Desk:
                          f"{'' if v['line'] is None else v['line']} | {v['book']} {v['price']} vs fair {v['fair']:.1%} | EV {v['ev']:+.1%} | [{fl}]"
                          + (f" [{act}]" if act else ""))
         c3.close()
+        
+        # ---- price-edge vs model paper split (2026-11-05)
+        # Overall CLV is dominated by model paper that loses to the close.
+        # Show the working category separately so the numbers are not misleading.
+        try:
+            c_split = db()
+            price_rows = [dict(r) for r in c_split.execute("select * from bets where paper=1 and note like 'price edge%'")]
+            model_rows = [dict(r) for r in c_split.execute("select * from bets where paper=1 and (note is null or note not like 'price edge%')")]
+            c_split.close()
+            def _blk(rs):
+                clv = [r["clv_pp"] for r in rs if r["clv_pp"] is not None]
+                done = [r for r in rs if r["result"] in ("W","L","P")]
+                st = sum(r["stake"] or 0 for r in done); pnl = sum(r["pnl"] or 0 for r in done)
+                return (f"n={len(rs)} closed={len(clv)} CLV={round(sum(clv)/len(clv),2) if clv else 'n/a'} "
+                        f"beat={round(sum(c>0 for c in clv)/len(clv),3) if clv else 'n/a'} "
+                        f"graded={len(done)} {sum(r['result']=='W' for r in done)}-{sum(r['result']=='L' for r in done)}-{sum(r['result']=='P' for r in done)} "
+                        f"units={round(pnl,2)} ROI={round(pnl/st,4) if st else 'n/a'}")
+            lines += ["", "PRICE-EDGE PAPER (the working category; soft-book vs Pinnacle fair):",
+                      "  " + _blk(price_rows),
+                      "MODEL PAPER (projections vs market; currently losing to the close):",
+                      "  " + _blk(model_rows)]
+        except Exception as _e:
+            lines.append(f"  (price/model split unavailable: {_e})")
         lines += ["", "MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):"]
         for r in self.edges():
             if r.get("plain"):
