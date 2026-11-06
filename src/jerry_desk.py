@@ -148,6 +148,49 @@ def norm_name(s):
     return re.sub(r"\s+", " ", re.sub(r"[^a-z ]", "", s.lower().replace("-", " "))).strip()
 
 
+# Match jerry_grade.NameResolver._norm so player_alias keys agree with the grader.
+_ALIAS_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def _alias_norm(s):
+    """Same as NameResolver._norm: lower, strip punct, drop generational suffix when >2 tokens."""
+    n = re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " ")).strip()
+    parts = n.split()
+    while len(parts) > 2 and parts[-1] in _ALIAS_SUFFIXES:
+        parts = parts[:-1]
+    return " ".join(parts)
+
+
+def _store_player_alias(sport, book_name, feed_name, now_iso):
+    """Insert/replace player_alias using NameResolver.remember when available, else SQL."""
+    key = _alias_norm(book_name)
+    try:
+        import jerry_grade as jg
+        con = db()
+        try:
+            res = jg.NameResolver(con)
+            res.remember(sport, book_name, feed_name, now_iso)
+            con.commit()
+            r = con.execute(
+                "select sport, book_name, feed_name, resolved_ts from player_alias where sport=? and book_name=?",
+                (sport, key)).fetchone()
+            return dict(r) if r else {"sport": sport, "book_name": key, "feed_name": feed_name, "resolved_ts": now_iso}
+        finally:
+            con.close()
+    except Exception:
+        con = db()
+        try:
+            con.execute("""create table if not exists player_alias(
+                sport text, book_name text, feed_name text, resolved_ts text,
+                primary key(sport, book_name))""")
+            con.execute("insert or replace into player_alias values(?,?,?,?)",
+                        (sport, key, feed_name, now_iso))
+            con.commit()
+            return {"sport": sport, "book_name": key, "feed_name": feed_name, "resolved_ts": now_iso}
+        finally:
+            con.close()
+
+
 def family(book):
     return FAMILY.get(book, book)
 
@@ -1978,6 +2021,17 @@ class Handler(BaseHTTPRequestHandler):
                 DESK.set_goalie(f["team"], f["name"])
             elif u.path == "/api/refresh-models":
                 threading.Thread(target=DESK.refresh_models, daemon=True).start()
+            elif u.path == "/api/alias":
+                # Manual player_alias insert/replace. book_name stored via same _norm as NameResolver.
+                sport = (f.get("sport") or "").strip()
+                book_name = (f.get("book_name") or "").strip()
+                feed_name = (f.get("feed_name") or "").strip()
+                if not sport or not book_name or not feed_name:
+                    return self.send(json.dumps({"error": "sport, book_name, feed_name required"}))
+                row = _store_player_alias(sport, book_name, feed_name, iso(now_utc()))
+                return self.send(json.dumps(row))
+            else:
+                return self.send(json.dumps({"error": f"unknown path {u.path}"}))
         except Exception as e:
             return self.send(f"error: {e}", "text/plain")
         self.send_response(303)
@@ -2040,15 +2094,54 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(json.dumps(DESK.report()))
         if u.path == "/api/paper":
             return self.send(json.dumps(DESK.paper_report()))
-        if u.path == "/api/quarantine":
+        if u.path == "/api/alias":
+            # Verify a stored player_alias row. book_name is _norm'd like NameResolver.
+            sport = (q.get("sport") or "").strip()
+            book_name = (q.get("book_name") or "").strip()
+            if not sport or not book_name:
+                return self.send(json.dumps({"error": "sport and book_name required"}), "application/json")
             con = db()
             try:
+                # Ensure table exists (NameResolver creates it on grade; create here too)
+                con.execute("""create table if not exists player_alias(
+                    sport text, book_name text, feed_name text, resolved_ts text,
+                    primary key(sport, book_name))""")
+                key = _alias_norm(book_name)
+                r = con.execute(
+                    "select sport, book_name, feed_name, resolved_ts from player_alias where sport=? and book_name=?",
+                    (sport, key)).fetchone()
+                if not r:
+                    con.close()
+                    return self.send(json.dumps({"found": False, "sport": sport, "book_name": key}))
+                row = dict(r)
+                con.close()
+                return self.send(json.dumps({"found": True, **row}))
+            except sqlite3.Error as e:
+                con.close()
+                return self.send(json.dumps({"error": str(e)}))
+        if u.path == "/api/quarantine":
+            # Pagination: ?limit= (default 500, max 5000) & ?offset= (default 0).
+            # Also returns total so clients can see past the old hard 200 cap.
+            con = db()
+            try:
+                total = con.execute("select count(*) from grade_quarantine").fetchone()[0]
+                try:
+                    limit = max(1, min(int(q.get("limit", 500)), 5000))
+                except (TypeError, ValueError):
+                    limit = 500
+                try:
+                    offset = max(0, int(q.get("offset", 0)))
+                except (TypeError, ValueError):
+                    offset = 0
                 rows = [dict(r) for r in con.execute(
-                    "select * from grade_quarantine order by seen_ts desc limit 200")]
+                    "select * from grade_quarantine order by seen_ts desc limit ? offset ?",
+                    (limit, offset))]
             except sqlite3.Error:
-                rows = []
+                total, rows, limit, offset = 0, [], 500, 0
             con.close()
-            return self.send(json.dumps({"quarantined": rows}))
+            return self.send(json.dumps({
+                "quarantined": rows, "total": total, "limit": limit, "offset": offset,
+            }))
         if u.path == "/api/edges":
             return self.send(json.dumps(DESK.edges(float(q.get("min", 0.015)), int(q.get("limit", 60)))))
         if u.path == "/api/model":
