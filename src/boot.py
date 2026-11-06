@@ -7062,11 +7062,11 @@ What this module changes (one batch, nothing new to install):
   9. A recurring audit block in the feed: the live-money gate, the projection gate, a fair-adjusted signal audit,
      and the plays scorecard.
 """
-import json, math, os, sys, time
+import json, math, os, re, sys, time
 from datetime import datetime, timezone, timedelta
 
 UTC = timezone.utc
-VERSION = "fix-v1-2026-11-03"
+VERSION = "fix-v1.2-2026-11-05"
 BOOKS = ("draftkings", "fanduel")
 BOOKN = {"draftkings": "DraftKings", "fanduel": "FanDuel", "fanatics": "Fanatics", "pinnacle": "Pinnacle"}
 PLAY_EV = float(os.environ.get("PLAY_MIN_EV", "0.02"))          # 0-2% price edges lost 31% (n 30)
@@ -7297,18 +7297,20 @@ def play_message(p):
 
 def send_new_plays(con, now=None):
     """Alert each play once and record it so the plays themselves get a scorecard."""
-    _ensure(con)
+    _ensure_learn(con)
     now = now or datetime.now(UTC)
     plays, _ = build_plays(con, now)
     sent = 0
     for p in plays:
         if con.execute("select 1 from fix_plays where k=?", (p["k"],)).fetchone():
             continue
+        mins, why = reason_for(p, now)
         con.execute("""insert into fix_plays(k, ts, sport, event_id, game, commence, market, player, outcome, line, book,
-                       price, floor, fair, ev, stake, tier, grp, result, pnl) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',null)""",
+                       price, floor, fair, ev, stake, tier, grp, result, pnl, reason, mins_to_start)
+                       values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',null,?,?)""",
                     (p["k"], _iso(now), p["sport"], p["event_id"], p["game"], p["commence"], p["market"], p["player"],
                      p["outcome"], p["line"], p["book"], p["price"], p["floor"], p["fair"], p["ev"], p["stake"],
-                     p["tier"], p["grp"]))
+                     p["tier"], p["grp"], json.dumps(why), round(mins, 1)))
         con.commit()
         if TG is not None:
             try:
@@ -7496,7 +7498,7 @@ def pull_event(con, sport, eid, markets, books=None, label="news", now=None):
     now = now or datetime.now(UTC)
     nbooks = len((books or getattr(m, "BOOKS", "")).split(",")) or 20
     cost = len(markets.split(",")) * max(1, -(-nbooks // 10))
-    if not d.can_spend(con, cost, now, floor=0.0, priority="close" if label == "news" else "tape"):
+    if not d.can_spend(con, cost, now, floor=0.0, priority="close" if str(label).startswith("news") else "tape"):
         raise RuntimeError(f"credits: can't spend {cost} now")
     params = {"bookmakers": books or getattr(m, "BOOKS"), "markets": markets, "oddsFormat": "decimal"}
     if not d.lock.acquire(timeout=90):
@@ -7514,7 +7516,7 @@ def pull_event(con, sport, eid, markets, books=None, label="news", now=None):
         con.commit()
     finally:
         d.lock.release()
-    if label == "news":
+    if str(label).startswith("news"):
         try:
             d._scan_price(con, now)            # re-price straight away so a stale DK/FD number becomes a play
             con.commit()
@@ -7653,7 +7655,7 @@ def patch_desk_globals(g):
 
 def install():
     for name, fn in (("books", patch_books), ("ledger", _wrap_ledger), ("learning", _wrap_learning),
-                     ("edge", _wrap_edge), ("rulebook", _patch_rulebook)):
+                     ("edge", _wrap_edge), ("rulebook", _patch_rulebook), ("learning loop", _wrap_learn)):
         try:
             STATUS[name] = fn()
         except Exception as e:                                 # noqa: BLE001
@@ -7661,10 +7663,542 @@ def install():
     return STATUS
 
 
+# ------------------------------------------------------------------ 10. learning loop (fix-v1.2)
+HOLDOUT_N = int(os.environ.get("HOLDOUT_N", "100"))
+HOLDOUT_Z = 1.65            # one-sided 95% on bets the discovery never saw
+HOLDOUT_RETRY_DAYS = 90
+SHARP_BATCH = 300
+_WORDS_MK = (("rebound", "player_rebounds"), ("assist", "player_assists"), ("block", "player_blocks"),
+             ("three", "player_threes"), ("3pt", "player_threes"), ("shot", "player_shots_on_goal"),
+             ("sog", "player_shots_on_goal"), ("goal", "player_goals"), ("rec yd", "player_reception_yds"),
+             ("receiving", "player_reception_yds"), ("reception", "player_receptions"), ("catch", "player_receptions"),
+             ("pass yd", "player_pass_yds"), ("passing", "player_pass_yds"), ("rush yd", "player_rush_yds"),
+             ("rushing", "player_rush_yds"), ("touchdown", "player_anytime_td"), (" td", "player_anytime_td"),
+             ("pra", "player_points_rebounds_assists"), ("point", "player_points"), ("pts", "player_points"))
+
+
+def _ensure_learn(con):
+    _ensure(con)
+    have = {r[1] for r in con.execute("pragma table_info(fix_plays)")}
+    for col, typ in (("reason", "text"), ("mins_to_start", "real"), ("fair_close", "real"), ("sharp_move", "real"),
+                     ("line_move", "real")):
+        if col not in have:
+            con.execute(f"alter table fix_plays add column {col} {typ}")
+    con.execute("""create table if not exists fix_sharp(bet_id integer primary key, fair_send real, fair_close real,
+                   sharp_move real, line_move real, ts text)""")
+    con.execute("""create table if not exists fix_holdout(signal text primary key, frozen_ts text, z_disc real, n_disc int,
+                   status text, z_hold real, n_hold int, decided_ts text)""")
+    con.execute("""create table if not exists fix_calls(id integer primary key, ts text, raw text, sport text, event_id text,
+                   game text, commence text, market text, selection text, player text, line real, price real, conf real,
+                   fair_call real, fair_close real, sharp_move real, line_move real, result text default 'pending', pnl real)""")
+
+
+# ---- sharp move: did Pinnacle's fair price move toward our side after we flagged it?
+def _pin_at(con, eid, market, outcome, player, line, t_iso):
+    """Pinnacle no-vig probability for one side at time t, at that exact line. Returns (fair, our_line_at_t)."""
+    def last(out):
+        return con.execute("""select line, price from ticks where book='pinnacle' and event_id=? and market=?
+                              and outcome=? and coalesce(player,'')=? and ts<=? order by ts desc limit 1""",
+                           (eid, market, out, player or "", t_iso)).fetchone()
+    me = last(outcome)
+    if me is None or not me["price"]:
+        return None, None
+    if line is not None and (me["line"] is None or abs(float(me["line"]) - float(line)) > 1e-9):
+        return None, me["line"]
+    if market in ("totals",) or market.startswith("player_"):
+        others = [{"Over": "Under", "Under": "Over", "Yes": "No", "No": "Yes"}.get(outcome)]
+    else:
+        others = [r[0] for r in con.execute("""select distinct outcome from ticks where book='pinnacle' and event_id=?
+                                               and market=? and coalesce(player,'')=? and outcome<>?""",
+                                            (eid, market, player or "", outcome))]
+    inv, mine = 0.0, 1.0 / float(me["price"])
+    for o in others:
+        if not o:
+            return None, me["line"]
+        r = last(o)
+        if r is None or not r["price"]:
+            return None, me["line"]
+        if line is not None and market == "spreads" and (r["line"] is None or abs(float(r["line"]) + float(line)) > 1e-9):
+            return None, me["line"]
+        if line is not None and market != "spreads" and market != "h2h" and (r["line"] is None or abs(float(r["line"]) - float(line)) > 1e-9):
+            return None, me["line"]
+        inv += 1.0 / float(r["price"])
+    return mine / (mine + inv), me["line"]
+
+
+def _line_toward(market, outcome, line, close_line):
+    """Points the sharp line moved in our favour (Over wants the total up, Under down, a spread side wants its number up)."""
+    if line is None or close_line is None:
+        return None
+    d = float(close_line) - float(line)
+    if outcome == "Under":
+        d = -d
+    if market == "spreads":
+        d = -d                      # our +3.5 closing +2.5 = the market moved toward us
+    return round(d, 2)
+
+
+def _close_for(con, eid, market, outcome, player, line, commence):
+    fair, cl = _pin_at(con, eid, market, outcome, player, line, commence)
+    lm = None if fair is not None else _line_toward(market, outcome, line, cl)
+    return fair, lm
+
+
+def track_sharp(con, now=None):
+    """Fill sharp-move for finished plays, calls and paper price-edge rows (the fast teacher)."""
+    _ensure_learn(con)
+    now = now or datetime.now(UTC)
+    cut = _iso(now - timedelta(minutes=10))
+    n = 0
+    for p in con.execute("""select k, event_id, market, outcome, player, line, fair, commence from fix_plays
+                            where fair_close is null and line_move is null and commence<? limit ?""", (cut, SHARP_BATCH)).fetchall():
+        fc, lm = _close_for(con, p["event_id"], p["market"], p["outcome"], p["player"], p["line"], p["commence"])
+        sm = round((fc - float(p["fair"])) * 100, 2) if fc is not None and p["fair"] else None
+        con.execute("update fix_plays set fair_close=?, sharp_move=?, line_move=? where k=?",
+                    (fc, sm, lm if lm is not None else (0.0 if fc is None else None), p["k"]))
+        n += 1
+    for p in con.execute("""select id, event_id, market, selection, player, line, fair_call, commence from fix_calls
+                            where fair_close is null and line_move is null and commence<? limit ?""", (cut, SHARP_BATCH)).fetchall():
+        fc, lm = _close_for(con, p["event_id"], p["market"], p["selection"], p["player"], p["line"], p["commence"])
+        sm = round((fc - float(p["fair_call"])) * 100, 2) if fc is not None and p["fair_call"] else None
+        con.execute("update fix_calls set fair_close=?, sharp_move=?, line_move=? where id=?",
+                    (fc, sm, lm if lm is not None else (0.0 if fc is None else None), p["id"]))
+        n += 1
+    for b in con.execute("""select b.id, b.event_id, b.market, b.selection, b.player, b.line, b.fair_prob, b.commence
+                            from bets b left join fix_sharp s on s.bet_id=b.id
+                            where s.bet_id is null and b.paper=1 and b.evidence_kind in ('price','price_adj')
+                            and b.note not like 'price edge (line-adj%' and b.commence<? and b.commence>? limit ?""",
+                         (cut, _iso(now - timedelta(days=45)), SHARP_BATCH)).fetchall():
+        fc, lm = _close_for(con, b["event_id"], b["market"], b["selection"], b["player"], b["line"], b["commence"])
+        sm = round((fc - float(b["fair_prob"])) * 100, 2) if fc is not None and b["fair_prob"] else None
+        con.execute("insert or replace into fix_sharp values(?,?,?,?,?,?)", (b["id"], b["fair_prob"], fc, sm, lm, _iso(now)))
+        n += 1
+    con.commit()
+    return n
+
+
+def sharp_by_group(con):
+    out = {}
+    for r in con.execute("""select b.sport, b.market, b.note, s.sharp_move, s.line_move from fix_sharp s join bets b on b.id=s.bet_id"""):
+        k = f"{r['sport']} {_fam(r['market'])} ({_kind(r['note'])})"
+        a = out.setdefault(k, {"sm": [], "lm": []})
+        if r["sharp_move"] is not None:
+            a["sm"].append(float(r["sharp_move"]))
+        elif r["line_move"] is not None:
+            a["lm"].append(float(r["line_move"]))
+    return out
+
+
+def _sm_txt(vals):
+    if not vals:
+        return "n/a"
+    m = sum(vals) / len(vals)
+    sd = (sum((v - m) ** 2 for v in vals) / max(1, len(vals) - 1)) ** 0.5
+    z = m / (sd / len(vals) ** 0.5) if sd > 0 and len(vals) > 1 else 0.0
+    toward = sum(v > 0 for v in vals) / len(vals)
+    return f"{m:+.2f}pp (n {len(vals)}, {toward:.0%} toward us, z {z:+.1f})"
+
+
+# ---- holdout promotion: a signal found on old bets must hold on the next 100 new ones
+def _holdout_rows(con, since):
+    rows = []
+    for b in con.execute("""select result, fair_prob, model_prob, price, clv_pp, signals, sport, market, evidence_kind, hours_to_start
+                            from bets where paper=1 and result in ('W','L') and signals is not null and placed_ts>?""", (since,)):
+        if b["sport"] == "NFL" and str(b["market"]).startswith("player_") and (b["evidence_kind"] or "") not in ("price", "price_adj"):
+            continue
+        try:
+            sg = json.loads(b["signals"])
+        except Exception:                                      # noqa: BLE001
+            continue
+        f = b["fair_prob"] or b["model_prob"]
+        if f:
+            rows.append((1 if b["result"] == "W" else 0, float(f), sg, b))
+    return rows
+
+
+def apply_holdout(con, js, out, now):
+    _ensure_learn(con)
+    status, stats, zs = out.get("status", {}), out.get("stats", {}), out.get("z", {})
+    passed = []
+    for k in list(status):
+        row = con.execute("select * from fix_holdout where signal=?", (k,)).fetchone()
+        if row is not None and row["status"] == "failed" and row["decided_ts"] and \
+                _ts(row["decided_ts"]) < now - timedelta(days=HOLDOUT_RETRY_DAYS):
+            con.execute("delete from fix_holdout where signal=?", (k,))
+            row = None
+        if status[k] != "graduated":
+            continue
+        if row is None:
+            con.execute("insert into fix_holdout values(?,?,?,?, 'holdout', null, 0, null)",
+                        (k, _iso(now), zs.get(k), (stats.get(k) or {}).get("n")))
+            status[k] = f"holdout 0/{HOLDOUT_N} (found z {zs.get(k, 0):+.1f} on old bets; must repeat on new ones)"
+            continue
+        if row["status"] == "passed":
+            passed.append(k)
+            continue
+        if row["status"] == "failed":
+            status[k] = f"failed holdout (z {row['z_hold']:+.1f} on {row['n_hold']} new bets)"
+            continue
+        hr = [r for r in _holdout_rows(con, row["frozen_ts"]) if r[2].get(k) is not None]
+        if len(hr) < HOLDOUT_N:
+            con.execute("update fix_holdout set n_hold=? where signal=?", (len(hr), k))
+            status[k] = f"holdout {len(hr)}/{HOLDOUT_N} (found z {row['z_disc'] or 0:+.1f})"
+            continue
+        w1, se1 = js._fit(hr, [k], stats, l2=1.0)
+        zh = w1[k] / se1[k] if se1[k] not in (0, float("inf")) else 0.0
+        ok = (zh >= HOLDOUT_Z and (row["z_disc"] or 0) > 0) or (zh <= -HOLDOUT_Z and (row["z_disc"] or 0) < 0)
+        con.execute("update fix_holdout set status=?, z_hold=?, n_hold=?, decided_ts=? where signal=?",
+                    ("passed" if ok else "failed", round(zh, 2), len(hr), _iso(now), k))
+        if ok:
+            passed.append(k)
+        else:
+            status[k] = f"failed holdout (z {zh:+.1f} on {len(hr)} new bets)"
+    w = {k: 0.0 for k in out.get("weights", {})}
+    if passed:
+        wl, _se = js._fit(js._graded_rows(con), passed, stats, l2=js.L2)
+        w.update({k: round(v, 4) for k, v in wl.items()})
+    out["weights"], out["status"], out["holdout_passed"] = w, status, passed
+    js._meta(con, "signal_weights", out)
+    con.commit()
+    return out
+
+
+def _wrap_holdout():
+    js = sys.modules["jerry_signals"]
+    if getattr(js, "_fix_holdout", False):
+        return "already"
+    orig = js.fit_weights
+
+    def fit_weights(con, now):
+        out = orig(con, now)
+        try:
+            out = apply_holdout(con, js, out, now)
+        except Exception as e:                                 # noqa: BLE001
+            _meta_set(con, "fix_holdout_error", f"{_iso(now)} {e}")
+        return out
+
+    js.fit_weights, js._fix_holdout = fit_weights, True
+    return "ok"
+
+
+# ---- reason codes
+def _ev_bucket(ev):
+    return "10%+ check" if ev > CHECK_EV else "6-10%" if ev >= 0.06 else "4-6%" if ev >= 0.04 else "2-4%"
+
+
+def _min_bucket(m):
+    return "0-30 min" if m < 30 else "30-60 min" if m < 60 else "60-120 min"
+
+
+def reason_for(p, now):
+    mins = (_ts(p["commence"]) - now).total_seconds() / 60
+    return mins, {"ev": _ev_bucket(p["ev"]), "book": BOOKN.get(p["book"], p["book"]), "start": _min_bucket(mins),
+                  "market": f"{p['sport']} {_fam(p['market'])}", "tier": p["tier"],
+                  "side": p["outcome"] if p["outcome"] in ("Over", "Under") else "side",
+                  "flag": (p.get("flag") or "none")}
+
+
+# ---- my analysis calls, graded like everything else
+ALIAS = {"cavs": "cavaliers", "sixers": "76ers", "mavs": "mavericks", "wolves": "timberwolves", "pels": "pelicans",
+         "nugs": "nuggets", "dubs": "warriors", "grizz": "grizzlies", "blazers": "blazers", "habs": "canadiens",
+         "leafs": "leafs", "pens": "penguins", "bolts": "lightning", "caps": "capitals", "canes": "hurricanes",
+         "avs": "avalanche", "jackets": "jackets", "preds": "predators", "sens": "senators", "isles": "islanders",
+         "hawks": "hawks", "niners": "49ers", "pats": "patriots", "bucs": "buccaneers", "jags": "jaguars",
+         "spurs": "spurs", "knicks": "knicks", "celts": "celtics", "wings": "wings", "yotes": "coyotes"}
+
+
+def _toks(s):
+    return [ALIAS.get(t, t) for t in re.findall(r"[a-z0-9']+", str(s).lower()) if len(t) >= 3]
+
+
+def parse_call(con, txt, now=None):
+    now = now or datetime.now(UTC)
+    raw = txt.split(None, 1)[1] if len(txt.split(None, 1)) > 1 else ""
+    low = " " + raw.lower() + " "
+    conf = re.search(r"conf(?:idence)?\s*(\d+(?:\.\d+)?)", low)
+    conf = float(conf.group(1)) if conf else None
+    low2 = re.sub(r"conf(?:idence)?\s*\d+(?:\.\d+)?", " ", low)
+    prices = re.findall(r"(?<![\d.+-])(\d{1,2}\.\d{2})(?![\d])", low2)
+    if not prices:
+        return None, "Add the decimal price, e.g. call Bears +3.5 1.84 conf 5"
+    price = float(prices[-1])
+    low3 = low2.replace(prices[-1], " ")
+    evs = con.execute("""select event_id, sport, home, away, commence from events where commence>? and commence<?""",
+                      (_iso(now - timedelta(hours=1)), _iso(now + timedelta(days=7)))).fetchall()
+    words = set(_toks(low3))
+    best, score = [], 0
+    for e in evs:
+        s = len(words & set(_toks(e["home"]))) + len(words & set(_toks(e["away"])))
+        if s > score:
+            best, score = [e], s
+        elif s == score and s > 0:
+            best.append(e)
+    player, pev = None, None
+    if not best or len(best) > 1:
+        # props: find a player name among upcoming events
+        cand = con.execute("""select distinct q.event_id, q.player from last_quote q join events e using(event_id)
+                              where q.player<>'' and e.commence>? and e.commence<?""",
+                           (_iso(now - timedelta(hours=1)), _iso(now + timedelta(days=3)))).fetchall()
+        hits = [(r["event_id"], r["player"]) for r in cand
+                if r["player"] and set(_toks(r["player"])) and set(_toks(r["player"])[-1:]) <= words
+                and (not best or r["event_id"] in {b["event_id"] for b in best})]
+        hits = sorted(set(hits), key=lambda h: -len(set(_toks(h[1])) & words))
+        if hits and (len(hits) == 1 or len(set(_toks(hits[0][1])) & words) > len(set(_toks(hits[1][1])) & words)):
+            pev, player = hits[0]
+            best = [e for e in evs if e["event_id"] == pev]
+    if len(best) != 1:
+        return None, ("Couldn't tell which game. Include a team name, e.g. call Bears +3.5 1.84"
+                      if not best else "That matches more than one game. Add the other team's name.")
+    e = best[0]
+    nums = re.findall(r"(?<![\d.])([+-]?\d{1,3}(?:\.\d)?)(?![\d.])", low3)
+    line = float(nums[0]) if nums else None
+    if player:
+        mk = next((m for w, m in _WORDS_MK if w in low3), "player_points")
+        if mk == "player_anytime_td":
+            sel, line = "Yes", None
+        else:
+            sel = "Under" if " under" in low3 or " u " in low3 else "Over"
+        return {"sport": e["sport"], "event_id": e["event_id"], "game": f"{e['away']} @ {e['home']}", "commence": e["commence"],
+                "market": mk, "selection": sel, "player": player, "line": line, "price": price, "conf": conf}, None
+    if " over" in low3 or " under" in low3 or " o " in low3 or " u " in low3:
+        sel = "Under" if (" under" in low3 or " u " in low3) else "Over"
+        return {"sport": e["sport"], "event_id": e["event_id"], "game": f"{e['away']} @ {e['home']}", "commence": e["commence"],
+                "market": "totals", "selection": sel, "player": "", "line": abs(line) if line is not None else None,
+                "price": price, "conf": conf}, None
+    hw, aw = set(_toks(e["home"])) & words, set(_toks(e["away"])) & words
+    if bool(hw) == bool(aw):
+        return None, "Name one team for a side, e.g. call Bears +3.5 1.84"
+    team = e["home"] if hw else e["away"]
+    if " ml" in low3 or "moneyline" in low3 or line is None:
+        return {"sport": e["sport"], "event_id": e["event_id"], "game": f"{e['away']} @ {e['home']}", "commence": e["commence"],
+                "market": "h2h", "selection": team, "player": "", "line": None, "price": price, "conf": conf}, None
+    return {"sport": e["sport"], "event_id": e["event_id"], "game": f"{e['away']} @ {e['home']}", "commence": e["commence"],
+            "market": "spreads", "selection": team, "player": "", "line": line, "price": price, "conf": conf}, None
+
+
+def call_reply(con, txt, now=None):
+    _ensure_learn(con)
+    now = now or datetime.now(UTC)
+    c, err = parse_call(con, txt, now)
+    if err:
+        return err
+    fair, _l = _pin_at(con, c["event_id"], c["market"], c["selection"], c["player"], c["line"], _iso(now))
+    con.execute("""insert into fix_calls(ts, raw, sport, event_id, game, commence, market, selection, player, line, price, conf, fair_call)
+                   values(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (_iso(now), txt[:300], c["sport"], c["event_id"], c["game"], c["commence"], c["market"], c["selection"],
+                 c["player"], c["line"], c["price"], c["conf"], fair))
+    con.commit()
+    p = dict(c, outcome=c["selection"])
+    f_txt = f" · Pinnacle fair now {fair:.1%}" if fair else " · no Pinnacle price at this line yet"
+    return f"Logged call: {describe(p)} at {c['price']:.2f}" + (f", confidence {c['conf']:g}" if c["conf"] else "") + \
+           f"\n{c['game']} · {_et(c['commence'])}{f_txt}"
+
+
+def _grade_side(market, sel, line, home, away, hs, as_):
+    if market == "h2h":
+        if hs == as_:
+            return "L"
+        return "W" if (sel == home) == (hs > as_) else "L"
+    if market == "totals":
+        t = hs + as_
+        d = (t - line) if sel == "Over" else (line - t)
+    else:
+        mg = (hs - as_) if sel == home else (as_ - hs)
+        d = mg + line
+    return "W" if d > 0 else "P" if d == 0 else "L"
+
+
+def grade_calls(con):
+    _ensure_learn(con)
+    n = 0
+    for c in con.execute("select * from fix_calls where result='pending'").fetchall():
+        res = None
+        if c["market"] in ("h2h", "spreads", "totals"):
+            f = None
+            try:
+                f = con.execute("select home_score, away_score from final_scores where event_id=?", (c["event_id"],)).fetchone()
+            except Exception:                                  # noqa: BLE001
+                f = None
+            if f is None:
+                f = con.execute("""select home_score, away_score from bets where event_id=? and home_score is not null
+                                   and away_score is not null limit 1""", (c["event_id"],)).fetchone()
+            e = con.execute("select home, away from events where event_id=?", (c["event_id"],)).fetchone()
+            if f is not None and e is not None and (c["line"] is not None or c["market"] == "h2h"):
+                res = _grade_side(c["market"], c["selection"], c["line"], e["home"], e["away"],
+                                  float(f["home_score"]), float(f["away_score"]))
+        else:
+            r = con.execute("""select result from bets where event_id=? and market=? and coalesce(player,'')=? and selection=?
+                               and ((line is null and ? is null) or abs(line-?)<1e-9) and result in ('W','L','P','V')
+                               order by id limit 1""",
+                            (c["event_id"], c["market"], c["player"] or "", c["selection"], c["line"], c["line"] or 0)).fetchone()
+            res = r["result"] if r else None
+        if res:
+            pnl = (c["price"] - 1) if res == "W" else -1.0 if res == "L" else 0.0
+            con.execute("update fix_calls set result=?, pnl=? where id=?", (res, round(pnl, 4), c["id"]))
+            n += 1
+    con.commit()
+    return n
+
+
+def _record(rows, stake_key=None):
+    w = sum(r["result"] == "W" for r in rows)
+    l = sum(r["result"] == "L" for r in rows)
+    u = sum(float(r["pnl"] or 0) for r in rows if r["result"] in ("W", "L", "P"))
+    st = sum((float(r[stake_key]) if stake_key else 1.0) for r in rows if r["result"] in ("W", "L", "P"))
+    roi = f"{u / st:+.1%}" if st else "n/a"
+    sm = [float(r["sharp_move"]) for r in rows if r["sharp_move"] is not None]
+    return f"{w}-{l} | {u:+.2f}u | ROI {roi} | sharp move {_sm_txt(sm)}"
+
+
+def calls_text(con, days=None):
+    _ensure_learn(con)
+    q = "select * from fix_calls" + (" where ts>=?" if days else "")
+    rows = [dict(r) for r in con.execute(q, ((_iso(datetime.now(UTC) - timedelta(days=days)),) if days else ()))]
+    if not rows:
+        return "No calls logged yet. Log one: call Bears +3.5 1.84 conf 5"
+    done = [r for r in rows if r["result"] != "pending"]
+    out = [f"CLAUDE CALLS ({'last ' + str(days) + ' days' if days else 'all time'}, flat 1u): {len(rows)} logged | {_record(done)}"]
+    for lo, hi in ((1, 4), (5, 6), (7, 10)):
+        g = [r for r in done if r["conf"] is not None and lo <= r["conf"] <= hi]
+        if g:
+            out.append(f"  confidence {lo}-{hi}: {_record(g)}")
+    return "\n".join(out)
+
+
+# ---- weekly learning report
+def _snapshot_tiers(con):
+    return {k: v["tier"] for k, v in gate_groups(con, force=True).items()}
+
+
+def weekly_text(con, now=None):
+    _ensure_learn(con)
+    now = now or datetime.now(UTC)
+    since = _iso(now - timedelta(days=7))
+    L = [f"KRONOS WEEKLY LEARNING REPORT · week to {now.astimezone(ET).strftime('%a %b %-d')}"]
+    try:
+        prev = json.loads((con.execute("select v from meta where k='fix_weekly_tiers'").fetchone() or ["{}"])[0])
+    except Exception:                                          # noqa: BLE001
+        prev = {}
+    cur = _snapshot_tiers(con)
+    moves = [f"{k}: {prev.get(k, 'new')} -> {v}" for k, v in sorted(cur.items()) if prev and prev.get(k) != v
+             and (v != "PAPER" or prev.get(k) not in (None, "PAPER"))]
+    L.append("Market tiers: " + ("; ".join(moves) if moves else "no promotions or demotions this week"))
+    plays = [dict(r) for r in con.execute("select * from fix_plays where ts>=? and result<>'pending'", (since,))]
+    L.append(f"Plays this week: {len(plays)} graded | " + (_record(plays, 'stake') if plays else "none"))
+    for dim in ("ev", "start", "market", "book", "side"):
+        groups = {}
+        for p in plays:
+            try:
+                rk = json.loads(p.get("reason") or "{}").get(dim, "n/a")
+            except Exception:                                  # noqa: BLE001
+                rk = "n/a"
+            groups.setdefault(rk, []).append(p)
+        if len(groups) > 1 or (groups and "n/a" not in groups):
+            L.append(f" by {dim}: " + " · ".join(f"{k} {_record(v, 'stake').split(' | ')[0]} "
+                                                 f"{sum(float(x['pnl'] or 0) for x in v):+.2f}u" for k, v in sorted(groups.items())))
+    L.append("Sharp move by market (paper price edges; did Pinnacle move toward us before start?):")
+    for k, a in sorted(sharp_by_group(con).items(), key=lambda kv: -len(kv[1]["sm"])):
+        if len(a["sm"]) >= 10:
+            L.append(f" {k}: {_sm_txt(a['sm'])}")
+    hold = con.execute("select * from fix_holdout order by frozen_ts").fetchall()
+    L.append("Signals in holdout: " + ("; ".join(f"{h['signal']} {h['status']} {h['n_hold'] or 0}/{HOLDOUT_N}"
+                                                  + (f" (z {h['z_hold']:+.1f})" if h["z_hold"] is not None else "") for h in hold)
+                                        if hold else "none yet"))
+    L.append(calls_text(con, days=7).replace("\n", "\n "))
+    return "\n".join(L)
+
+
+def weekly_due(con, now=None):
+    """Mondays from 9 AM ET, once."""
+    now = now or datetime.now(UTC)
+    t = now.astimezone(ET)
+    if t.weekday() != 0 or t.hour < 9:
+        return False
+    k = t.strftime("%Y-%m-%d")
+    r = con.execute("select v from meta where k='fix_weekly_last'").fetchone()
+    if r and r[0] == k:
+        return False
+    _meta_set(con, "fix_weekly_last", k)
+    return True
+
+
+def send_weekly(con, now=None):
+    txt = weekly_text(con, now)
+    _meta_set(con, "fix_weekly_tiers", json.dumps(_snapshot_tiers(con)))
+    con.commit()
+    if TG is not None:
+        try:
+            TG(txt)
+        except Exception:                                      # noqa: BLE001
+            pass
+    return txt
+
+
+# ---- Telegram: adds `call`, `calls` and `learn` to the existing commands
+def telegram_poll(get_con, tg_send):
+    import requests
+    ke = sys.modules["kronos_edge"]
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not tok or not chat:
+        return
+    c = get_con()
+    try:
+        off = int(ke._meta(c, "tg_offset") or 0)
+    finally:
+        c.close()
+    while True:
+        try:
+            r = requests.get(f"https://api.telegram.org/bot{tok}/getUpdates", params={"timeout": 25, "offset": off + 1}, timeout=35)
+            for u in r.json().get("result", []):
+                off = max(off, u["update_id"])
+                m = u.get("message") or {}
+                if str((m.get("chat") or {}).get("id")) != str(chat):
+                    continue
+                txt = str(m.get("text") or "").strip()
+                low = txt.lower()
+                c = get_con()
+                try:
+                    if low.startswith(("boost", "/boost")):
+                        reply = ke.boost_reply(c, txt)
+                    elif low.startswith(("call ", "/call ")):
+                        reply = call_reply(c, txt)
+                    elif low in ("calls", "/calls"):
+                        reply = calls_text(c)
+                    elif low in ("learn", "/learn", "report", "/report"):
+                        reply = weekly_text(c)
+                    elif low in ("bets", "/bets", "plays", "/plays"):
+                        reply = ke.bets_reply(c)
+                    elif low in ("card", "/card"):
+                        reply = "GAME CARD (play/sit)\n" + "\n".join(ke.card(c) or ["No games locked yet today."])
+                    elif low in ("help", "/help", "/start"):
+                        reply = ke.HELP
+                    else:
+                        reply = None
+                    ke._meta(c, "tg_offset", str(off))
+                    c.commit()
+                finally:
+                    c.close()
+                if reply:
+                    tg_send(reply)
+        except Exception as e:                                 # noqa: BLE001
+            print(f"[telegram poll] {e}", flush=True)
+            time.sleep(15)
+
+
+def _wrap_learn():
+    ke = sys.modules["kronos_edge"]
+    ke.telegram_poll = telegram_poll
+    ke.HELP = ("KRONOS commands:\n• bets — plays right now (DraftKings/FanDuel, gated, with floor prices)\n"
+               "• call <pick> <price> [conf N] — log a Claude call to be graded, e.g. call Bears +3.5 1.84 conf 5\n"
+               "• calls — the Claude-call scorecard\n• learn — this week's learning report\n"
+               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n• help — this list")
+    return _wrap_holdout()
+
+
 # ------------------------------------------------------------------ 9. feed block
 def feed_block(con, now=None):
     now = now or datetime.now(UTC)
-    _ensure(con)
+    _ensure_learn(con)
     L = ["", "", f"KRONOS FIX ({VERSION}: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, "
                  "news credit priority, learning-layer cleanup, signal audit):"]
     L.append("  patches: " + "; ".join(f"{k} {v}" for k, v in STATUS.items() if k != "last_build"))
@@ -7680,12 +8214,26 @@ def feed_block(con, now=None):
             roi = f"{pr['u'] / pr['st']:+.1%}" if pr["st"] else "n/a"
             L.append(f"  PLAYS SCORECARD (every play sent): {pr['n']} plays | {pr['w'] or 0}-{pr['l'] or 0}-{pr['p'] or 0} | "
                      f"{pr['u'] or 0:+.2f}u | ROI {roi} | pending {pr['pend'] or 0}")
+            L.append("  PLAYS SENT (last 3 days, newest first):")
+            for q in con.execute("""select * from fix_plays where ts>=? order by ts desc limit 60""",
+                                 (_iso(now - timedelta(days=3)),)).fetchall():
+                q = dict(q)
+                res = q["result"] or "pending"
+                pnl = "" if q["pnl"] is None else f" {q['pnl']:+.2f}u"
+                if q.get("sharp_move") is not None:
+                    pnl += f" | sharp move {q['sharp_move']:+.1f}pp"
+                elif q.get("line_move"):
+                    pnl += f" | line moved {q['line_move']:+g} toward us"
+                L.append(f"   {_et(q['commence'])} {q['game']} | {BOOKN.get(q['book'], q['book'])} · {describe(q)} | "
+                         f"{q['price']:.2f} (floor {q['floor']:.2f}) | {q['stake']:g}u {q['tier']} | edge {q['ev']:+.1%} | {res}{pnl}")
         L.append("  LIVE-MONEY GATE (paper ledger by market; LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0):")
         groups = gate_groups(con, force=True)
         order = {"LIVE": 0, "PILOT": 1, "PAPER": 2}
+        sbg = sharp_by_group(con)
         for k, gi in sorted(groups.items(), key=lambda kv: (order[kv[1]["tier"]], -kv[1]["n"])):
             if gi["n"] >= 5 or gi["tier"] != "PAPER":
-                L.append("   " + _group_line(k, gi))
+                sm = (sbg.get(k) or {}).get("sm") or []
+                L.append("   " + _group_line(k, gi) + (f" | sharp move {_sm_txt(sm)}" if sm else ""))
         L.append("  PROJECTION GATE (a projection may veto a BET only after beating the market's line over 100+ games):")
         for sp in ("NFL", "NBA", "NHL", "EPL", "UCL"):
             for mk in ("spreads", "totals"):
@@ -7694,6 +8242,15 @@ def feed_block(con, now=None):
         L.append("  SIGNAL AUDIT (each signal's high half vs low half, measured as wins beyond what the price expected; "
                  "|z| >= 2 is a real effect; NFL props model rows excluded):")
         L.extend(signal_audit(con)[:30])
+        L.append("  LEARNING LOOP (fix-v1.2): sharp move = Pinnacle's no-vig price at start minus at flag time, on our side; "
+                 "it confirms an edge in ~100-200 bets where results need ~1,600.")
+        hold = con.execute("select * from fix_holdout order by frozen_ts").fetchall()
+        L.append("   signal holdout (found on old bets, must repeat on the next " + str(HOLDOUT_N) + " new ones): "
+                 + ("; ".join(f"{h['signal']} {h['status']} {h['n_hold'] or 0}/{HOLDOUT_N}"
+                              + (f" z {h['z_hold']:+.1f}" if h["z_hold"] is not None else f" (found z {h['z_disc'] or 0:+.1f})")
+                              for h in hold) if hold else "none frozen yet"))
+        L.append("   " + calls_text(con).replace("\n", "\n   "))
+        L.append("   " + weekly_text(con, now).replace("\n", "\n   "))
         for kind in ("alt", "early"):
             r = con.execute(f"""select count(*) n, sum(result='W') w, sum(result='L') l,
                                        sum(case when result='W' then price-1 when result='L' then -1 else 0 end) u
@@ -8894,6 +9451,10 @@ try:
                     _kfx._paper_out(_c)
                     _n = _kfx.send_new_plays(_c)
                     _g = _kfx.grade_plays(_c)
+                    _g += _kfx.grade_calls(_c)
+                    _kfx.track_sharp(_c)
+                    if _kfx.weekly_due(_c):
+                        _kfx.send_weekly(_c)
                     _kfx._meta_set(_c, "fix_status", f"{datetime.now(UTC).isoformat(timespec='seconds')} sent {_n} graded {_g}")
                     _c.commit()
                     if _n:
