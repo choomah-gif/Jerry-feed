@@ -1426,6 +1426,24 @@ class NameResolver:
         if len(matches) == 1:
             self.remember(sport, book_name, matches[0], now_iso)
             return matches[0]
+        # fuzzy last resort (2026-11-05): clear the 254-name quarantine. High bar so we do not
+        # invent matches. Token-sort ratio via simple character overlap; only unique strong hits.
+        if surname and len(want) > 4:
+            fuzzy = []
+            for c in candidates:
+                cn = _norm(c)
+                if not cn or surname not in cn:
+                    continue
+                # simple overlap score
+                common = sum(1 for a, b in zip(want, cn) if a == b)
+                score = common / max(len(want), len(cn))
+                if score >= 0.75:
+                    fuzzy.append((score, c))
+            fuzzy.sort(reverse=True)
+            if fuzzy and (len(fuzzy) == 1 or fuzzy[0][0] - fuzzy[1][0] > 0.1):
+                best = fuzzy[0][1]
+                self.remember(sport, book_name, best, now_iso)
+                return best
         return None
 
     def quarantine(self, bet_id, sport, player, market, reason, now_iso):
