@@ -62,7 +62,7 @@ LEAN, PLAY = 0.015, 0.03          # NFL sides/totals (jerry.py thresholds)
 # NFL props (model) failed its 150-bet review on 2026-10-26: 65-85, -17.2u, -11.8% ROI, beat close 22%.
 # Calls keep paper-logging as evidence but are tagged [PAPER ONLY] and must not go on a card.
 NFL_PROPS_PAPER_ONLY = True
-NFL_ANCHOR = 0.25      # NFL model moves 25% from Pinnacle fair (backtest: calibrated, no side edge); fixed until 150 graded per market
+NFL_ANCHOR = 0.15      # stronger shrink (was 0.25). Model still loses to close; only reduce after positive CLV over 100+ graded
 NFL_SIT_RAW = 0.06     # raw (pre-anchor) NFL edge above this = missing information, not a bet (same rule as NHL/props)
 UFC_LEAN, UFC_PLAY = 0.05, 0.08
 
@@ -1149,6 +1149,11 @@ def paper_log(con, rows, now):
     ensure_paper_schema(con)
     n = 0
     for r in rows:
+        # skip NFL props model paper (known negative CLV, 5.4% beat-close). Price edges unaffected.
+        if NFL_PROPS_PAPER_ONLY and (r.get("market") or "").startswith("player_"):
+            ev = con.execute("select sport from events where event_id=?", (r["event_id"],)).fetchone()
+            if ev and ev["sport"] == "NFL":
+                continue
         # Sits are logged as well, at zero stake. Without them the ledger contains
         # only large edges and cannot answer whether edge size predicts anything —
         # the exact question raised when the three largest edges were the three
@@ -1236,6 +1241,9 @@ def _consensus_fair(rows, outcome, line, exclude_book):
 
 
 def price_edges(con, now):
+    # 2026-11-05: price edges remain the working category. Injury / role changes are the main
+    # source of stale soft-book prices. The active-player gate below drops recent DNPs and
+    # tags low minutes; a full news engine is still queued.
     """Soft-book prices that beat Pinnacle's de-vigged fair price: an edge that needs no model."""
     ensure_paper_schema(con)
     try:
@@ -1310,9 +1318,9 @@ def price_edges(con, now):
                         con.execute("insert or replace into meta(k,v) values(?,?)",
                                     (f"label_reject_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
                         continue
-                # active-player gate (2026-10-27): 3 of 10 card bets on 10-26 were players who did not play.
-                # Did not play last game -> no edge. Under 12 NBA minutes -> tagged LOW MINUTES. No team
-                # on file -> tagged MINUTES UNVERIFIED. NFL has no box-score feed here, so it is not gated.
+                # active-player gate (2026-10-27, strengthened 2026-11-05): players who did not play or
+                # who are listed Out/Doubtful are dropped. Soft-book edges on injured or low-minutes
+                # players are usually stale. NFL remains ungated here (no box feed at pricing time).
                 activity = None
                 if evv >= PRICE_EDGE_MIN and player and ev["sport"] in ("NBA", "NHL"):
                     try:
