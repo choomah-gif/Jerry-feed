@@ -9396,6 +9396,21 @@ class _KronosServer(_OrigTHS):
                             c.close()
                     except Exception as e:                            # noqa: BLE001
                         return self.send(f"master error: {e}", "text/plain")
+                if p == "/api/quarantine-diagnostic":
+                    # Read-only join of each quarantined bet to its ORIGINAL bet event (2026-11-06).
+                    # Opens desk.db with mode=ro: cannot write, settle, alias or regrade anything.
+                    try:
+                        import kronos_sidecars as _ksc
+                        qs = _up.parse_qs(_up.urlparse(self.path).query)
+                        lim = max(1, min(int((qs.get("limit") or ["500"])[0]), 2000))
+                        off = max(0, int((qs.get("offset") or ["0"])[0]))
+                        c = _ksc.open_readonly(_desk_db())
+                        try:
+                            return self.send(json.dumps(_ksc.quarantine_diagnostic(c, lim, off), default=str))
+                        finally:
+                            c.close()
+                    except Exception as e:                            # noqa: BLE001
+                        return self.send(f"quarantine diagnostic error: {e}", "text/plain")
                 if p in ("/dropping", "/api/dropping"):
                     try:
                         import kronos_drops as _kd
