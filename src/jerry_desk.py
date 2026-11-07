@@ -1122,6 +1122,76 @@ class Desk:
         wk = max(1, min(22, ((now - kickoff).days // 7) + 1))
         return y, wk
 
+
+    def regrade_nfl_week(self, season=None, week=None, limit=5000):
+        """Admin: clear backfill_props_{season}_{week} meta and re-run grade_nfl_props.
+
+        Lets NameResolver pick up new player_alias rows and settle (or re-quarantine)
+        pending NFL props for that week. Returns a JSON-serializable report.
+        """
+        now = now_utc()
+        cur_season, _cur_week = self._nfl_season_week(now)
+        try:
+            season = int(season) if season not in (None, "") else cur_season
+        except (TypeError, ValueError):
+            raise ValueError("season must be an int")
+        try:
+            week = int(week) if week not in (None, "") else 8
+        except (TypeError, ValueError):
+            raise ValueError("week must be an int")
+        if not (1 <= week <= 22):
+            raise ValueError("week must be 1..22")
+        key = f"backfill_props_{season}_{week}"
+        now_iso = iso(now)
+        con = db()
+        try:
+            q_before = con.execute("select count(*) from grade_quarantine").fetchone()[0]
+            old = con.execute("select v from meta where k=?", (key,)).fetchone()
+            cleared = []
+            if old:
+                con.execute("delete from meta where k=?", (key,))
+                cleared.append(key)
+                con.commit()
+            # Always re-grade this week even if meta was already absent.
+            try:
+                rep = jg.grade_nfl_props(con, season, week, now_iso, limit=limit)
+            except TypeError:
+                # older embedded grader without limit kw
+                rep = jg.grade_nfl_props(con, season, week, now_iso)
+            # Drop quarantine rows whose bets are no longer pending (same as _grade_props).
+            deleted = 0
+            try:
+                cur = con.execute("""delete from grade_quarantine where bet_id in
+                                     (select id from bets where result!='pending')""")
+                deleted = cur.rowcount if cur is not None else 0
+                con.commit()
+            except sqlite3.Error:
+                pass
+            # Record this pass like boot.backfill_props so a later refresh won't redo it
+            # until someone clears the key again.
+            try:
+                con.execute("insert or replace into meta(k,v) values(?,?)",
+                            (key, json.dumps(rep)[:400]))
+                con.commit()
+            except sqlite3.Error:
+                pass
+            q_after = con.execute("select count(*) from grade_quarantine").fetchone()[0]
+            return {
+                "ok": True,
+                "season": season,
+                "week": week,
+                "meta_key": key,
+                "meta_cleared": cleared,
+                "meta_had_value": bool(old),
+                "grade": rep if isinstance(rep, dict) else {"raw": str(rep)},
+                "quarantine_deleted_settled": deleted,
+                "quarantine_before": q_before,
+                "quarantine_after": q_after,
+                "ts": now_iso,
+            }
+        finally:
+            con.close()
+
     def finish(self, con, b, res, now, hs=None, as_=None):
         pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0}[res]
         c = self.closing(con, b)
@@ -2030,6 +2100,14 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send(json.dumps({"error": "sport, book_name, feed_name required"}))
                 row = _store_player_alias(sport, book_name, feed_name, iso(now_utc()))
                 return self.send(json.dumps(row))
+            elif u.path == "/api/regrade-week":
+                # Admin: clear backfill_props_{season}_{week} and re-run NFL prop grading for that week.
+                # Defaults: current season, week=8. Auth same as other POSTs (DESK_PASSWORD if set).
+                try:
+                    report = DESK.regrade_nfl_week(f.get("season"), f.get("week"))
+                except ValueError as ve:
+                    return self.send(json.dumps({"ok": False, "error": str(ve)}))
+                return self.send(json.dumps(report))
             else:
                 return self.send(json.dumps({"error": f"unknown path {u.path}"}))
         except Exception as e:
@@ -2037,6 +2115,43 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(303)
         self.send_header("Location", "/")
         self.end_headers()
+
+    def do_DELETE(self):
+        # Remove a player_alias row. Auth same as POST (DESK_PASSWORD if set).
+        # Params: sport + book_name from query and/or form body. book_name is _norm'd.
+        if not self.authed():
+            return
+        u = urllib.parse.urlparse(self.path)
+        if u.path != "/api/alias":
+            return self.send(json.dumps({"error": f"unknown path {u.path}"}))
+        q = dict(urllib.parse.parse_qsl(u.query))
+        n = int(self.headers.get("Content-Length", 0) or 0)
+        f = dict(urllib.parse.parse_qsl(self.rfile.read(n).decode())) if n else {}
+        sport = (f.get("sport") or q.get("sport") or "").strip()
+        book_name = (f.get("book_name") or q.get("book_name") or "").strip()
+        if not sport or not book_name:
+            return self.send(json.dumps({"error": "sport and book_name required"}))
+        key = _alias_norm(book_name)
+        con = db()
+        try:
+            con.execute("""create table if not exists player_alias(
+                sport text, book_name text, feed_name text, resolved_ts text,
+                primary key(sport, book_name))""")
+            cur = con.execute(
+                "DELETE FROM player_alias WHERE sport=? AND book_name=?",
+                (sport, key))
+            deleted = (cur.rowcount or 0) > 0
+            con.commit()
+        except sqlite3.Error as e:
+            con.close()
+            return self.send(json.dumps({"error": str(e)}))
+        con.close()
+        return self.send(json.dumps({
+            "ok": True,
+            "deleted": deleted,
+            "sport": sport,
+            "book_name": key,
+        }))
 
     def send(self, body, ctype="application/json"):
         b = body.encode() if isinstance(body, str) else body
