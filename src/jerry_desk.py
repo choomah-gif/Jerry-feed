@@ -802,6 +802,29 @@ class Desk:
                     elif 0 < mins - s <= PROP_FLOOR_HOURS * 60:
                         prop_floor += len(props) * BOOK_UNITS   # tokens held back so tape can't starve upcoming props
 
+        # 2b) Sunday NFL fixed-clock full-board prop pulls (owner 2026-11-08)
+        # Times: 10:00, 12:00, 12:30, 14:00, 16:00, 18:00, 20:00, 22:00 ET
+        et_now = now.astimezone(ET)
+        if et_now.weekday() == 6 and "NFL" in plan and plan["NFL"]:
+            sunday_times = [(10, 0), (12, 0), (12, 30), (14, 0), (16, 0), (18, 0), (20, 0), (22, 0)]
+            for hh, mm in sunday_times:
+                slot_key = f"sunday_nfl_props:{et_now.date()}:{hh:02d}{mm:02d}"
+                if self._done(con, slot_key):
+                    continue
+                # fire if within ±3 minutes of the target time
+                target_min = hh * 60 + mm
+                now_min = et_now.hour * 60 + et_now.minute
+                if abs(now_min - target_min) <= 3:
+                    props = SPORTS["NFL"]["props"]
+                    if props and self.can_spend(con, len(plan["NFL"]) * len(props) * BOOK_UNITS, now, priority="props"):
+                        for e in plan["NFL"]:
+                            try:
+                                self.pull_props(con, "NFL", e["event_id"], now, is_close=False)
+                            except Exception as ex:
+                                meta_set(con, "error_props_NFL_sunday", f"{iso(now)} {ex}"[:200])
+                        self._mark(con, slot_key, now)
+                        meta_set(con, "last_sunday_nfl_props", f"{iso(now)} {hh:02d}:{mm:02d}")
+
         # 3) tape: sharp window > baseline > openers. Each sport pull covers every game in it.
         tokens, cap = self._bucket(con, now)
         day0 = iso(now.astimezone(ET).replace(hour=0, minute=0, second=0, microsecond=0))
