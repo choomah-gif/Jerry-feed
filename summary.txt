@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-11-09T23:09:07+00:00)
-credits left 14678 | budget/day 679 | spent today 4 | reset in 21.04d | backfill days {'NHL': 17}
-CREDIT FORECAST: ~387/day over the last 3 days (NBA 153, NHL 95, NFL 90, EPL 49) -> ~8135 to reset vs 14678 left: on track | 20 books
+KRONOS DESK SUMMARY  (generated 2026-11-09T23:19:09+00:00)
+credits left 14676 | budget/day 679 | spent today 6 | reset in 21.03d | backfill days {'NHL': 17}
+CREDIT FORECAST: ~369/day over the last 3 days (NBA 137, NHL 93, NFL 91, EPL 49) -> ~7753 to reset vs 14676 left: on track | 20 books
 UFC CARDS: 2026-11-08T14:46:27+00:00 [ESPN] 1 numbered cards: UFC 334: Gane vs. Hokit (13 fights)
 errors: {'error_loop': '2026-11-02T18:21:13+00:00 database is locked', 'error_props_NFL': '2026-11-08T16:00:01+00:00 HTTP Error 502: Bad Gateway', 'error_props_EPL': '2026-11-02T18:00:26+00:00 HTTP Error 502: Bad Gateway', 'error_props_NBA': '2026-11-07T21:00:02+00:00 HTTP Error 502: Bad Gateway'}
 
@@ -434,7 +434,7 @@ UFC 2026-11-15T05:30:00Z Josh Hokit @ Ciryl Gane [UFC 334: Gane vs. Hokit] id=52
 KRONOS FIX (fix-v1.2-2026-11-05: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, news credit priority, learning-layer cleanup, signal audit):
   patches: books ['jerry_reason.BET_BOOKS', 'kronos_ledger.CT_BOOKS', 'kronos_edge.CT', 'kronos_drops.CT_BOOKS']; ledger ok; learning ok; edge ok; rulebook 16 rules; learning loop ok; desk ['BETTABLE', 'BACKFILL_SHARE', 'SHARP_EVERY']
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  last build 2026-11-09T23:09:08+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
+  last build 2026-11-09T23:19:09+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
   PLAYS SCORECARD (every play sent): 32 plays | 15-17-0 | -0.40u | ROI -4.4% | pending 0
   PLAYS SENT (last 3 days, newest first):
    Sun 3:40 PM ET Philadelphia 76ers @ Chicago Bulls | FanDuel · Jalen Smith Over 1.5 assists | 2.16 (floor 2.16) | 0.25u LIVE | edge +2.3% | W +0.29u
@@ -445,7 +445,6 @@ KRONOS FIX (fix-v1.2-2026-11-05: plays at DraftKings/FanDuel only, live-money ga
    Fri 7:10 PM ET Boston Celtics @ Charlotte Hornets | FanDuel · Grayson Allen Under 2.5 rebounds | 2.36 (floor 2.25) | 1u LIVE | edge +7.3% | W +1.36u
    Fri 7:10 PM ET Washington Wizards @ Atlanta Hawks | DraftKings · Trae Young Under 22.5 points | 1.84 (floor 1.83) | 0.25u LIVE | edge +2.8% | L -0.25u | sharp move -0.6pp
    Fri 7:10 PM ET Boston Celtics @ Charlotte Hornets | FanDuel · Grayson Allen Under 2.5 assists | 2.40 (floor 2.20) | 0.25u LIVE | edge +11.7% | L -0.25u
-   Fri 7:10 PM ET Washington Wizards @ Atlanta Hawks | FanDuel · Trae Young Over 8.5 assists | 1.85 (floor 1.85) | 0.25u LIVE | edge +2.0% | W +0.21u | sharp move +0.1pp
   LIVE-MONEY GATE (paper ledger by market; LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0):
    NBA props (price edge): LIVE | 100-73 | +17.45u | ROI +10.1% | CLV +0.52 | graded 173 | sharp move -0.51pp (n 83, 41% toward us, z -2.5)
    NHL props (price edge): PILOT | 47-53 | -11.07u | ROI -11.1% | CLV +0.56 | graded 100 | sharp move -0.42pp (n 59, 34% toward us, z -3.0)
@@ -507,7 +506,7 @@ KRONOS FIX (fix-v1.2-2026-11-05: plays at DraftKings/FanDuel only, live-money ga
     NHL props (price edge): -0.42pp (n 59, 34% toward us, z -3.0)
    Signals in holdout: hours holdout 0/100
    No calls logged yet. Log one: call Bears +3.5 1.84 conf 5
-  alt (paper only, flat 1u): 161 picks | 11-24 | -14.44u | CLV not measured (no same-rung close)
+  alt (paper only, flat 1u): 162 picks | 11-24 | -14.44u | CLV not measured (no same-rung close)
   early (paper only, flat 1u): 78 picks | 29-14 | +9.91u
 
 
@@ -516,7 +515,8 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   GAME CARD (checklist #15: play/sit/confidence, one line per game today; game lines only, logged 90 min before start; the prop shadow card is separate):
    no games locked yet today
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  news scan: {"ts": "2026-11-09T23:05:25+00:00", "NFL": {"listed": 800, "new_outs": 1}, "NHL": {"listed": 122, "new_outs": 0}}
+  news scan: {"ts": "2026-11-09T23:15:25+00:00", "NFL": {"listed": 800, "new_outs": 0}, "NHL": {"listed": 122, "new_outs": 0}}
+  2026-11-09T23:15:26+00:00 alt NFL: KRONOS alt line | FanDuel alternate_totals Under +39.5 at 3.10 | fair 36.2% from Pinnacle's main +44 (50.6%) using empirical NFL closing-line errors since 2016 (key numbers included) | EV +12.3% | best rung of the ladder; check the price before betting
   2026-11-09T21:05:21+00:00 news NHL: KRONOS NEWS: Alberts Smits (New York Rangers) now listed Out | New York Rangers @ Edmonton Oilers, Mon 8:00 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-09T21:05:21+00:00 news NHL: KRONOS NEWS: Colton Dach (Edmonton Oilers) now listed Out | New York Rangers @ Edmonton Oilers, Mon 8:00 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-09T01:25:17+00:00 news NBA: KRONOS NEWS: Domantas Sabonis (Sacramento Kings) now listed Out | Miami Heat @ Sacramento Kings, Sun 9:10 PM ET | Daily re-pull limit (6) reached; check prices by hand.
@@ -528,8 +528,7 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   2026-11-09T00:15:11+00:00 news NFL: KRONOS NEWS: Keyshaun Elliott (Chicago Bears) now listed Out | Tampa Bay Buccaneers @ Chicago Bears, Sun 8:20 PM ET | Prices re-pulled: no CT book is stale on game lines right now.
   2026-11-09T00:15:10+00:00 news NFL: KRONOS NEWS: Case Keenum (Chicago Bears) now listed Out | Tampa Bay Buccaneers @ Chicago Bears, Sun 8:20 PM ET | Prices re-pulled: no CT book is stale on game lines right now.
   2026-11-09T00:05:10+00:00 alt NBA: KRONOS alt line | FanDuel alternate_spreads New Orleans Pelicans +3.5 at 1.59 | fair 66.7% from Pinnacle's main -1.5 (50.6%) using normal model (sd 12.0) | EV +6.1% | best rung of the ladder; check the price before betting
-  2026-11-09T00:05:10+00:00 alt NBA: KRONOS alt line | DraftKings alternate_spreads Milwaukee Bucks +23.5 at 1.31 | fair 79.8% from Pinnacle's main +13.5 (50.0%) using normal model (sd 12.0) | EV +4.5% | best rung of the ladder; check the price before betting
-  alt: 161 picks, 11-24, -2.58u, CLV None
+  alt: 162 picks, 11-24, -2.58u, CLV None
   early: 78 picks, 29-14, +0.33u, CLV -2.2
 
 
@@ -558,7 +557,7 @@ KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match
   UCL market: 3 picks, 0 pending | 0-2-1 | +0.00u on 0.00u (n/a) | CLV avg 2.62pp, beat close 67%
   UCL model: 51 picks, 0 pending | 18-32-1 | +0.00u on 0.00u (n/a) | CLV avg -0.39pp, beat close 39%
   by grade: B 1-1 -0.04u; BET 5-3 +0.21u; C 9-9 -0.52u; D 7-3 +0.35u; LEAN 254-237 +0.00u
-  last grading pass: 2026-11-09T23:04:08+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
+  last grading pass: 2026-11-09T23:14:08+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
   soccer model: {"data": {"espn_calls": 5, "rows": 5, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-09T18:36:40+00:00", "rows": 0, "matched": 0, "unmatched": []}
 
 
@@ -572,27 +571,27 @@ KRONOS MASTER (master-v1-2026-11-01: shared rulebook, roster + schedule layers, 
   backtest EPL: {"sport": "EPL", "seasons": ["2425", "2526", "2627"], "matches": 368, "log_loss": {"model": 0.9874, "market_close": 0.9747, "blend": 0.9753}, "picks_vs_open": {"n": 293, "clv_avg_pp": -0.8, "beat_close": 0.348, "roi_flat": 0.018}, "read": "market alone is still better than the blend; raw model worse than market by 0.0127 log loss", "ts": "2026-11-09T09:05:04+00:00"}
 
 
-DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-09T23:09:08+00:00; 2 sides):
+DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-09T23:19:09+00:00; 2 sides):
   rules: R1 only SHARP-LED drops count as sharp evidence; R2 RETAIL-ONLY drops are public money; R3 PRICED IN (best CT EV < 0) = do not chase; R4 act only on STALE CT PRICE (Pinnacle >=5% in 1h, CT EV >= +2%); R5 a drop on confirmed team news is information, not an edge
 NFL Mon 8:15PM ET Buffalo Bills @ Minnesota Vikings | spreads Buffalo Bills -3 | Pinnacle open +6.9% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +3.3% 1h +0.0% (16 books) | NONE | best CT DraftKings 1.87 EV -3.9% | [DROPPING · PRICED IN]
 NFL Mon 8:15PM ET Buffalo Bills @ Minnesota Vikings | totals Under 44 | Pinnacle open +0.5% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (13 books) | NONE | line 46.5->44 | no CT price | [LINE MOVE]
   telegram: 2026-11-09T21:05:22+00:00 ok
 
 
-GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 6 sides; computed 2026-11-09T23:09:08+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
+GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 6 sides; computed 2026-11-09T23:19:09+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
 NFL 2026-11-10T01:15Z Buffalo Bills @ Minnesota Vikings | KRONOS Buffalo Bills 25.6 @ Minnesota Vikings 16.9 | market margin -3.0 total 44.0
   h2h Buffalo Bills | sharp book 1.57 fair 62.1% | KRONOS 63.9% [see home row] | sim (raw projection) 74.9% | best CT draftkings 1.59 (EV -1.3%) | money [SHARP]
-      signals: drop_pct +5.1%, steam +0.20, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -1.3%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats -0.014, role_ats -0.136, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
+      signals: drop_pct +5.1%, steam +0.20, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -1.3%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats -0.014, role_ats -0.136, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
   h2h Minnesota Vikings | sharp book 2.5 fair 37.9% | KRONOS 36.1% [Sit (edge too large — check inputs)] | sim (raw projection) 25.1% | best CT fanduel 2.46 (EV -6.7%) | money [AGAINST]
-      signals: drop_pct -7.5%, steam -0.20, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -6.7%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.041, role_ats 0.136, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
+      signals: drop_pct -7.5%, steam -0.20, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -6.7%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.041, role_ats 0.136, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
   spreads Buffalo Bills -3 | sharp book 1.89 fair 51.5% | KRONOS 53.7% [see home row] | sim (raw projection) 67.0% | best CT draftkings 1.87 (EV -3.7%) | money [SHARP]
-      signals: drop_pct +3.4%, steam 0, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -3.7%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats -0.014, role_ats -0.136, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
+      signals: drop_pct +3.4%, steam 0, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -3.7%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats -0.014, role_ats -0.136, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
   spreads Minnesota Vikings +3 | sharp book 2 fair 48.5% | KRONOS 46.3% [Sit (edge too large — check inputs)] | sim (raw projection) 33.0% | best CT draftkings 1.95 (EV -5.4%) | money [AGAINST]
-      signals: drop_pct -3.0%, steam 0, rlm 0, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -5.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.041, role_ats 0.136, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
+      signals: drop_pct -3.0%, steam 0, rlm 0, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -5.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.041, role_ats 0.136, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 0
   totals Over 44 | sharp book 1.96 fair 49.3% | KRONOS 48.7% [see Under row] | sim (raw projection) 45.5% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam 0, rlm 1, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -3.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam 0, rlm 1, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -3.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 44 | sharp book 1.91 fair 50.7% | KRONOS 51.3% [Sit] | sim (raw projection) 54.5% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam 0, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 2.1, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam 0, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 0, hours 1.93, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 
 
