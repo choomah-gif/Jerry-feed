@@ -6548,6 +6548,8 @@ def run_backtests(con, now=None):
         except Exception as e:                                 # noqa: BLE001
             res[sp] = {"error": str(e)[:120]}
         con.execute("insert or replace into meta(k,v) values(?,?)", (f"backtest_{sp}", json.dumps(res[sp])))
+        # Report metadata only: release its writer before the next download/fit.
+        con.commit()
     con.commit()
     return res
 
@@ -9078,6 +9080,9 @@ if L is not None and hasattr(L, "telegram"):
             return None
         out = []
         try:
+            # health_check commits/closes before this callback. Keep this independent
+            # metadata transaction short; it finishes before _tg sends any HTTP.
+            c.execute("pragma busy_timeout=1000")
             now = datetime.now(UTC)
             for p in lines:
                 rule = next((r for r in _HEALTH_RULES if r[0] in p), None)
