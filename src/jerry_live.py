@@ -1667,66 +1667,81 @@ def build_card(con, now, edges):
 def health_check(db_path, results):
     """After every model run: catch broken data before it reaches the board. Returns the list of problems."""
     now = datetime.now(UTC)
-    con = sqlite3.connect(db_path, timeout=60); con.row_factory = sqlite3.Row
-    probs = []
-    d = os.environ.get("JERRY_DATA_DIR", "/data")
+    con = sqlite3.connect(db_path, timeout=1); con.row_factory = sqlite3.Row
+    notify = False
     try:
-        if os.path.exists(d) and os.stat(d).st_dev == os.stat("/").st_dev:
-            probs.append(f"{d} is not a mounted volume: data will be lost on the next redeploy")
-    except Exception:
-        pass
-    for s, v in (results or {}).items():
-        if isinstance(v, str):
-            probs.append(f"{s} model error: {v}")
-    t0 = now.isoformat(timespec="seconds"); t1 = (now + timedelta(hours=36)).isoformat(timespec="seconds")
-    for sport in ("NFL", "NHL", "MLB", "UFC", "NBA"):
-        ev = [r[0] for r in con.execute("select event_id from events where sport=? and commence>? and commence<?", (sport, t0, t1))]
-        if not ev:
-            continue
-        marks = ",".join("?" * len(ev))
-        nq = con.execute(f"select count(*) from last_quote where event_id in ({marks})", ev).fetchone()[0]
-        nm = con.execute(f"select count(*) from model_probs where event_id in ({marks})", ev).fetchone()[0]
-        if not nq:
-            probs.append(f"{sport}: {len(ev)} games within 36h but no prices on the board")
-        elif not nm and sport in (results or {}) and sport != "NBA":
-            probs.append(f"{sport}: prices present but the model produced 0 rows")
-    # NHL goalie feed: a game within 90 minutes with zero confirmed starters league-wide means the parser broke
-    t90 = (now + timedelta(minutes=90)).isoformat(timespec="seconds")
-    nhl_soon = con.execute("select count(*) from events where sport='NHL' and commence>? and commence<?", (t0, t90)).fetchone()[0]
-    if nhl_soon:
-        if LAST_GOALIES is None:
-            probs.append("NHL: games within 90 min but the goalie feed has not been read this session")
-        elif LAST_GOALIES[1] == 0:
-            probs.append("NHL: DailyFaceoff parsed 0 teams — goalie parser broken, every total is a Sit")
-        elif LAST_GOALIES[2] == 0:
-            probs.append(f"NHL: {nhl_soon} games within 90 min and 0 confirmed goalies ({LAST_GOALIES[1]} teams parsed)")
-    spl = (results or {}).get("SPLITS")
-    if isinstance(spl, dict) and not (spl.get("table_rows") or spl.get("article_rows")):
-        probs.append("DK splits: 0 rows — public-money input is empty; flags rest on Pinnacle-vs-retail only")
-    # a [PAPER ONLY] model must never reach Telegram/card as a live Play
-    leak = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>?
-                          and m.call like 'Play%' and m.call like '%PAPER ONLY%'""", (t0,)).fetchone()[0]
-    if leak:
-        probs.append(f"{leak} PAPER ONLY rows tagged Play")
-    big = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>? and abs(coalesce(m.edge,0))>?
-                         and (m.call like 'Lean%' or m.call like 'Play%')""", (t0, BIG_EDGE)).fetchone()[0]
-    if big:
-        probs.append(f"{big} live calls with edge above {BIG_EDGE:.0%}: model output suspect")
-    for k, v in con.execute("select k, v from meta where k like 'error_%'"):
+        probs = []
+        d = os.environ.get("JERRY_DATA_DIR", "/data")
         try:
-            if now - datetime.fromisoformat(v[:19]).replace(tzinfo=UTC) < timedelta(hours=1):
-                probs.append(f"{k}: {v[20:120]}")
+            if os.path.exists(d) and os.stat(d).st_dev == os.stat("/").st_dev:
+                probs.append(f"{d} is not a mounted volume: data will be lost on the next redeploy")
         except Exception:
             pass
-    con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v",
-                ("health", f"{t0} " + ("ok" if not probs else " || ".join(probs))[:900]))
-    if probs:
-        key = str(abs(hash(" | ".join(sorted(probs)))))
-        last = con.execute("select v from meta where k='health_sent'").fetchone()
-        if not last or last[0].split(" ", 1)[0] != key or now - datetime.fromisoformat(last[0].split(" ", 1)[1]).replace(tzinfo=UTC) > timedelta(hours=6):
-            telegram("KRONOS HEALTH CHECK\n" + "\n".join(f"- {p}" for p in probs))
+        for s, v in (results or {}).items():
+            if isinstance(v, str):
+                probs.append(f"{s} model error: {v}")
+        t0 = now.isoformat(timespec="seconds"); t1 = (now + timedelta(hours=36)).isoformat(timespec="seconds")
+        for sport in ("NFL", "NHL", "MLB", "UFC", "NBA"):
+            ev = [r[0] for r in con.execute("select event_id from events where sport=? and commence>? and commence<?", (sport, t0, t1))]
+            if not ev:
+                continue
+            marks = ",".join("?" * len(ev))
+            nq = con.execute(f"select count(*) from last_quote where event_id in ({marks})", ev).fetchone()[0]
+            nm = con.execute(f"select count(*) from model_probs where event_id in ({marks})", ev).fetchone()[0]
+            if not nq:
+                probs.append(f"{sport}: {len(ev)} games within 36h but no prices on the board")
+            elif not nm and sport in (results or {}) and sport != "NBA":
+                probs.append(f"{sport}: prices present but the model produced 0 rows")
+        # NHL goalie feed: a game within 90 minutes with zero confirmed starters league-wide means the parser broke
+        t90 = (now + timedelta(minutes=90)).isoformat(timespec="seconds")
+        nhl_soon = con.execute("select count(*) from events where sport='NHL' and commence>? and commence<?", (t0, t90)).fetchone()[0]
+        if nhl_soon:
+            if LAST_GOALIES is None:
+                probs.append("NHL: games within 90 min but the goalie feed has not been read this session")
+            elif LAST_GOALIES[1] == 0:
+                probs.append("NHL: DailyFaceoff parsed 0 teams — goalie parser broken, every total is a Sit")
+            elif LAST_GOALIES[2] == 0:
+                probs.append(f"NHL: {nhl_soon} games within 90 min and 0 confirmed goalies ({LAST_GOALIES[1]} teams parsed)")
+        spl = (results or {}).get("SPLITS")
+        if isinstance(spl, dict) and not (spl.get("table_rows") or spl.get("article_rows")):
+            probs.append("DK splits: 0 rows — public-money input is empty; flags rest on Pinnacle-vs-retail only")
+        # a [PAPER ONLY] model must never reach Telegram/card as a live Play
+        leak = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>?
+                              and m.call like 'Play%' and m.call like '%PAPER ONLY%'""", (t0,)).fetchone()[0]
+        if leak:
+            probs.append(f"{leak} PAPER ONLY rows tagged Play")
+        big = con.execute("""select count(*) from model_probs m join events e using(event_id) where e.commence>? and abs(coalesce(m.edge,0))>?
+                             and (m.call like 'Lean%' or m.call like 'Play%')""", (t0, BIG_EDGE)).fetchone()[0]
+        if big:
+            probs.append(f"{big} live calls with edge above {BIG_EDGE:.0%}: model output suspect")
+        for k, v in con.execute("select k, v from meta where k like 'error_%'"):
+            try:
+                if now - datetime.fromisoformat(v[:19]).replace(tzinfo=UTC) < timedelta(hours=1):
+                    probs.append(f"{k}: {v[20:120]}")
+            except Exception:
+                pass
+        con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v",
+                    ("health", f"{t0} " + ("ok" if not probs else " || ".join(probs))[:900]))
+        if probs:
+            key = str(abs(hash(" | ".join(sorted(probs)))))
+            last = con.execute("select v from meta where k='health_sent'").fetchone()
+            if not last or last[0].split(" ", 1)[0] != key or now - datetime.fromisoformat(last[0].split(" ", 1)[1]).replace(tzinfo=UTC) > timedelta(hours=6):
+                notify = True
+        con.commit()
+    finally:
+        con.close()
+    # Boot's health filter and Telegram status recorder use their own connections.
+    # No health-check connection/transaction may be open while calling the sender.
+    if notify:
+        telegram("KRONOS HEALTH CHECK\n" + "\n".join(f"- {p}" for p in probs))
+        # Preserve prior semantics: any normal return (even False) marks attempted;
+        # an exception does not. Persist the marker in a separate short transaction.
+        con = sqlite3.connect(db_path, timeout=1)
+        try:
             con.execute("insert into meta(k,v) values(?,?) on conflict(k) do update set v=excluded.v", ("health_sent", f"{key} {t0}"))
-    con.commit(); con.close()
+            con.commit()
+        finally:
+            con.close()
     log(f"health: {'ok' if not probs else probs}")
     return probs
 
