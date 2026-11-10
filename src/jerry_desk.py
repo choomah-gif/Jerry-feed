@@ -202,11 +202,24 @@ def implied(dec):
 def db():
     con = sqlite3.connect(DB, timeout=30)
     con.row_factory = sqlite3.Row
+    try:
+        con.execute("pragma busy_timeout=30000")
+    except Exception:
+        con.close()
+        raise
     return con
 
 
 def init_db():
     con = db()
+    # Persistent, local /data volume: WAL is set once, never on every connection.
+    # It permits readers during a write; SQLite still allows only one writer.
+    try:
+        mode = con.execute("pragma journal_mode=WAL").fetchone()[0]
+        if str(mode).lower() != "wal":
+            _collector_log(f"WAL unavailable (journal_mode={mode})")
+    except sqlite3.Error as exc:
+        _collector_log(f"WAL unavailable: {_collector_error_text(exc)}")
     con.executescript("""
     create table if not exists events(event_id text primary key, sport text, commence text, home text, away text,
         card text, seen text);
@@ -359,7 +372,10 @@ class Desk:
     """All scheduling state. tick(now) is the whole brain; tests drive it with a fake clock."""
 
     def __init__(self, get=http_get):
-        self.get = get
+        self._get = get
+        self.collector = CollectorWatchdog(self)
+        # All desk feed requests (including news workers) share the I/O fence.
+        self.get = self.collector.get
         self.lock = threading.Lock()
         self.remaining = None
         self.events_at = {}
@@ -921,22 +937,34 @@ class Desk:
 
     # ---------- dashboard data
     def status(self):
-        con = db()
-        now = now_utc()
-        tokens, cap = self._bucket(con, now) if self.remaining is not None else (0, 0)
-        con.commit()
-        day0 = iso(now.astimezone(ET).replace(hour=0, minute=0, second=0, microsecond=0))
-        month0 = iso(now.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
-        today = con.execute("select sport, endpoint, sum(cost) c from usage where ts>=? group by sport, endpoint", (day0,)).fetchall()
-        month = con.execute("select coalesce(sum(cost),0) c from usage where ts>=?", (month0,)).fetchone()["c"]
-        bf = con.execute("select sport, count(*) n from backfill_done group by sport").fetchall()
-        errs = {r["k"]: r["v"] for r in con.execute("select k, v from meta where k like 'error%'")}
-        con.close()
-        return {"remaining": self.remaining, "allowance_per_day": round(self.allowance(now)),
-                "tokens": round(tokens), "bucket_cap": round(cap), "days_to_reset": round(self.days_left(now), 2),
-                "spent_today": sum(r["c"] for r in today), "spent_month_by_desk": month,
-                "today": [dict(r) for r in today], "backfill_days": {r["sport"]: r["n"] for r in bf},
-                "reserve": RESERVE, "errors": errs}
+        con = None
+        try:
+            con = db()
+            now = now_utc()
+            tokens, cap = self._bucket(con, now) if self.remaining is not None else (0, 0)
+            con.commit()
+            day0 = iso(now.astimezone(ET).replace(hour=0, minute=0, second=0, microsecond=0))
+            month0 = iso(now.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+            today = con.execute("select sport, endpoint, sum(cost) c from usage where ts>=? group by sport, endpoint", (day0,)).fetchall()
+            month = con.execute("select coalesce(sum(cost),0) c from usage where ts>=?", (month0,)).fetchone()["c"]
+            bf = con.execute("select sport, count(*) n from backfill_done group by sport").fetchall()
+            errs = {r["k"]: r["v"] for r in con.execute("select k, v from meta where k like 'error%'")}
+            return {"remaining": self.remaining, "allowance_per_day": round(self.allowance(now)),
+                    "tokens": round(tokens), "bucket_cap": round(cap), "days_to_reset": round(self.days_left(now), 2),
+                    "spent_today": sum(r["c"] for r in today), "spent_month_by_desk": month,
+                    "today": [dict(r) for r in today], "backfill_days": {r["sport"]: r["n"] for r in bf},
+                    "reserve": RESERVE, "errors": errs, "collector": self.collector.snapshot()}
+        except sqlite3.Error as exc:
+            # Monitoring must not disappear behind the same SQLite write lock.
+            now = now_utc()
+            return {"remaining": self.remaining, "allowance_per_day": round(self.allowance(now)),
+                    "tokens": 0, "bucket_cap": 0, "days_to_reset": round(self.days_left(now), 2),
+                    "spent_today": 0, "spent_month_by_desk": 0, "today": [], "backfill_days": {},
+                    "reserve": RESERVE, "errors": {"error_status": str(exc)},
+                    "status_unavailable": True, "collector": self.collector.snapshot()}
+        finally:
+            if con is not None:
+                con.close()
 
     def board(self, sport):
         con = db()
@@ -1549,6 +1577,7 @@ class Desk:
         lines = ["KRONOS DESK SUMMARY  (generated " + iso(now_utc()) + ")",
                  f"credits left {st['remaining']} | budget/day {st['allowance_per_day']} | spent today {st['spent_today']} | "
                  f"reset in {st['days_to_reset']}d | backfill days {st['backfill_days']}",
+                 "COLLECTOR: " + json.dumps(st["collector"], sort_keys=True),
                  self._credit_forecast_line(st),
                  f"errors: {st['errors'] or 'none'}", "",
                  f"BETS: {rp['bets_total']} total, {rp['pending']} pending, {rp['graded']} graded",
@@ -2294,17 +2323,218 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
-def run_loop(desk):
-    while True:
+class CollectorSuperseded(BaseException):
+    """Control flow: bypass per-sport Exception handlers and unwind the old tick."""
+
+
+def _collector_error_text(exc):
+    try:
+        return str(exc)
+    except Exception:
+        return f"{type(exc).__name__} (unprintable exception)"
+
+
+def _collector_log(message):
+    # Even broken stdout must not turn the exception reporter into a thread killer.
+    try:
+        print(f"[collector] {message}", flush=True)
+    except Exception:
+        pass
+
+
+def _collector_close(con, label):
+    if con is None:
+        return
+    # Independent attempts: failed rollback must not skip close, or vice versa.
+    for action in ("rollback", "close"):
         try:
-            desk.tick()
-        except Exception as e:
-            print(f"[desk] tick error: {e}", flush=True)
-            con = db()
-            meta_set(con, "error_loop", f"{iso(now_utc())} {e}"[:200])
+            getattr(con, action)()
+        except Exception as exc:
+            _collector_log(f"{label} {action} failed: {_collector_error_text(exc)}")
+
+
+class CollectorWatchdog:
+    """One collector, cooperative generation fencing, no forced thread/lock release.
+
+    A request holds _io for its entire lifetime. Fencing takes the SAME lock,
+    nonblocking, so an admitted request finishes before its generation changes.
+    A fenced worker must unwind and release Desk.lock before a successor starts.
+    This deliberately fails closed if a Python/native thread never returns.
+    """
+    def __init__(self, desk, interval=60, stall_after=900, check_every=5,
+                 max_backoff=300, persist_every=60):
+        self.desk = desk
+        self.interval, self.stall_after = interval, stall_after
+        self.check_every, self.max_backoff = check_every, max_backoff
+        self.persist_every = persist_every
+        self._state = threading.RLock()
+        self._io = threading.Lock()
+        self._local = threading.local()
+        self._shutdown = threading.Event()
+        self._wake = threading.Event()
+        self.thread = self.watchdog = None
+        self.generation = self.restarts = 0
+        self.last_heartbeat = self.last_start = self.last_finish = None
+        self.last_error = None
+        self._last_mono = time.monotonic()
+        self._last_persist = 0.0
+        self._fenced = False
+
+    def current(self, generation):
+        with self._state:
+            return not self._shutdown.is_set() and generation == self.generation
+
+    def heartbeat(self, generation, phase=None):
+        with self._state:
+            if not self.current(generation):
+                return
+            self.last_heartbeat = iso(now_utc())
+            self._last_mono = time.monotonic()
+            if phase == "start":
+                self.last_start = self.last_heartbeat
+            elif phase == "finish":
+                self.last_finish = self.last_heartbeat
+
+    def get(self, path, params):
+        generation = getattr(self._local, "generation", None)
+        with self._io:
+            if generation is not None:
+                if not self.current(generation):
+                    raise CollectorSuperseded()
+                self.heartbeat(generation)
+            try:
+                return self.desk._get(path, params)
+            finally:
+                if generation is not None:
+                    self.heartbeat(generation)
+
+    def snapshot(self):
+        with self._state:
+            alive = bool(self.thread and self.thread.is_alive())
+            return {"alive": alive and not self._fenced and not self._shutdown.is_set(),
+                    "generation": self.generation, "last_heartbeat": self.last_heartbeat,
+                    "last_start": self.last_start, "last_finish": self.last_finish,
+                    "restarts": self.restarts, "last_error": self.last_error,
+                    "stalled": alive and time.monotonic() - self._last_mono > self.stall_after,
+                    "fenced_thread_alive": alive and self._fenced}
+
+    def _launch_locked(self):
+        if self.thread is not None:
+            self.restarts += 1
+        if not self._fenced:
+            self.generation += 1
+        self._fenced = False
+        self._wake = threading.Event()
+        self._last_mono = time.monotonic()
+        self.thread = threading.Thread(target=run_loop,
+                                       args=(self.desk, self.generation, self._wake),
+                                       name=f"collector-{self.generation}", daemon=True)
+        self.thread.start()
+
+    def check_once(self):
+        # Never wait for a hung socket while holding up monitoring/status.
+        if not self._io.acquire(blocking=False):
+            return False
+        try:
+            with self._state:
+                if self._shutdown.is_set():
+                    return False
+                alive = bool(self.thread and self.thread.is_alive())
+                if alive and not self._fenced and time.monotonic() - self._last_mono > self.stall_after:
+                    self.generation += 1  # invalidate old token before allowing ANY successor
+                    self._fenced = True
+                    self.last_error = "collector stalled; fenced, waiting for old tick to unwind"
+                    self._wake.set()
+                    _collector_log(self.last_error)
+                if not alive:
+                    if self.thread is not None and not self._fenced:
+                        self.last_error = "collector thread exited; restarting"
+                        _collector_log(self.last_error)
+                    # No two collector ticks, no duplicate slots/credit accounting.
+                    self._launch_locked()
+                    return True
+                return False
+        finally:
+            self._io.release()
+
+    def persist(self):
+        # Telemetry is deliberately short-timeout and independent of Desk.lock.
+        # Never let a locked DB stop the in-memory watchdog/heartbeat.
+        con = None
+        try:
+            con = sqlite3.connect(DB, timeout=0.1)
+            con.execute("pragma busy_timeout=100")
+            meta_set(con, "collector_health", json.dumps(self.snapshot(), sort_keys=True))
             con.commit()
-            con.close()
-        time.sleep(60)
+        except Exception as exc:
+            _collector_log(f"heartbeat persistence failed: {_collector_error_text(exc)}")
+        finally:
+            _collector_close(con, "heartbeat")
+
+    def watch(self):
+        while not self._shutdown.wait(self.check_every):
+            try:
+                self.check_once()
+                if time.monotonic() - self._last_persist >= self.persist_every:
+                    self.persist()
+                    self._last_persist = time.monotonic()
+            except Exception as exc:
+                _collector_log(f"watchdog check failed: {_collector_error_text(exc)}")
+
+    def start(self):
+        self.check_once()
+        with self._state:
+            if self.watchdog is None:
+                self.watchdog = threading.Thread(target=self.watch, name="collector-watchdog", daemon=True)
+                self.watchdog.start()
+
+    def stop(self):
+        # For orderly local tests/shutdown; never kill threads or unlock their locks.
+        with self._state:
+            self._shutdown.set()
+            self.generation += 1
+            self._wake.set()
+
+
+def run_loop(desk, generation=None, wake=None):
+    monitor = desk.collector
+    generation = monitor.generation if generation is None else generation
+    wake = monitor._wake if wake is None else wake
+    monitor._local.generation = generation
+    delay = monitor.interval
+    try:
+        while monitor.current(generation):
+            monitor.heartbeat(generation, "start")
+            try:
+                desk.tick()
+                delay = monitor.interval
+            except CollectorSuperseded:
+                return
+            except Exception as exc:
+                # Last-resort guard covers the WHOLE reporter, not just the DB write.
+                try:
+                    with monitor._state:
+                        if monitor.current(generation):
+                            monitor.last_error = _collector_error_text(exc)[:200]
+                    _collector_log(f"tick error: {_collector_error_text(exc)}")
+                    con = None
+                    try:
+                        con = db()
+                        meta_set(con, "error_loop", f"{iso(now_utc())} {_collector_error_text(exc)}"[:200])
+                        con.commit()
+                    except Exception as report_exc:
+                        _collector_log(f"error_loop persistence failed: {_collector_error_text(report_exc)}")
+                    finally:
+                        _collector_close(con, "error_loop")
+                except Exception as handler_exc:
+                    _collector_log(f"error handler failed: {_collector_error_text(handler_exc)}")
+                delay = min(max(delay, monitor.interval) * 2, monitor.max_backoff)
+            finally:
+                monitor.heartbeat(generation, "finish")
+            if wake.wait(delay):
+                return
+    finally:
+        del monitor._local.generation
 
 
 def model_loop(desk):
@@ -2319,7 +2549,7 @@ def main():
     init_db()
     DESK = Desk()
     if load_key():
-        threading.Thread(target=run_loop, args=(DESK,), daemon=True).start()
+        DESK.collector.start()
         threading.Thread(target=model_loop, args=(DESK,), daemon=True).start()
     else:   # keep serving so the dashboard/logs explain the problem instead of a crash loop
         print("ODDS_API_KEY is not set — dashboard is up but NOTHING is being pulled. Add the variable and redeploy.")
