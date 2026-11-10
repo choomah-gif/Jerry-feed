@@ -28,6 +28,10 @@ import requests
 from scipy.stats import norm, poisson
 
 import jerry as JM
+try:
+    import goalie_binding as GB  # proposal module (event-bound NHL starters)
+except ImportError:  # pragma: no cover
+    GB = None
 
 UTC = timezone.utc
 NFLVERSE = "https://github.com/nflverse/nflverse-data/releases/download"
@@ -625,27 +629,40 @@ def refresh_nfl_props(con, now):
 
 # ---------------------------------------------------------------- NHL
 def dailyfaceoff_goalies():
-    """Confirmed starters from DailyFaceoff. Returns {team_abbr: (goalie, status)}.
+    """Fetch DailyFaceoff starters.
 
-    Parses the page's __NEXT_DATA__ JSON and walks it. The old regex used [^{}] spans,
-    which can never step into the nested "team": {...} object, so it matched nothing
-    and every NHL total ran as a goalie-unconfirmed Sit (fixed 2026-10-26).
+    PROPOSAL CHANGE (goalie_binding): still updates LAST_GOALIES for health checks, but the
+    returned team map is LEGACY-ONLY. refresh_nhl must resolve via GB.resolve_goalie with
+    event date/opponent — never price off this map alone. If goalie_binding is unavailable,
+    falls back to the prior team-keyed parser (unsafe; logs a warning).
     """
+    global LAST_GOALIES, LAST_GOALIE_OBS
     try:
         html = requests.get("https://www.dailyfaceoff.com/starting-goalies", timeout=20,
                             headers={"User-Agent": "Mozilla/5.0"}).text
     except Exception as e:
-        log(f"dailyfaceoff unavailable: {e}"); return {}
+        log(f"dailyfaceoff unavailable: {e}"); LAST_GOALIE_OBS = []; return {}
+    observed = datetime.now(UTC)
+    if GB is not None:
+        obs = GB.parse_dailyfaceoff_html(
+            html, observed_at=observed,
+            source_url="https://www.dailyfaceoff.com/starting-goalies")
+        LAST_GOALIE_OBS = obs
+        out = GB.legacy_team_map(obs)
+        LAST_GOALIES = (observed, len(out), sum(1 for v in out.values() if "onfirm" in v[1] or v[1] == "confirmed"))
+        log(f"dailyfaceoff: {len(out)} teams, {LAST_GOALIES[2]} confirmed (event-bound obs={len(obs)})")
+        return out
+    # ---- legacy fallback (team-keyed; DO NOT use for pricing if GB present) ----
+    log("dailyfaceoff: goalie_binding missing — using legacy team-keyed parser")
     m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
     if not m:
-        log("dailyfaceoff: no __NEXT_DATA__ on page"); return {}
+        log("dailyfaceoff: no __NEXT_DATA__ on page"); LAST_GOALIE_OBS = []; return {}
     try:
         blob = json.loads(m.group(1))
     except Exception as e:
-        log(f"dailyfaceoff: bad JSON {e}"); return {}
+        log(f"dailyfaceoff: bad JSON {e}"); LAST_GOALIE_OBS = []; return {}
     out = {}
     rank = lambda st: 2 if "onfirm" in st else 1 if "ikel" in st or "xpect" in st else 0
-
     def team_abbr(d, side=""):
         for k in (f"{side}TeamAbbreviation", f"{side}TeamSlug", f"{side}TeamAbbr"):
             v = d.get(k)
@@ -665,18 +682,14 @@ def dailyfaceoff_goalies():
                 if isinstance(v, str) and 2 <= len(v) <= 3:
                     return v.upper()
         return None
-
     alias = {"LA": "LAK", "NJ": "NJD", "SJ": "SJS", "TB": "TBL", "T.B": "TBL", "N.J": "NJD", "L.A": "LAK",
              "S.J": "SJS", "WAS": "WSH", "MON": "MTL", "CLB": "CBJ", "VEG": "VGK", "UTAH": "UTA", "ARI": "UTA"}
-
     def put(abbr, name, status):
         abbr = alias.get(abbr, abbr) if abbr else abbr
         if abbr and name and (abbr not in out or rank(status) > rank(out[abbr][1])):
             out[abbr] = (name, status or "")
-
     def walk(o):
         if isinstance(o, dict):
-            # layout A: one object per game with home*/away* goalie fields
             for side in ("home", "away"):
                 name = o.get(f"{side}GoalieName")
                 g = o.get(f"{side}Goalie")
@@ -685,7 +698,6 @@ def dailyfaceoff_goalies():
                 if isinstance(name, str):
                     st = o.get(f"{side}NewsStrengthName") or o.get(f"{side}GoalieStatus") or o.get(f"{side}Status") or ""
                     put(team_abbr(o, side), name, str(st))
-            # layout B: one object per goalie with a nested team
             if isinstance(o.get("name"), str) and ("team" in o) and any(k in o for k in ("status", "newsStrength", "newsStrengthName")):
                 st = o.get("status") or o.get("newsStrengthName") or o.get("newsStrength") or ""
                 put(team_abbr(o), o["name"], str(st))
@@ -694,15 +706,15 @@ def dailyfaceoff_goalies():
         elif isinstance(o, list):
             for v in o:
                 walk(v)
-
     walk(blob)
-    global LAST_GOALIES
+    LAST_GOALIE_OBS = []
     LAST_GOALIES = (datetime.now(UTC), len(out), sum(1 for v in out.values() if "onfirm" in v[1]))
     log(f"dailyfaceoff: {len(out)} teams, {LAST_GOALIES[2]} confirmed")
     return out
 
 
 LAST_GOALIES = None   # (ts, teams parsed, confirmed) from the latest DailyFaceoff read, for the health check
+LAST_GOALIE_OBS = []  # event-bound GoalieObservation list from goalie_binding (proposal)
 
 
 def goalie_overrides(con):
@@ -778,7 +790,9 @@ def refresh_nhl(con, now):
     lg_xg5 = (t5.xGoalsFor / hrs(t5)).mean()
     lg_pp = (pp.xGoalsFor / hrs(pp)).mean(); lg_pk = (pk.xGoalsAgainst / hrs(pk)).mean()
     pp_minutes = 4.5  # expected PP time per team per game, league average
-    confirmed = dailyfaceoff_goalies(); confirmed.update(goalie_overrides(con))
+    confirmed = dailyfaceoff_goalies(); confirmed.update(goalie_overrides(con))  # legacy health / manual names
+    event_obs = list(LAST_GOALIE_OBS or [])
+    # Manual overrides remain team-scoped in meta today; treat as projected unless event fields exist.
     out = []; pend = []
     for _, ev in quotes.drop_duplicates("event_id").iterrows():
         h, a = NHL_TEAMS.get(ev.home), NHL_TEAMS.get(ev.away)
@@ -797,14 +811,39 @@ def refresh_nhl(con, now):
             return {"xgf_60": (1 - w) * xgf + w * gf, "xga_60": (1 - w) * xga + w * ga}
         rh, ra = rates(h), rates(a)
         def goalie_term(t):
-            g = confirmed.get(t)
-            if g:
-                cand = goalies[(goalies.team == t)]
-                hit = cand[cand.name.str.lower().str.contains(_norm(g[0]).split(" ")[-1])]
-                if not hit.empty:
+            # PROPOSAL: bind confirmation to this event (date/opponent/home-away). Fail closed.
+            sure, gname, label = False, None, None
+            if GB is not None:
+                try:
+                    start = datetime.fromisoformat(str(ev.commence).replace("Z", "+00:00"))
+                    if start.tzinfo is None:
+                        start = start.replace(tzinfo=UTC)
+                    ce = GB.CanonicalEvent(event_id=str(ev.event_id), home_abbr=h, away_abbr=a,
+                                           start_at=start, schedule_revision=1)
+                    # Include active manual override as a synthetic observation ONLY when it
+                    # carries matching event_id (new shape). Legacy team-only meta is ignored
+                    # for confirmed status (still visible via confirmed dict for operators).
+                    obs = list(event_obs)
+                    for abbr, (nm, st) in confirmed.items():
+                        if abbr == t and st == "Manual":
+                            # legacy manual: do not auto-confirm across fixtures
+                            pass
+                    rr = GB.resolve_goalie(ce, t, obs, at=now if getattr(now, "tzinfo", None) else now.replace(tzinfo=UTC))
+                    if rr.status == "confirmed" and rr.goalie_name:
+                        sure, gname, label = True, rr.goalie_name, f"{rr.goalie_name} (Confirmed)"
+                except Exception as _ge:  # noqa: BLE001
+                    log(f"goalie_binding resolve failed for {t}: {_ge}")
+            else:
+                g = confirmed.get(t)
+                if g:
+                    gname, label = g[0], g[1]
                     sure = ("onfirm" in g[1]) or g[1] == "Manual"
-                    # a Likely/Expected starter is used for the number but still counts as unconfirmed (totals Sit)
-                    return _gsax60(hit.iloc[0].gsax, hit.iloc[0].iceTime), (f"{g[0]} ({g[1]})" if sure else f"{g[0]} ({g[1]}, unconfirmed)")
+            if gname:
+                cand = goalies[(goalies.team == t)]
+                hit = cand[cand.name.str.lower().str.contains(_norm(gname).split(" ")[-1])]
+                if not hit.empty:
+                    # Likely/Expected or unbound names contribute gsax but stay unconfirmed (totals Sit)
+                    return _gsax60(hit.iloc[0].gsax, hit.iloc[0].iceTime), (label if sure else f"{gname} ({label or 'unconfirmed'}, unconfirmed)")
             tg = goalies[goalies.team == t]
             if tg.empty:
                 return 0.0, "goalie unconfirmed (league avg)"
