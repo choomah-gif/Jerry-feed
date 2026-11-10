@@ -1,11 +1,11 @@
-KRONOS DESK SUMMARY  (generated 2026-11-10T02:29:43+00:00)
-credits left 14568 | budget/day 678 | spent today 114 | reset in 20.9d | backfill days {'NHL': 17}
-CREDIT FORECAST: ~320/day over the last 3 days (NFL 127, NHL 78, NBA 67, EPL 49) -> ~6688 to reset vs 14568 left: on track | 20 books
+KRONOS DESK SUMMARY  (generated 2026-11-10T02:39:45+00:00)
+credits left 14568 | budget/day 678 | spent today 114 | reset in 20.89d | backfill days {'NHL': 17}
+CREDIT FORECAST: ~320/day over the last 3 days (NFL 127, NHL 78, NBA 67, EPL 49) -> ~6685 to reset vs 14568 left: on track | 20 books
 UFC CARDS: 2026-11-08T14:46:27+00:00 [ESPN] 1 numbered cards: UFC 334: Gane vs. Hokit (13 fights)
 errors: {'error_loop': '2026-11-02T18:21:13+00:00 database is locked', 'error_props_NFL': '2026-11-08T16:00:01+00:00 HTTP Error 502: Bad Gateway', 'error_props_EPL': '2026-11-02T18:00:26+00:00 HTTP Error 502: Bad Gateway', 'error_props_NBA': '2026-11-07T21:00:02+00:00 HTTP Error 502: Bad Gateway'}
 
 BETS: 0 total, 0 pending, 0 graded
-PROPS GRADED: 1112 settled (446 void), 20 pending | results on file: NBA 160, NHL 274 | 62 props rejected on roster mismatch | 1 awaiting a results feed (EPL 1) — not gradeable yet | 20 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
+PROPS GRADED: 1112 settled (446 void), 20 pending | results on file: NBA 162, NHL 274 | 62 props rejected on roster mismatch | 1 awaiting a results feed (EPL 1) — not gradeable yet | 20 quarantined (unresolved names — see /api/quarantine) | last grading error: 2026-10-26T17:03:44+00:00 'Foster Moreau'
 overall: null
 by sport: {}
 by bet type: {}
@@ -81,7 +81,7 @@ UFC 2026-11-15T05:30Z Josh Hokit @ Ciryl Gane | h2h  Ciryl Gane  | model 81.1% f
 UFC 2026-11-15T05:00Z Amanda Nunes @ Kayla Harrison | >> Lean: Kayla Harrison to win — KRONOS 69% vs market 62%
 UFC 2026-11-15T05:00Z Amanda Nunes @ Kayla Harrison | h2h  Kayla Harrison  | model 68.5% fair 62.2% edge +6.3 | Lean Kayla Harrison [PUBLIC] | stats-only 39%; P(decision) 54%; UFC fights 3/18 — thin data
       why:  Market read [PUBLIC]: retail books shade it 3.1pp — this is the public side. Caution: this is the public side.
-(models last refreshed: 2026-11-10T01:38:44+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "LEARN": {"soccer_graded": 0, "trends": 0, "nfl": "2026-11-09T23:38:06+00:00 snaps 12597 | injuries 2821 | positional defense 512 rows"}, "MLB": 0, "GRADE": [{"week": 9, "graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 95, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 122, "graded": 0, "voided": 0, "quarantined": 1}}, "ROSTER": {"NFL": {"injuries": 800, "sched_calls": 3}, "NBA": {"injuries": 95, "sched_calls": 3}, "NHL": {"injuries": 122, "sched_calls": 3}}, "SOCCER": {"data": {"espn_calls": 5, "rows": 5, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-10T00:38:29+00:00", "rows": 0, "matched": 0, "unmatched": []}, "NBA": 0})
+(models last refreshed: 2026-11-10T02:39:00+00:00 {"NFL": 84, "NFL_PROPS": 0, "NHL": 0, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 0, "article_rows": 0}, "LEARN": {"soccer_graded": 0, "trends": 0, "nfl": "2026-11-09T23:38:06+00:00 snaps 12597 | injuries 2821 | positional defense 512 rows"}, "MLB": 0, "GRADE": [{"week": 9, "graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}], "FEEDS": {"NBA": {"games_ingested": 2, "backfill_days": 0, "injuries": 94, "graded": 0, "voided": 0, "quarantined": 3}, "NHL": {"games_ingested": 0, "backfill_days": 0, "injuries": 122, "graded": 0, "voided": 0, "quarantined": 1}}, "ROSTER": {"NFL": {"injuries": 800, "sched_calls": 3}, "NBA": {"injuries": 94, "sched_calls": 3}, "NHL": {"injuries": 122, "sched_calls": 3}}, "SOCCER": {"data": {"espn_calls": 5, "rows": 15, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-10T00:38:29+00:00", "rows": 0, "matched": 0, "unmatched": []}, "NBA": 0})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
 NFL 2026-11-13T01:15Z | KRONOS Washington Commanders 21.7 @ New York Giants 23.4 | market 21.8-23.2 | gap margin +0.2 (0.02), total +0.1 (0.01)
@@ -133,8 +133,8 @@ FLAG SCORECARD (paper bets by money flag — is the sharp side worth following?)
 [DROPPING · SHARP-LED DROP] 1 bets | beat close n/a | CLV n/a | 1-0 | ROI +110.0%
 
 DK SPLITS: 732 rows on file (dk_table 168, dk_trends 564)
-   table: 2026-11-10T01:38:30+00:00 10 games on page, 0 rows matched to tracked events
-   articles: 2026-11-10T01:38:30+00:00 wp-json 1 posts
+   table: 2026-11-10T02:38:44+00:00 10 games on page, 0 rows matched to tracked events
+   articles: 2026-11-10T02:38:44+00:00 wp-json 1 posts
 
 SHADOW SCORECARD (price-v4 rules, flat 1u):
   KRONOS card : 4-5 | -1.90u (-21.1%) | CLV +4.60pp | beat close 100%
@@ -154,7 +154,7 @@ LEARNING (every signal starts at weight 0; it moves a price only after 20 graded
   hours: high n354 ROI +0.6% vs low n366 ROI -10.0%
   edge: high n352 ROI -6.3% vs low n368 ROI -3.4%
   is_fav: high n181 ROI -2.7% vs low n186 ROI -8.9%
-  feeds: DK trends: 2026-11-10T01:38:41+00:00 0 posts, 0 split rows matched | nflverse: 2026-11-09T23:38:06+00:00 snaps 12597 | injuries 2821 | positional defense 512 rows
+  feeds: DK trends: 2026-11-10T02:38:57+00:00 0 posts, 0 split rows matched | nflverse: 2026-11-09T23:38:06+00:00 snaps 12597 | injuries 2821 | positional defense 512 rows
 
 SPIN SCORECARD (mean absolute error on completed games; lower is better):
 EPL: 12 games | margin KRONOS 1.07 vs market 1.14 | total KRONOS 1.51 vs market 1.59
@@ -432,7 +432,7 @@ UFC 2026-11-15T05:30:00Z Josh Hokit @ Ciryl Gane [UFC 334: Gane vs. Hokit] id=52
 KRONOS FIX (fix-v1.2-2026-11-05: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, news credit priority, learning-layer cleanup, signal audit):
   patches: books ['jerry_reason.BET_BOOKS', 'kronos_ledger.CT_BOOKS', 'kronos_edge.CT', 'kronos_drops.CT_BOOKS']; ledger ok; learning ok; edge ok; rulebook 16 rules; learning loop ok; desk ['BETTABLE', 'BACKFILL_SHARE', 'SHARP_EVERY']
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  last build 2026-11-10T02:29:43+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
+  last build 2026-11-10T02:39:45+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
   PLAYS SCORECARD (every play sent): 32 plays | 15-17-0 | -0.40u | ROI -4.4% | pending 0
   PLAYS SENT (last 3 days, newest first):
    Sun 3:40 PM ET Philadelphia 76ers @ Chicago Bulls | FanDuel · Jalen Smith Over 1.5 assists | 2.16 (floor 2.16) | 0.25u LIVE | edge +2.3% | W +0.29u
@@ -509,7 +509,7 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   GAME CARD (checklist #15: play/sit/confidence, one line per game today; game lines only, logged 90 min before start; the prop shadow card is separate):
    Mon 8:15 PM ET Buffalo Bills @ Minnesota Vikings: SIT · Buffalo Bills (h2h) 1.59 DraftKings · confidence 4/10
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  news scan: {"ts": "2026-11-10T02:25:36+00:00", "NHL": {"listed": 122, "new_outs": 0}}
+  news scan: {"ts": "2026-11-10T02:35:36+00:00", "NHL": {"listed": 122, "new_outs": 0}}
   2026-11-10T00:05:33+00:00 news NFL: KRONOS NEWS: Caleb Banks (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-10T00:05:32+00:00 news NFL: KRONOS NEWS: Charles Demmings (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-10T00:05:32+00:00 news NFL: KRONOS NEWS: Jakobe Thomas (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
@@ -532,7 +532,7 @@ GAME CHECKLIST (checklist-v1-2026-11-01: the owner's 15-point analysis items wit
 
 
 KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match, logged 90 min before kickoff, graded free from ESPN; BET = +EV at a CT book (0.25/0.5/1u by EV), LEAN = 0u for learning):
-  model coverage next 48h: NFL 0/0 games (nfl-v3-anchor25-qbstatus-2026-10-26); NBA 0/0 games (nba-v1-2026-10-26); NHL 0/2 games (nhl-v3-goaliejson-2026-10-26); EPL 0/0 games (epl-soccer-v1-2026-11-01); UCL 0/0 games (ucl-soccer-v1-2026-11-01); UFC 0/0 games (ufc-v1-2026-10-24)
+  model coverage next 48h: NFL 0/0 games (nfl-v3-anchor25-qbstatus-2026-10-26); NBA 0/0 games (nba-v1-2026-10-26); NHL 0/1 games (nhl-v3-goaliejson-2026-10-26); EPL 0/0 games (epl-soccer-v1-2026-11-01); UCL 0/0 games (ucl-soccer-v1-2026-11-01); UFC 0/0 games (ufc-v1-2026-10-24)
   EPL model: 36 picks, 0 pending | 18-17-1 | +0.46u on 0.45u (+102.2%) | CLV avg -1.59pp, beat close 3%
   NBA market: 6 picks, 0 pending | 3-3-0 | +0.00u on 0.00u (n/a) | CLV avg -1.76pp, beat close 0%
   NBA model: 183 picks, 0 pending | 76-104-3 | -0.63u on 4.25u (-14.8%) | CLV avg -1.71pp, beat close 9%
@@ -544,27 +544,27 @@ KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match
   pick NFL 2026-11-10T01:15Z Buffalo Bills @ Minnesota Vikings | h2h Buffalo Bills 1.59 draftkings | LEAN 0u 0u
   pick NFL 2026-11-10T01:15Z Buffalo Bills @ Minnesota Vikings | spreads Buffalo Bills -3 1.87 draftkings | LEAN 0u 0u
   pick NFL 2026-11-10T01:15Z Buffalo Bills @ Minnesota Vikings | totals Under 44 1.91 pinnacle | LEAN 0u 0u
-  last grading pass: 2026-11-10T02:24:08+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
-  soccer model: {"data": {"espn_calls": 5, "rows": 5, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-10T00:38:29+00:00", "rows": 0, "matched": 0, "unmatched": []}
+  last grading pass: 2026-11-10T02:34:08+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
+  soccer model: {"data": {"espn_calls": 5, "rows": 15, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-10T00:38:29+00:00", "rows": 0, "matched": 0, "unmatched": []}
 
 
 KRONOS MASTER (master-v1-2026-11-01: shared rulebook, roster + schedule layers, learning upgrades, backtests):
   rulebook: R1 Market first: Pinnacle's de-vigged price is the baseline; the model moves off it only where the ledger shows it has earned to. | R2 Every tracked match gets a pick in every game-line market, logged 90 min before start. Never 'no bet': a game with no edge is a LEAN at 0u; no line = a pick marked 'no posted line'. | R3 Two tiers (fix-v1): a BET is a DraftKings/FanDuel price that beats the sharp fair price by 2%+, inside 2 hours of start, in a market the ledger has made LIVE (50+ graded, positive CLV and ROI: 0.25u at +2-4%, 0.5u at +4-6%, 1u at +6%; over +10% is treated as a likely stale or mislabeled price, 0.25u max) or PILOT (30+ graded, positive CLV: 0.1u). Models never create a BET. Everything else is LEAN 0u. | R4 A projection may veto a BET only after it has beaten the market's own line over 100+ graded games for that sport (spin scorecard). Until then it is shown and graded, never used for staking. | R5 Every signal starts at weight 0 and graduates only on graded results against the market baseline; graduated signals are demoted when their last 60 days fade. One signal per idea: no duplicates. | R6 Closing line value judges a pick before the result does; a model earns weight after 150 graded picks that beat the close. | R7 Price moves are labels, not rules: sharp-led vs retail-only vs priced in. A stale CT price is just a price edge under R3. | R8 Game analysis = the 15-point checklist: line tape, splits (RLM and steam separate), injuries + EPA/ranking mismatches, weather, coaching H2H and ATS as fav/dog, officials, bounce-back/let-down, role stats, series H2H, date rhyme (weight 0), handicapper board, historical rates as hits-n against the break-even, weighted model whose projected score matches the side, props from positional matchup (posted numbers only), and a one-screen play/sit/confidence card. | R9 Trends (coaching, officials, spots, roles, series) are shown with hits-losses, rate and n, flagged under 20 games, and carry weight 0 until proven. The date rhyme never moves a pick. | R10 Repeating losing patterns become candidate rules on probation (mistake memory); nothing is applied until it is proven. | R11 Soccer reports use Sports Mole previews; soccer 1X2 settles on 90 minutes; props need confirmed lineups first. | R12 Every play shows the book, the exact line and a floor price; a different line or a lower price at that book means skip. | R13 Correlation caps: at most 2 plays per game, 3 same-direction totals per sport per day, and no more than 60% of a slate's Over/Under plays on one side. | R14 No parlays from the card. Alternate lines and the early NFL scan are paper-only until 50 graded picks; alternate-line CLV is not measured (no same-rung close). | R15 Analysis may not cite a trend or signal as a reason for a pick until it has graduated under R5; ungraduated items are context only. | R16 Credits: news re-pulls run at close priority, backfill gets 5% of the daily budget, and game lines are re-pulled every 30 minutes in the last 90.
-  roster/schedule data: {"ts": "2026-11-10T01:38:43+00:00", "NFL": {"injuries": 800, "sched_calls": 3}, "NBA": {"injuries": 95, "sched_calls": 3}, "NHL": {"injuries": 122, "sched_calls": 3}}
-  injury lists: NBA 95 players, NFL 800 players, NHL 122 players
+  roster/schedule data: {"ts": "2026-11-10T02:38:59+00:00", "NFL": {"injuries": 800, "sched_calls": 3}, "NBA": {"injuries": 94, "sched_calls": 3}, "NHL": {"injuries": 122, "sched_calls": 3}}
+  injury lists: NBA 94 players, NFL 800 players, NHL 122 players
   autopsy by sport (14d): {"NFL": {"loss: bad price (lost value to the close)": 200, "loss: other / game script": 27, "loss: narrow (variance)": 4, "loss: clear miss": 14, "loss: roster (more outs than the opponent)": 7, "loss: role / minutes": 3, "win: despite losing value": 237, "win: value held": 37}, "NBA": {"loss: bad price (lost value to the close)": 88, "loss: clear miss": 35, "loss: narrow (variance)": 22, "loss: other / game script": 31, "loss: schedule spot (back-to-back)": 17, "loss: roster (more outs than the opponent)": 4, "win: value held": 95, "win: despite losing value": 86}, "NHL": {"loss: narrow (vari
   mistake memory: NBA spreads picks that are favorite 7-16 ROI -0.42 CLV -1.61; NBA h2h picks that are on back-to-back 13-24 ROI -0.36 CLV -1.5; NBA h2h picks that are home 15-22 ROI -0.35 CLV -1.72; NHL totals picks that are taken 6h+ early 27-38 ROI -0.19 CLV -2.36; NBA spreads picks that are home 14-18 ROI -0.15 CLV -1.69; NFL spreads picks that are favorite 12-15 ROI -0.14 CLV -1.33
   layer scorecard (win rate / CLV when signal high vs low): drop_pct: high 55%/-1.57pp vs low 50%/-1.55pp (n627); steam: high 56%/-1.43pp vs low 47%/-1.81pp (n625); rlm: high 65%/-1.84pp vs low 48%/-1.69pp (n625); shade_pp: high 51%/-2.02pp vs low 51%/-1.61pp (n483); injury_q: high 50%/1.67pp vs low 50%/-1.55pp (n720); hours: high 53%/-1.69pp vs low 48%/-1.39pp (n720); edge: high 50%/-0.89pp vs low 50%/-2.07pp (n720); is_fav: high 62%/-1.91pp vs low 39%/-1.34pp (n367); drop_1h: high 46%/-0.96pp vs low 51%/-1.59pp (n641); pin_led: high 53%/-0.95pp vs low 51%/-1.63pp (n641); coach_ats: high 81%/-1.51pp vs low 58%/-1.69pp (n47); role_ats: high 62%/-1.43pp vs low 64%/-1.75pp (n52); spot_ats: high 63%/-2.23pp vs low 57%/-1.25pp (n40); h2h_ats: high 60%/-1.29pp vs low 64%/-1.87pp (n24); out_diff: high 57%/-1.64pp vs low 50%/-1.84pp (n279); rest_diff: high 51%/-1.9pp vs low 53%/-1.67pp (n273); b2b_flag: high 51%/-1.75pp vs low 53%/-1.72pp (n273)
   backtest EPL: {"sport": "EPL", "seasons": ["2425", "2526", "2627"], "matches": 368, "log_loss": {"model": 0.9874, "market_close": 0.9747, "blend": 0.9753}, "picks_vs_open": {"n": 293, "clv_avg_pp": -0.8, "beat_close": 0.348, "roi_flat": 0.018}, "read": "market alone is still better than the blend; raw model worse than market by 0.0127 log loss", "ts": "2026-11-09T09:05:04+00:00"}
 
 
-DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-10T02:29:43+00:00; 0 sides):
+DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-10T02:39:45+00:00; 0 sides):
   rules: R1 only SHARP-LED drops count as sharp evidence; R2 RETAIL-ONLY drops are public money; R3 PRICED IN (best CT EV < 0) = do not chase; R4 act only on STALE CT PRICE (Pinnacle >=5% in 1h, CT EV >= +2%); R5 a drop on confirmed team news is information, not an edge
   no side has dropped past the flag yet
   telegram: 2026-11-10T00:05:33+00:00 ok
 
 
-GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 0 sides; computed 2026-11-10T02:29:43+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
+GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 0 sides; computed 2026-11-10T02:39:45+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
 
 
 QUARANTINE (20 unresolved player/market pairs; these bets are unsettled, not lost):
