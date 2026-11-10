@@ -628,7 +628,7 @@ def refresh_nfl_props(con, now):
 
 
 # ---------------------------------------------------------------- NHL
-def dailyfaceoff_goalies():
+def dailyfaceoff_goalies(observed_at=None):
     """Fetch DailyFaceoff starters.
 
     PROPOSAL CHANGE (goalie_binding): still updates LAST_GOALIES for health checks, but the
@@ -642,7 +642,11 @@ def dailyfaceoff_goalies():
                             headers={"User-Agent": "Mozilla/5.0"}).text
     except Exception as e:
         log(f"dailyfaceoff unavailable: {e}"); LAST_GOALIE_OBS = []; return {}
-    observed = datetime.now(UTC)
+    # Prefer the refresh-cycle clock when provided so observed_at is not later than
+    # the `now` refresh_all snapped before NFL work / this HTTP fetch (6b9ac9a SPIN miss).
+    observed = observed_at if observed_at is not None else datetime.now(UTC)
+    if getattr(observed, "tzinfo", None) is None:
+        observed = observed.replace(tzinfo=UTC)
     if GB is not None:
         obs = GB.parse_dailyfaceoff_html(
             html, observed_at=observed,
@@ -790,7 +794,7 @@ def refresh_nhl(con, now):
     lg_xg5 = (t5.xGoalsFor / hrs(t5)).mean()
     lg_pp = (pp.xGoalsFor / hrs(pp)).mean(); lg_pk = (pk.xGoalsAgainst / hrs(pk)).mean()
     pp_minutes = 4.5  # expected PP time per team per game, league average
-    confirmed = dailyfaceoff_goalies(); confirmed.update(goalie_overrides(con))  # legacy health / manual names
+    confirmed = dailyfaceoff_goalies(observed_at=now); confirmed.update(goalie_overrides(con))  # legacy health / manual names
     event_obs = list(LAST_GOALIE_OBS or [])
     # Manual overrides remain team-scoped in meta today; treat as projected unless event fields exist.
     out = []; pend = []
@@ -828,7 +832,9 @@ def refresh_nhl(con, now):
                         if abbr == t and st == "Manual":
                             # legacy manual: do not auto-confirm across fixtures
                             pass
-                    rr = GB.resolve_goalie(ce, t, obs, at=now if getattr(now, "tzinfo", None) else now.replace(tzinfo=UTC))
+                    decision_at = now if getattr(now, "tzinfo", None) else now.replace(tzinfo=UTC)
+                    decision_at = GB.live_decision_at(decision_at, obs)
+                    rr = GB.resolve_goalie(ce, t, obs, at=decision_at)
                     if rr.status == "confirmed" and rr.goalie_name:
                         sure, gname, label = True, rr.goalie_name, f"{rr.goalie_name} (Confirmed)"
                 except Exception as _ge:  # noqa: BLE001
