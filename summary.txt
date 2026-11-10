@@ -1,6 +1,6 @@
-KRONOS DESK SUMMARY  (generated 2026-11-10T05:20:13+00:00)
-credits left 14568 | budget/day 682 | spent today 0 | reset in 20.78d | backfill days {'NHL': 17}
-CREDIT FORECAST: ~304/day over the last 3 days (NFL 125, NHL 78, NBA 55, EPL 47) -> ~6317 to reset vs 14568 left: on track | 20 books
+KRONOS DESK SUMMARY  (generated 2026-11-10T05:30:15+00:00)
+credits left 14568 | budget/day 682 | spent today 0 | reset in 20.77d | backfill days {'NHL': 17}
+CREDIT FORECAST: ~304/day over the last 3 days (NFL 125, NHL 78, NBA 55, EPL 47) -> ~6314 to reset vs 14568 left: on track | 20 books
 UFC CARDS: 2026-11-08T14:46:27+00:00 [ESPN] 1 numbered cards: UFC 334: Gane vs. Hokit (13 fights)
 errors: {'error_loop': '2026-11-02T18:21:13+00:00 database is locked', 'error_props_NFL': '2026-11-08T16:00:01+00:00 HTTP Error 502: Bad Gateway', 'error_props_EPL': '2026-11-02T18:00:26+00:00 HTTP Error 502: Bad Gateway', 'error_props_NBA': '2026-11-07T21:00:02+00:00 HTTP Error 502: Bad Gateway'}
 
@@ -425,7 +425,7 @@ UFC 2026-11-15T05:30:00Z Josh Hokit @ Ciryl Gane [UFC 334: Gane vs. Hokit] id=52
 KRONOS FIX (fix-v1.2-2026-11-05: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, news credit priority, learning-layer cleanup, signal audit):
   patches: books ['jerry_reason.BET_BOOKS', 'kronos_ledger.CT_BOOKS', 'kronos_edge.CT', 'kronos_drops.CT_BOOKS']; ledger ok; learning ok; edge ok; rulebook 16 rules; learning loop ok; desk ['BETTABLE', 'BACKFILL_SHARE', 'SHARP_EVERY']
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  last build 2026-11-10T05:20:13+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
+  last build 2026-11-10T05:30:15+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
   PLAYS SCORECARD (every play sent): 32 plays | 15-17-0 | -0.40u | ROI -4.4% | pending 0
   PLAYS SENT (last 3 days, newest first):
    Sun 3:40 PM ET Philadelphia 76ers @ Chicago Bulls | FanDuel · Jalen Smith Over 1.5 assists | 2.16 (floor 2.16) | 0.25u LIVE | edge +2.3% | W +0.29u
@@ -502,7 +502,7 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   GAME CARD (checklist #15: play/sit/confidence, one line per game today; game lines only, logged 90 min before start; the prop shadow card is separate):
    no games locked yet today
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  news scan: {"ts": "2026-11-10T05:15:36+00:00"}
+  news scan: {"ts": "2026-11-10T05:25:36+00:00"}
   2026-11-10T00:05:33+00:00 news NFL: KRONOS NEWS: Caleb Banks (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-10T00:05:32+00:00 news NFL: KRONOS NEWS: Charles Demmings (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-10T00:05:32+00:00 news NFL: KRONOS NEWS: Jakobe Thomas (Minnesota Vikings) now listed Out | Buffalo Bills @ Minnesota Vikings, Mon 8:15 PM ET | Daily re-pull limit (6) reached; check prices by hand.
@@ -534,7 +534,7 @@ KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match
   UCL market: 3 picks, 0 pending | 0-2-1 | +0.00u on 0.00u (n/a) | CLV avg 2.62pp, beat close 67%
   UCL model: 51 picks, 0 pending | 18-32-1 | +0.00u on 0.00u (n/a) | CLV avg -0.39pp, beat close 39%
   by grade: B 1-1 -0.04u; BET 5-3 +0.21u; C 9-9 -0.52u; D 7-3 +0.35u; LEAN 257-237 +0.00u
-  last grading pass: 2026-11-10T05:14:10+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
+  last grading pass: 2026-11-10T05:24:10+00:00 {"due": 0, "graded": 0, "held_extra_time": 0}
   soccer model: {"data": {"espn_calls": 5, "rows": 5, "europe_days_left": 0, "matches_on_file": 5689, "errors": []}, "fit": "cached 2026-11-10T00:38:29+00:00", "rows": 0, "matched": 0, "unmatched": []}
 
 
@@ -548,13 +548,13 @@ KRONOS MASTER (master-v1-2026-11-01: shared rulebook, roster + schedule layers, 
   backtest EPL: {"sport": "EPL", "seasons": ["2425", "2526", "2627"], "matches": 368, "log_loss": {"model": 0.9874, "market_close": 0.9747, "blend": 0.9753}, "picks_vs_open": {"n": 293, "clv_avg_pp": -0.8, "beat_close": 0.348, "roi_flat": 0.018}, "read": "market alone is still better than the blend; raw model worse than market by 0.0127 log loss", "ts": "2026-11-09T09:05:04+00:00"}
 
 
-DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-10T05:20:13+00:00; 0 sides):
+DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-10T05:30:15+00:00; 0 sides):
   rules: R1 only SHARP-LED drops count as sharp evidence; R2 RETAIL-ONLY drops are public money; R3 PRICED IN (best CT EV < 0) = do not chase; R4 act only on STALE CT PRICE (Pinnacle >=5% in 1h, CT EV >= +2%); R5 a drop on confirmed team news is information, not an edge
   no side has dropped past the flag yet
   telegram: 2026-11-10T00:05:33+00:00 ok
 
 
-GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 0 sides; computed 2026-11-10T05:20:13+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
+GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 0 sides; computed 2026-11-10T05:30:15+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
 
 
 QUARANTINE (20 unresolved player/market pairs; these bets are unsettled, not lost):
