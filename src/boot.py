@@ -385,6 +385,11 @@ def clv_pp(bet_line, bet_price, close_line, close_price, market, selection,
     if bet_line is not None and close_line is not None:
         d = float(close_line) - float(bet_line)
         if abs(d) > 1e-9:
+            if str(market).startswith("player_") and not (sd and sd > 0):
+                # rules v2: one flat slope is wrong for every prop market (rebounds ~0.13/unit, yards
+                # ~0.016/unit). Until per-market slopes are fitted from the tape, a moved prop line
+                # has no CLV rather than a wrong one.
+                return None
             sign = _line_sign(market, selection)
             if sign == 0:
                 return None          # cannot translate: unknown market geometry
@@ -7096,16 +7101,21 @@ import json, math, os, re, sys, time
 from datetime import datetime, timezone, timedelta
 
 UTC = timezone.utc
-VERSION = "fix-v1.2-2026-11-05"
+VERSION = "rules-v2-2026-11-10"
 BOOKS = ("draftkings", "fanduel")
 BOOKN = {"draftkings": "DraftKings", "fanduel": "FanDuel", "fanatics": "Fanatics", "pinnacle": "Pinnacle"}
 PLAY_EV = float(os.environ.get("PLAY_MIN_EV", "0.02"))          # 0-2% price edges lost 31% (n 30)
 PLAY_WINDOW_H = float(os.environ.get("PLAY_WINDOW_H", "2.0"))   # game lines 6h+ out ran -23%; <1h +7%
 CHECK_EV = 0.10                                                 # bigger than this is usually a bad price feed
-LIVE_N, PILOT_N, PILOT_STAKE = 50, 30, 0.1
+# rules v2 section 4: ONE gate. Two states. No pilot tier.
+LIVE_N = int(os.environ.get("LIVE_N", "150"))        # closed bets with a valid CLV, current version only
+LIVE_Z = 1.645                                       # one-sided 95% lower bound of mean CLV must be above 0
+TRAIL_N, SUB_N, SUB_CLV, DRAWDOWN_U = 100, 40, -0.5, 15.0
+K_DEFAULT, UNIT_ROUND, MIN_STAKE, MAX_STAKE = 0.5, 0.25, 0.5, 2.0
+MAX_GAME_U, MAX_OPEN_U = 3.0, 8.0
 PROJ_GATE_N = 100
 MAX_PER_GAME, MAX_SAME_TOTALS, MAX_DIR_SHARE = 2, 3, 0.60
-BACKFILL_SHARE_FIX, SHARP_EVERY_FIX = 0.05, 30
+BACKFILL_SHARE_FIX, SHARP_EVERY_FIX = 0.05, 30   # upper limits only: the desk (rules v2) now runs 0% backfill and 10-minute lines
 ALT_CALLS_FIX = int(os.environ.get("ALT_MAX_CALLS_DAY_FIX", "12"))
 TG = None                     # the unfiltered Telegram sender, set by boot.py
 STATUS = {}
@@ -7165,51 +7175,125 @@ def _meta_set(con, k, v):
 
 
 # ------------------------------------------------------------------ 1. live-money gate
+def _price_version():
+    L = sys.modules.get("jerry_live")
+    try:
+        return L.MODEL_VERSIONS[("ANY", "price")]
+    except Exception:                                          # noqa: BLE001
+        return None
+
+
+def _kind_of(r):
+    ek = (r["evidence_kind"] if "evidence_kind" in r.keys() else None) or ""
+    if ek == "price_adj":
+        return "price edge, line-adj"
+    if ek == "price":
+        return "price edge"
+    return _kind(r["note"])
+
+
 def gate_groups(con, force=False):
-    """Market tiers from the paper ledger: LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0."""
+    """Rules v2 section 4. LIVE = 150+ closed bets with a VALID closing line value on the CURRENT price
+    version, and the one-sided 95% lower bound of mean CLV above 0. Everything else is PAPER.
+    Model rows are never LIVE (they live in the sandbox). Demotion: trailing-100 mean CLV <= 0, or a
+    15u drawdown from the category's peak."""
     if not force and _GATE["groups"] and time.time() - _GATE["ts"] < 1800:
         return _GATE["groups"]
-    g = {}
-    for r in con.execute("select sport, market, note, result, pnl, stake, clv_pp from bets where paper=1"):
-        k = f"{r['sport']} {_fam(r['market'])} ({_kind(r['note'])})"
-        a = g.setdefault(k, {"n": 0, "w": 0, "l": 0, "pnl": 0.0, "st": 0.0, "clv": []})
+    cols = {r[1] for r in con.execute("pragma table_info(bets)")}
+    has_valid = "clv_valid" in cols
+    ver = _price_version()
+    sel = "sport, market, note, result, pnl, stake, clv_pp, price, edge, model_version, evidence_kind"
+    sel += ", clv_valid" if has_valid else ", 0 as clv_valid"
+    g, mk = {}, {}
+    for r in con.execute(f"select {sel} from bets where paper=1 order by id"):
+        kind = _kind_of(r)
+        k = f"{r['sport']} {_fam(r['market'])} ({kind})"
+        a = g.setdefault(k, {"n": 0, "w": 0, "l": 0, "pnl": 0.0, "st": 0.0, "clv": [], "run": [], "kept": [], "all_n": 0,
+                             "price": kind.startswith("price edge")})
         if r["result"] in ("W", "L", "P"):
-            a["n"] += 1
+            a["all_n"] += 1
+        current = a["price"] and ver is not None and r["model_version"] == ver
+        if not current:
+            continue
+        if r["result"] in ("W", "L", "P"):
             a["w"] += r["result"] == "W"
             a["l"] += r["result"] == "L"
             a["pnl"] += float(r["pnl"] or 0)
             a["st"] += float(r["stake"] or 0)
-        if r["clv_pp"] is not None:
-            a["clv"].append(float(r["clv_pp"]))
+            a["run"].append(float(r["pnl"] or 0))
+        if r["clv_valid"] and r["clv_pp"] is not None:
+            c = float(r["clv_pp"])
+            a["clv"].append(c)
+            m = mk.setdefault(f"{r['sport']}|{r['market']}|{kind}", [])
+            m.append(c)
+            if r["edge"] and r["price"] and float(r["edge"]) > 0:
+                a["kept"].append((c / 100.0 * float(r["price"]), float(r["edge"])))
     out = {}
     for k, a in g.items():
+        n = len(a["clv"])
         roi = a["pnl"] / a["st"] if a["st"] else None
-        clv = sum(a["clv"]) / len(a["clv"]) if a["clv"] else None
-        tier = "PAPER"
-        if a["n"] >= LIVE_N and (clv or 0) > 0 and (roi or 0) > 0:
+        clv = sum(a["clv"]) / n if n else None
+        lo = None
+        if n >= 2:
+            sd = (sum((x - clv) ** 2 for x in a["clv"]) / (n - 1)) ** 0.5
+            lo = clv - LIVE_Z * sd / n ** 0.5
+        tier, why = "PAPER", ""
+        if not a["price"]:
+            why = "sandbox: models do not create bets"
+        elif n < LIVE_N:
+            why = f"{n}/{LIVE_N} valid-CLV bets on {ver}"
+        elif lo is None or lo <= 0:
+            why = f"CLV lower bound {lo:+.2f} not above 0"
+        else:
             tier = "LIVE"
-        elif a["n"] >= PILOT_N and (clv or 0) > 0:
-            tier = "PILOT"
-        out[k] = {"tier": tier, "n": a["n"], "record": f"{a['w']}-{a['l']}", "units": round(a["pnl"], 2),
-                  "roi": roi, "clv": clv}
-    _GATE.update(ts=time.time(), groups=out)
+            tr = a["clv"][-TRAIL_N:]
+            peak = cur = dd = 0.0
+            for x in a["run"]:
+                cur += x
+                peak = max(peak, cur)
+                dd = max(dd, peak - cur)
+            if len(tr) >= TRAIL_N and sum(tr) / len(tr) <= 0:
+                tier, why = "PAPER", f"demoted: trailing {TRAIL_N} mean CLV {sum(tr) / len(tr):+.2f}"
+            elif peak - cur >= DRAWDOWN_U:
+                tier, why = "PAPER", f"demoted: {peak - cur:.1f}u below its peak"
+        k_ret = K_DEFAULT
+        if n >= LIVE_N and a["kept"]:
+            num = sum(x for x, _ in a["kept"]) / len(a["kept"])
+            den = sum(e for _, e in a["kept"]) / len(a["kept"])
+            if den > 0:
+                k_ret = max(0.0, min(1.0, num / den))
+        out[k] = {"tier": tier, "n": n, "record": f"{a['w']}-{a['l']}", "units": round(a["pnl"], 2), "roi": roi,
+                  "clv": clv, "clv_lo": lo, "k": round(k_ret, 3), "why": why, "all_n": a["all_n"]}
+    _GATE.update(ts=time.time(), groups=out,
+                 markets={k: {"n": len(v), "clv": sum(v) / len(v)} for k, v in mk.items() if v})
     return out
 
 
-def stake_for(tier, ev):
-    if tier == "LIVE":
-        if ev > CHECK_EV:
-            return 0.25
-        return 1.0 if ev >= 0.06 else 0.5 if ev >= 0.04 else 0.25
-    if tier == "PILOT":
-        return PILOT_STAKE
-    return 0.0
+def market_killed(sport, market, kind="price edge"):
+    """Sub-market kill switch: 40+ valid closed bets in one market with mean CLV under -0.5pp."""
+    m = (_GATE.get("markets") or {}).get(f"{sport}|{market}|{kind}")
+    return bool(m and m["n"] >= SUB_N and m["clv"] < SUB_CLV)
+
+
+def stake_for(tier, ev, price=None, k=K_DEFAULT):
+    """Quarter Kelly on a shrunk edge, in units of 1% of bankroll: 25 x (k x EV) / (price - 1).
+    Rounded to 0.25u, capped at 2u; under 0.5u is no play. PAPER is always 0."""
+    if tier != "LIVE" or not price or float(price) <= 1.0 or ev is None or ev <= 0:
+        return 0.0
+    raw = 25.0 * (float(k) * float(ev)) / (float(price) - 1.0)
+    st = round(raw / UNIT_ROUND) * UNIT_ROUND
+    if st < MIN_STAKE:
+        return 0.0
+    return min(st, MAX_STAKE)
 
 
 def _group_line(k, gi):
     roi = f"{gi['roi']:+.1%}" if gi.get("roi") is not None else "n/a"
     clv = f"{gi['clv']:+.2f}" if gi.get("clv") is not None else "n/a"
-    return f"{k}: {gi['tier']} | {gi['record']} | {gi['units']:+.2f}u | ROI {roi} | CLV {clv} | graded {gi['n']}"
+    lo = f"{gi['clv_lo']:+.2f}" if gi.get("clv_lo") is not None else "n/a"
+    return (f"{k}: {gi['tier']} | valid-CLV bets {gi['n']}/{LIVE_N} | CLV {clv} (95% floor {lo}) | {gi['record']} | "
+            f"{gi['units']:+.2f}u | ROI {roi} | k {gi.get('k', K_DEFAULT):g}"
+            + (f" | {gi['why']}" if gi.get("why") else "") + f" | all versions graded {gi.get('all_n', 0)}")
 
 
 # ------------------------------------------------------------------ 2. projection gate
@@ -7268,17 +7352,24 @@ def build_plays(con, now=None):
                            order by v.ev desc""",
                        (_iso(now), _iso(now + timedelta(hours=PLAY_WINDOW_H)), *BOOKS, PLAY_EV)).fetchall()
     acc, per_game, tot_dir, ou, paper_n, capped = [], {}, {}, {}, 0, 0
+    game_u, open_u = {}, 0.0
     for v in rows:
         if str(v["outcome"]) in ("No",):                       # can't bet a player NOT to score at his books
             continue
         if v["fair"] is None or float(v["fair"]) <= 0:
             continue
-        grp = f"{v['sport']} {_fam(v['market'])} (price edge)"
+        kind = "price edge, line-adj" if ("line_adj" in v.keys() and v["line_adj"]) else "price edge"
+        grp = f"{v['sport']} {_fam(v['market'])} ({kind})"
         gi = groups.get(grp) or {"tier": "PAPER", "n": 0, "record": "0-0", "units": 0.0, "roi": None, "clv": None}
         ev = float(v["ev"])
-        st = stake_for(gi["tier"], ev)
+        st = stake_for(gi["tier"], ev, v["price"], gi.get("k", K_DEFAULT))
+        if st > 0 and market_killed(v["sport"], v["market"], kind):
+            st = 0.0
         if st <= 0:
             paper_n += 1
+            continue
+        if game_u.get(v["event_id"], 0.0) + st > MAX_GAME_U or open_u + st > MAX_OPEN_U:
+            capped += 1
             continue
         if any(p["event_id"] == v["event_id"] and p["market"] == v["market"] and p["player"] == (v["player"] or "")
                and p["outcome"] == v["outcome"] for p in acc):
@@ -7301,6 +7392,8 @@ def build_plays(con, now=None):
              "line": v["line"], "book": v["book"], "price": float(v["price"]), "floor": floor, "fair": fair, "ev": ev,
              "stake": st, "tier": gi["tier"], "grp": grp, "gi": gi, "check": ev > CHECK_EV, "flag": v["flag"] if "flag" in v.keys() else None}
         acc.append(p)
+        game_u[v["event_id"]] = game_u.get(v["event_id"], 0.0) + st
+        open_u += st
         per_game[v["event_id"]] = per_game.get(v["event_id"], 0) + 1
         if d:
             so[d] += 1
@@ -7320,7 +7413,7 @@ def play_message(p):
              f"{p['game']} · {_et(p['commence'])}",
              f"Edge {p['ev']:+.1%} vs sharp fair {p['fair']:.1%}. {p['grp']}: {gi['record']}, {gi['units']:+.1f}u{roi}."]
     if p["check"]:
-        lines.append("CHECK THE PRICE: an edge this big is usually a stale or mislabeled line. Stake capped at 0.25u.")
+        lines.append("CHECK THE PRICE on the app before betting: an edge this big is often a stale or mislabeled line.")
     lines.append(f"Different line or a price below {p['floor']:.2f} at {BOOKN.get(p['book'], p['book'])} = skip.")
     return "\n".join(lines)
 
@@ -7408,8 +7501,8 @@ def gate_ledger_rows(con, ev, now):
         if "BET: price beats" in note and evm is not None:
             grp = f"{r['sport']} {_fam(r['market'])} (price edge)"
             gi = groups.get(grp) or {"tier": "PAPER", "n": 0}
-            st = stake_for(gi["tier"], float(evm)) if float(evm) >= PLAY_EV else 0.0
-            why = f"{grp} is {gi['tier']} (graded {gi['n']})" + ("" if float(evm) >= PLAY_EV else f", edge {float(evm):+.1%} under {PLAY_EV:.0%}")
+            st = 0.0
+            why = "rules v2: plays come only from the price scanner (fresh prices, 2h window); ledger rows are never staked"
         else:
             st, why = 0.0, "models don't create bets until they beat the close"
         new_call = f"BET {st:g}u" if st > 0 else "LEAN 0u"
@@ -7641,17 +7734,25 @@ ADDED = [
 ]
 
 
+RULES_V2 = [
+    "R1 The market is the baseline: fair = power de-vig of Pinnacle, blended with other sharp books when 3+ quote both sides at the same line. No model, signal or learned adjustment moves it.",
+    "R2 A play is a price, not an opinion: a DraftKings or FanDuel price that beats fair by 2%+, inside 2 hours of start.",
+    "R3 No play is the default. No pick for every game, no LEAN, no 0u pick, no quota.",
+    "R4 Missing data = unavailable. Never estimate a price, line, status, timestamp or close. Posted lines only. Decimal odds only. Bettable sides only.",
+    "R5 Prices must be fresh: sharp quote updated within 10 minutes and not more than 5 minutes older than the soft quote.",
+    "R6 Closing line value is the scorecard, and it counts only against a sharp close pulled 10+ minutes after the bet.",
+    "R7 Live money: a category (sport x family x kind) is LIVE at 150+ closed bets with valid CLV on the current version and the 95% floor of mean CLV above 0. Otherwise PAPER. No pilot tier, no overrides.",
+    "R8 Stake = 25 x (k x EV) / (price - 1) units, rounded to 0.25u; under 0.5u is no play; caps 2u per play, 3u per game, 8u open, 2 plays per game.",
+    "R9 Price-edge rows and model rows are never mixed. Models, signals, trends and filters live in the sandbox at zero influence until they pass 150 rows plus a 100-row holdout.",
+    "R10 No rule from a named loss: a rule change needs a measured effect over 100+ rows.",
+    "R11 A 'full analysis' adds the owner's 15-point checklist as context only; it never creates, sizes or vetoes a play.",
+]
+
+
 def _patch_rulebook():
     km = sys.modules["kronos_master"]
-    rb = km.RULEBOOK
-    for i, r in enumerate(rb):
-        for tag, text in RULES.items():
-            if r.startswith(tag + " "):
-                rb[i] = text
-    for a in ADDED:
-        if not any(r.startswith(a.split(" ", 1)[0] + " ") for r in rb):
-            rb.append(a)
-    return f"{len(rb)} rules"
+    km.RULEBOOK[:] = RULES_V2
+    return f"{len(km.RULEBOOK)} rules (v2)"
 
 
 # ------------------------------------------------------------------ 8. books
@@ -8256,9 +8357,10 @@ def feed_block(con, now=None):
                     pnl += f" | line moved {q['line_move']:+g} toward us"
                 L.append(f"   {_et(q['commence'])} {q['game']} | {BOOKN.get(q['book'], q['book'])} · {describe(q)} | "
                          f"{q['price']:.2f} (floor {q['floor']:.2f}) | {q['stake']:g}u {q['tier']} | edge {q['ev']:+.1%} | {res}{pnl}")
-        L.append("  LIVE-MONEY GATE (paper ledger by market; LIVE = 50+ graded, CLV > 0, ROI > 0; PILOT = 30+ graded, CLV > 0):")
+        L.append(f"  LIVE-MONEY GATE (rules v2: LIVE = {LIVE_N}+ closed bets with a valid CLV on the current price version "
+                 "and the 95% floor of mean CLV above 0; no pilot tier; everything else PAPER):")
         groups = gate_groups(con, force=True)
-        order = {"LIVE": 0, "PILOT": 1, "PAPER": 2}
+        order = {"LIVE": 0, "PAPER": 2}
         sbg = sharp_by_group(con)
         for k, gi in sorted(groups.items(), key=lambda kv: (order[kv[1]["tier"]], -kv[1]["n"])):
             if gi["n"] >= 5 or gi["tier"] != "PAPER":
@@ -8518,12 +8620,71 @@ def recompute_clv_once(db_path):
         c.close()
 
 
+def recompute_clv_v2(db_path):
+    """One-time repair (rules v2, 2026-11-10). Re-derive every stored CLV under the valid-close rule:
+    the close must be a sharp book's price from a close pull taken 10+ minutes after the bet, and a
+    prop whose line moved has no CLV until per-market slopes exist. Invalid rows keep their close
+    fields but get clv_pp = NULL and clv_valid = 0, so they stop counting toward the gate."""
+    import jerry_reason as _jr
+    SHARPS = ("pinnacle", "lowvig", "betonlineag", "betfair_ex_eu", "matchbook", "smarkets")
+    c = sqlite3.connect(db_path, timeout=60); c.row_factory = sqlite3.Row
+    try:
+        c.execute("pragma busy_timeout=60000")
+        if c.execute("select 1 from meta where k='clv_fix_2026_11_10'").fetchone():
+            return "already done"
+        if "clv_valid" not in {r[1] for r in c.execute("pragma table_info(bets)")}:
+            c.execute("alter table bets add column clv_valid int")
+        rows = c.execute("""select id, event_id, market, selection, player, line, price, commence, placed_ts, close_book,
+                            close_line, close_price, comp_json from bets where close_price is not null""").fetchall()
+        n = ok = 0
+        for b in rows:
+            n += 1
+            v = None
+            try:
+                t = c.execute("""select max(ts) from ticks where event_id=? and market=? and outcome=? and player=? and book=?
+                                 and is_close=1 and price=? and line is ? and ts<=?""",
+                              (b["event_id"], b["market"], b["selection"], b["player"] or "", b["close_book"],
+                               b["close_price"], b["close_line"], b["commence"])).fetchone()[0]
+                valid = bool(t) and b["close_book"] in SHARPS and b["placed_ts"] and \
+                    datetime.fromisoformat(str(t).replace("Z", "+00:00")) >= \
+                    datetime.fromisoformat(str(b["placed_ts"]).replace("Z", "+00:00")) + timedelta(minutes=10)
+                if valid:
+                    fair = None
+                    ol = (-b["close_line"] if (b["market"] == "spreads" and b["close_line"] is not None) else b["close_line"])
+                    r = c.execute("""select price from ticks where event_id=? and market=? and player=? and book=? and outcome<>?
+                                     and line is ? and ts<=? order by ts desc limit 1""",
+                                  (b["event_id"], b["market"], b["player"] or "", b["close_book"], b["selection"], ol,
+                                   b["commence"])).fetchone()
+                    if r and r["price"]:
+                        fair = _jr.fair_two_way_power(float(b["close_price"]), float(r["price"]))
+                    try:
+                        comp = json.loads(b["comp_json"] or "{}")
+                    except Exception:                         # noqa: BLE001
+                        comp = {}
+                    v = _jr.clv_pp(b["line"], b["price"], b["close_line"], b["close_price"], b["market"], b["selection"],
+                                   sd=comp.get("sd"), mu=comp.get("mu"), close_fair=fair)
+            except Exception:                                 # noqa: BLE001
+                v = None
+            ok += v is not None
+            c.execute("update bets set clv_pp=?, clv_valid=? where id=?", (v, int(v is not None), b["id"]))
+        c.execute("insert or replace into meta(k,v) values('clv_fix_2026_11_10', ?)",
+                  (f"{datetime.now(UTC).isoformat()} {n} rows checked, {ok} valid, {n - ok} blanked",))
+        c.commit()
+        return f"{n} rows checked, {ok} keep a valid CLV, {n - ok} blanked"
+    finally:
+        c.close()
+
+
 _orig_refresh_all = L.refresh_all if L else None
 def refresh_all(db_path, sports=None):
     try:
         print(f"[boot] CLV repair: {recompute_clv_once(db_path)}", flush=True)
     except Exception as e:   # noqa: BLE001
         print(f"[boot] CLV repair failed: {e}", flush=True)
+    try:
+        print(f"[boot] CLV v2 repair: {recompute_clv_v2(db_path)}", flush=True)
+    except Exception as e:   # noqa: BLE001
+        print(f"[boot] CLV v2 repair failed: {e}", flush=True)
     _spl = None
     try:
         import jerry_splits as _js
@@ -9195,7 +9356,9 @@ def _ledger_loop():
             import kronos_ledger as _kl
             c = _drops_con()
             try:
-                n = _kl.log_due(c, L=L, jr=sys.modules.get("jerry_reason"), js=sys.modules.get("jerry_signals"))
+                # rules v2 R3: no pick for every game. Set KRONOS_QUOTA_LEDGER=1 in Railway to turn the old logging back on.
+                n = (_kl.log_due(c, L=L, jr=sys.modules.get("jerry_reason"), js=sys.modules.get("jerry_signals"))
+                     if os.environ.get("KRONOS_QUOTA_LEDGER", "0") == "1" else 0)
                 if n:
                     print(f"[ledger] logged {n} picks", flush=True)
                 while _kl.NEW_BETS:
