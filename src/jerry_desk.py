@@ -63,9 +63,14 @@ HARD_FLOOR = 25          # even closes stop here
 # 20 books, standard across every sport (2026-10-29). The feed bills per batch of 10, so
 # 20 costs exactly 2x of 10 — never pull 11-19. Exchanges (Betfair, Matchbook, Smarkets) are
 # the sharpest soccer referees; DraftKings, FanDuel and Fanatics are the only CT-bettable books.
-BOOKS_CORE = "pinnacle,lowvig,betonlineag,draftkings,fanduel,betmgm,williamhill_us,espnbet,fanatics,betrivers"
+# rules v2 (2026-11-10): TEN books = 1 credit unit per market. Four sharp referees, the two books the
+# owner bets (DraftKings, FanDuel), four retail books for the consensus fair price.
+BOOKS_CORE = "pinnacle,lowvig,betonlineag,betfair_ex_eu,draftkings,fanduel,betmgm,williamhill_us,espnbet,betrivers"
 BOOKS_EXTRA = "betfair_ex_eu,matchbook,smarkets,marathonbet,williamhill,hardrockbet,ballybet,bovada,betus,mybookieag"
-BOOKS = os.environ.get("BOOKS", BOOKS_CORE + "," + BOOKS_EXTRA)
+BOOKS = os.environ.get("BOOKS", BOOKS_CORE)   # BOOKS_EXTRA is no longer pulled by default (set BOOKS in Railway to override)
+# closing line value is only valid against one of these, from a close pull taken after the bet (rules v2 s4)
+CLV_SHARP = ("pinnacle", "lowvig", "betonlineag", "betfair_ex_eu", "matchbook", "smarkets")
+CLV_MIN_GAP_MIN = 10
 BOOK_UNITS = max(1, -(-len([b for b in BOOKS.split(",") if b.strip()]) // 10))   # credits multiplier per market
 SHARP = {"pinnacle", "lowvig", "betonlineag"}
 FAMILY = {"lowvig": "betonline", "betonlineag": "betonline"}   # LowVig is BetOnline's sister book
@@ -90,18 +95,19 @@ SPORTS = {
 }
 SOCCER = {"EPL", "UCL"}
 # NBA game lines are pulled less often (tape intervals x3); props follow the same 6h/2h/30m schedule as every sport
-SPORT_CADENCE = {"NBA": 3}
-PROP_SLOTS_BY_SPORT = {"NBA": (360, 120, 60, 30)}   # NBA gets an extra 1-hour prop pull: its prop edge is the proven one
+SPORT_CADENCE = {"NBA": 3}   # applies outside the final-2h window only (rules v2)
+PROP_SLOTS_BY_SPORT = {}   # one schedule for every sport (rules v2, 10 books)   # NBA gets an extra 1-hour prop pull: its prop edge is the proven one
 OUTRIGHTS = {"WS": "baseball_mlb_world_series_winner"}   # pulled every 6h while it returns data
 
 # cadence (minutes) — the bucket stretches these automatically when credits are tight
-SHARP_WINDOW_MIN = 90      # last 90 minutes before a start cluster
-SHARP_EVERY = 120          # 2026-10-29: no 5-minute tape in the last 90 min; closes still pulled below
+SHARP_WINDOW_MIN = 120     # rules v2: the play window is the last 2 hours before a start cluster
+SHARP_EVERY = int(os.environ.get("SHARP_EVERY_MIN", "10"))   # rules v2: game lines every 10 min inside the window (10 books = half the cost per pull)
 BASELINE_HOURS = 36        # games inside 36h get baseline tape
 BASELINE_EVERY = 120       # games inside 36h: game lines every 2 hours (owner's spec, 2026-10-29)
 OPENER_DAYS = 7            # games 36h-7d out get a pull every 12h (openers + early moves)
 OPENER_EVERY = 720         # every 12 hours (was 6): early lines matter least for price edges
-PROP_SLOTS_MIN = (360, 120, 30)      # owner's spec 2026-10-29: props at 6h, 2h and 30m; the 30m pull is the prop close
+PROP_SLOTS_MIN = (360, 120, 60, 30, 15, 5)   # rules v2: opener at 6h, then 2h/1h/30m/15m, plus a true close at T-5 for events with an open prop bet
+PROP_TRUE_CLOSE_MIN = 5
 CLOSE_SLOTS_MIN = ((12, 8), (4, 0))  # two close pulls per start cluster: T-12..T-8 and T-4..T-0
 CLUSTER_MIN = 30
 UFC_LOOKAHEAD_DAYS = 30   # numbered cards graded from a month out (2026-10-29)
@@ -118,8 +124,10 @@ BACKFILL = [
     ("NBA", "2022-10-18", "2023-04-09", (15, 23)), ("NHL", "2022-10-07", "2023-04-14", (15, 23)),
 ]
 NFL_GAME_WEEKDAYS = {0, 3, 6}   # Mon, Thu, Sun — skip other NFL days in backfill
-BACKFILL_WHEN_FULL = 0.85       # spend on backfill whenever bucket >= 85% full (under-spending)
-BACKFILL_SHARE = 0.20           # ...and always give backfill 20% of each day's allowance until the queue is done
+# rules v2: no backfill spend until a category is LIVE. Set KRONOS_BACKFILL=1 in Railway to turn it back on.
+_BF_ON = os.environ.get("KRONOS_BACKFILL", "0") == "1"
+BACKFILL_WHEN_FULL = 0.85 if _BF_ON else 9.9   # 9.9 = never (the bucket cannot be 990% full)
+BACKFILL_SHARE = 0.20 if _BF_ON else 0.0
 
 
 # ---------------------------------------------------------------- utils
@@ -252,7 +260,11 @@ def init_db():
     create index if not exists bets_res on bets(result);
     create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
         book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book));
+    create table if not exists quote_fresh(event_id text, book text, market text, book_ts text, pull_ts text,
+        primary key(event_id, book, market));
     """)
+    if "clv_valid" not in {r[1] for r in con.execute("pragma table_info(bets)")}:
+        con.execute("alter table bets add column clv_valid int")
     _betcols = {r[1] for r in con.execute("pragma table_info(bets)")}
     if "paper" not in _betcols:
         con.execute("alter table bets add column paper int default 0")
@@ -362,6 +374,18 @@ def _close_fair(con, b, c):
         return jr.fair_two_way_power(float(c["price"]), float(r["price"]))
     except Exception:
         return None
+
+def clv_is_valid(placed_ts, close_book, close_ts, is_close):
+    """Rules v2 s4: a close counts only if it is a sharp book's price from a close pull taken at least
+    CLV_MIN_GAP_MIN minutes after the bet was logged. Otherwise the bet would be graded against the
+    snapshot that created it."""
+    try:
+        if not is_close or close_book not in CLV_SHARP:
+            return False
+        return parse(close_ts) >= parse(placed_ts) + timedelta(minutes=CLV_MIN_GAP_MIN)
+    except Exception:
+        return False
+
 
 # sports with a player-level results feed wired in; everything else cannot be
 # graded yet and is reported as such rather than counted as a backlog
@@ -590,6 +614,7 @@ class Desk:
             if g["id"] not in keep:
                 continue
             for b in g.get("bookmakers", []):
+                self._fresh(con, g["id"], b, now)
                 for m in b.get("markets", []):
                     for o in m.get("outcomes", []):
                         rows.append((g, b["key"], m["key"], o["name"], "", o.get("point"), o["price"]))
@@ -606,6 +631,7 @@ class Desk:
         self._record(con, sport, "props", hdr, now)
         rows = []
         for b in data.get("bookmakers", []):
+            self._fresh(con, data.get("id", event_id), b, now)
             for m in b.get("markets", []):
                 for o in m.get("outcomes", []):
                     rows.append((data, b["key"], m["key"], o["name"], o.get("description", ""), o.get("point"), o["price"]))
@@ -646,6 +672,15 @@ class Desk:
                                      g.get("home_team", ""), g.get("away_team", ""), b["key"], m["key"], o["name"],
                                      o.get("point"), o["price"]))
         con.execute("insert or ignore into backfill_done values(?,?)", (sport, day))
+
+    def _fresh(self, con, eid, b, now):
+        """Record each book's own update time per market (rules v2 s2 step 2: prices must be fresh)."""
+        try:
+            for m in b.get("markets", []):
+                con.execute("insert or replace into quote_fresh values(?,?,?,?,?)",
+                            (eid, b["key"], m["key"], m.get("last_update") or b.get("last_update"), iso(now)))
+        except Exception as ex:
+            meta_set(con, "error_quote_fresh", f"{iso(now)} {ex}"[:200])
 
     # ---------- storage + move detection
     def store(self, con, sport, rows, now, is_close):
@@ -806,22 +841,31 @@ class Desk:
                     mins = (start - now).total_seconds() / 60
                     if self._done(con, k) or not props:
                         continue
-                    is_last = (s == min(PROP_SLOTS_BY_SPORT.get(sport, PROP_SLOTS_MIN)))
-                    window = 15 if s <= 30 else 30
+                    is_last = (s <= 30)          # the 30m and T-5 pulls both write close ticks; grading takes the latest
+                    window = 5 if s <= PROP_TRUE_CLOSE_MIN else 15 if s <= 30 else 30
+                    if s <= PROP_TRUE_CLOSE_MIN and s - window < mins <= s:
+                        # the T-5 pull is spent only where a prop bet is waiting to be graded against it
+                        if not con.execute("""select 1 from bets where event_id=? and result='pending'
+                                              and market like 'player_%' limit 1""", (e["event_id"],)).fetchone():
+                            self._mark(con, k, now)
+                            continue
                     if s - window < mins <= s:
-                        if self.can_spend(con, len(props) * BOOK_UNITS, now, priority="close" if is_last else "props"):
+                        # only the last two pulls may spend past the daily bucket; the rest wait their turn
+                        if self.can_spend(con, len(props) * BOOK_UNITS, now, priority="close" if s <= 15 else "props"):
                             try:
                                 self.pull_props(con, sport, e["event_id"], now, is_close=is_last)
                             except Exception as ex:
                                 meta_set(con, f"error_props_{sport}", f"{iso(now)} {ex}"[:200])
                         self._mark(con, k, now)   # missed slots are skipped, not retried
-                    elif 0 < mins - s <= PROP_FLOOR_HOURS * 60:
+                    elif 0 < mins - s <= PROP_FLOOR_HOURS * 60 and s > PROP_TRUE_CLOSE_MIN:
                         prop_floor += len(props) * BOOK_UNITS   # tokens held back so tape can't starve upcoming props
 
         # 2b) Sunday NFL fixed-clock full-board prop pulls (owner 2026-11-08)
         # Times: 10:00, 12:00, 12:30, 14:00, 16:00, 18:00, 20:00, 22:00 ET
         et_now = now.astimezone(ET)
-        if et_now.weekday() == 6 and "NFL" in plan and plan["NFL"]:
+        # rules v2: off by default. Every game now gets its own pulls at 2h/1h/30m/15m before kickoff, so the
+        # fixed-clock pulls only duplicated them (and four of the eight fell outside the 2-hour play window).
+        if os.environ.get("KRONOS_SUNDAY_CLOCK", "0") == "1" and et_now.weekday() == 6 and "NFL" in plan and plan["NFL"]:
             sunday_times = [(10, 0), (12, 0), (12, 30), (14, 0), (16, 0), (18, 0), (20, 0), (22, 0)]
             for hh, mm in sunday_times:
                 slot_key = f"sunday_nfl_props:{et_now.date()}:{hh:02d}{mm:02d}"
@@ -866,7 +910,7 @@ class Desk:
                 every, floor = BASELINE_EVERY, prop_floor + hold_bf * 0.5 + cost * 6
             else:
                 every, floor = OPENER_EVERY, prop_floor + hold_bf + cost * 12
-            every = every * SPORT_CADENCE.get(sport, 1)
+            every = every * (1 if in_sharp else SPORT_CADENCE.get(sport, 1))
             # starvation guard: a sport with games inside the baseline window and no
             # game-line quotes at all gets one pull regardless of the prop floor
             if soonest <= BASELINE_HOURS * 60:
@@ -1083,8 +1127,9 @@ class Desk:
 
     def closing(self, con, b):
         """Closing number for the bet: Pinnacle close at the same line if possible, else any close, else last tick."""
-        q = """select book, line, price from ticks where event_id=? and market=? and outcome=? and player=?
-               and ts<=? {extra} order by (book='pinnacle') desc, ts desc limit 1"""
+        q = """select book, line, price, ts, is_close from ticks where event_id=? and market=? and outcome=? and player=?
+               and ts<=? {extra} order by (book='pinnacle') desc,
+               (book in ('lowvig','betonlineag','betfair_ex_eu','matchbook','smarkets')) desc, ts desc limit 1"""
         args = (b["event_id"], b["market"], b["selection"], b["player"] or "", b["commence"])
         for extra in ("and is_close=1 and line is ?", "and is_close=1", "and line is ?", ""):
             a = args + ((b["line"],) if "line is ?" in extra else ())
@@ -1100,9 +1145,10 @@ class Desk:
             if b["close_price"] is None:
                 c = self.closing(con, b)
                 if c and c["price"]:
-                    clv = _clv_for(b, c, con)
-                    con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=? where id=?",
-                                (c["book"], c["line"], c["price"], clv, b["id"]))
+                    valid = clv_is_valid(b["placed_ts"], c["book"], c["ts"], c["is_close"])
+                    clv = _clv_for(b, c, con) if valid else None
+                    con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=?, clv_valid=? where id=?",
+                                (c["book"], c["line"], c["price"], clv, int(valid and clv is not None), b["id"]))
         if not pend:
             return
         sports = {b["sport"] for b in pend if b["sport"] in SPORTS and b["market"] in ("h2h", "spreads", "totals")}
@@ -1246,11 +1292,12 @@ class Desk:
     def finish(self, con, b, res, now, hs=None, as_=None):
         pnl = {"W": b["stake"] * (b["price"] - 1), "L": -b["stake"], "P": 0.0}[res]
         c = self.closing(con, b)
-        clv = _clv_for(b, c, con) if c else None   # +pp = the market moved toward you
+        valid = bool(c) and clv_is_valid(b["placed_ts"], c["book"], c["ts"], c["is_close"])
+        clv = _clv_for(b, c, con) if valid else None   # +pp = the market moved toward you; blank unless the close is valid
         con.execute("""update bets set result=?, pnl=?, home_score=?, away_score=?, close_book=?, close_line=?,
-                       close_price=?, clv_pp=?, graded_ts=? where id=?""",
+                       close_price=?, clv_pp=?, clv_valid=?, graded_ts=? where id=?""",
                     (res, round(pnl, 4), hs, as_, c["book"] if c else None, c["line"] if c else None,
-                     c["price"] if c else None, clv, iso(now), b["id"]))
+                     c["price"] if c else None, clv, int(valid and clv is not None), iso(now), b["id"]))
 
     def grade_manual(self, bet_id, res):
         con = db()
