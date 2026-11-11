@@ -19,6 +19,7 @@ import math
 import os
 import re
 import sqlite3
+import sys
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -1069,17 +1070,77 @@ PRICE_BOOKS = tuple(b.strip() for b in os.environ.get("PRICE_BOOKS", "draftkings
 PAPER_LOG_MAX_HOURS = 2.0   # edges are logged / carded only from pulls within 2h of start
 PRICE_EDGE_MIN = 0.015     # +EV vs Pinnacle fair needed to flag a soft-book price
 PRICE_EDGE_MIN_ADJ = 0.025 # higher bar when the fair had to be translated across a line gap
+# rules v2 section 2 step 2: both prices must be fresh, by each book's own update time
+FRESH_SHARP_MAX_MIN = float(os.environ.get("FRESH_SHARP_MAX_MIN", "10"))   # sharp quote no older than this
+FRESH_LAG_MAX_MIN = float(os.environ.get("FRESH_LAG_MAX_MIN", "5"))        # ...and at most this much older than the soft quote
+CAND_MIN_EV = 0.01         # every edge at or above this is written to the candidate log with the step it stopped at
+
+
+def _fresh_ts(con, event_id, book, market):
+    """(book's own update time, pull time) for one book+market, as datetimes or None."""
+    try:
+        r = con.execute("select book_ts, pull_ts from quote_fresh where event_id=? and book=? and market=?",
+                        (event_id, book, market)).fetchone()
+    except Exception:
+        return None, None
+    if not r:
+        return None, None
+    def _p(x):
+        try:
+            return datetime.fromisoformat(str(x).replace("Z", "+00:00")) if x else None
+        except Exception:
+            return None
+    return _p(r[0]), _p(r[1])
+
+
+def fresh_check(con, event_id, market, sharp_book, soft_book, now):
+    """None when both quotes are fresh, else a short reason. A book that reports no update time of its
+    own is judged on the pull time. No record at all = unavailable."""
+    sb, sp = _fresh_ts(con, event_id, sharp_book, market)
+    fb, fp = _fresh_ts(con, event_id, soft_book, market)
+    st, ft = sb or sp, fb or fp
+    if st is None or ft is None:
+        return "no timestamp"
+    if sp is None or (now - sp).total_seconds() > FRESH_SHARP_MAX_MIN * 60:
+        return "pull older than %g min" % FRESH_SHARP_MAX_MIN
+    if (now - st).total_seconds() > FRESH_SHARP_MAX_MIN * 60:
+        return "sharp quote older than %g min" % FRESH_SHARP_MAX_MIN
+    if (ft - st).total_seconds() > FRESH_LAG_MAX_MIN * 60:
+        return "sharp quote %g+ min behind the soft quote" % FRESH_LAG_MAX_MIN
+    return None
+
+
+def _cand(con, now, ev, market, r, fair, evv, stop, tags=None, adj=False):
+    """Candidate log: one row per side per book, first sighting kept, latest state updated. Filters
+    mark a row with the step that stopped it; nothing is silently dropped, so every filter can be tested."""
+    try:
+        if evv is None or evv < CAND_MIN_EV:
+            return
+        ts = now.isoformat(timespec="seconds")
+        con.execute("""insert into candidates(event_id, market, outcome, player, book, sport, commence, line, price, fair, ev,
+                       first_ts, last_ts, stop, tags, line_adj, first_price, first_ev) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       on conflict(event_id, market, outcome, player, book) do update set line=excluded.line,
+                       price=excluded.price, fair=excluded.fair, ev=excluded.ev, last_ts=excluded.last_ts,
+                       stop=excluded.stop, tags=excluded.tags, line_adj=excluded.line_adj""",
+                    (ev["event_id"], market, r["outcome"], r["player"] or "", r["book"], ev["sport"], ev["commence"], r["line"],
+                     r["price"], round(float(fair), 4), round(float(evv), 4), ts, ts, stop,
+                     " · ".join(t for t in (tags or []) if t) or None, int(bool(adj)), r["price"], round(float(evv), 4)))
+    except Exception as _e:
+        try:
+            con.execute("insert or replace into meta(k,v) values('candidates_error_last', ?)", (f"{now.isoformat(timespec='seconds')} {str(_e)[:150]}",))
+        except Exception:
+            pass
 
 # Version tag on every paper row, so a rebuild never mixes with the evidence of the old
 # model. Bump the string whenever a model's logic changes; the 150-bet clock is per version.
 MODEL_VERSIONS = {
-    ("NFL", "model"): "nfl-v3-anchor25-qbstatus-2026-10-26",
+    ("NFL", "model"): "nfl-v4-anchor15-2026-11-05",
     ("NFL_PROPS", "model"): "nflprops-v2-paperonly-2026-10-26",
     ("NHL", "model"): "nhl-v3-goaliejson-2026-10-26",
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v7-late-logging-2026-10-29",
+    ("ANY", "price"): "price-v8-fresh-validclv-2026-11-10",   # rules v2: freshness check + valid-close CLV; the 150 count restarts here
 }
 
 
@@ -1146,13 +1207,19 @@ def ensure_paper_schema(con):
     con.execute("""create table if not exists value_edges(event_id text, market text, outcome text, player text, line real,
                    book text, price real, fair real, ev real, ts text, primary key(event_id, market, outcome, player, book))""")
     con.execute("create index if not exists bets_paper on bets(paper, event_id, market, selection, player)")
+    con.execute("""create table if not exists candidates(event_id text, market text, outcome text, player text, book text,
+                   sport text, commence text, line real, price real, fair real, ev real, first_ts text, last_ts text,
+                   stop text, tags text, line_adj int, first_price real, first_ev real,
+                   primary key(event_id, market, outcome, player, book))""")
+    con.execute("create table if not exists quote_fresh(event_id text, book text, market text, book_ts text, pull_ts text, primary key(event_id, book, market))")
     # flags travel with every edge and every paper bet so their value can be measured
     for tbl, col, typ in (("value_edges", "flag", "text"), ("bets", "sharp_flag", "text"),
                           ("bets", "dk_bets_pct", "real"), ("bets", "dk_handle_pct", "real"),
                           ("model_probs", "flag", "text"), ("model_probs", "reasoning", "text"),
                           ("bets", "model_version", "text"), ("bets", "hours_to_start", "real"),
                           ("bets", "edge", "real"), ("bets", "fair_prob", "real"),
-                          ("model_probs", "plain", "text"), ("value_edges", "activity", "text")):
+                          ("model_probs", "plain", "text"), ("value_edges", "activity", "text"),
+                          ("value_edges", "line_adj", "int")):
         try:
             if col not in {r[1] for r in con.execute(f"pragma table_info({tbl})")}:
                 con.execute(f"alter table {tbl} add column {col} {typ}")
@@ -1297,11 +1364,14 @@ def price_edges(con, now):
         _learned = _js.load_model(con)
     except Exception:
         _js, _learned = None, None
+    if os.environ.get("KRONOS_LEARNED_SHIFT", "0") != "1":
+        _learned = None          # rules v2 R1: nothing moves the fair price. Signals are still captured for the sandbox.
     lim = (now + timedelta(hours=48)).isoformat(timespec="seconds")
     evs = [dict(r) for r in con.execute("select event_id, sport, home, away, commence from events where commence>? and commence<?",
                                         (now.isoformat(timespec="seconds"), lim))]
     con.execute("delete from value_edges where event_id in (select event_id from events where commence>?)", (now.isoformat(timespec="seconds"),))
     out = []
+    _n_stale = 0
     for ev in evs:
         q = [dict(r) for r in con.execute("select * from last_quote where event_id=?", (ev["event_id"],))]
         if not q:
@@ -1320,6 +1390,7 @@ def price_edges(con, now):
             by = {}
             for r in sharp:
                 by.setdefault(r["outcome"], r)
+            _sharp_book = sharp[0]["book"]
             if three_way:
                 ks = list(by)
                 fw = jr.power_devig([by[k]["price"] for k in ks])
@@ -1350,6 +1421,15 @@ def price_edges(con, now):
                     f_use = min(max(f_use + adj, 0.01), 0.99)
                 evv = float(r["price"]) * f_use - 1
                 if adj and evv < PRICE_EDGE_MIN_ADJ:
+                    _cand(con, now, ev, market, r, f_use, evv, "below line-adj minimum", adj=True)
+                    continue
+                if evv < PRICE_EDGE_MIN:
+                    _cand(con, now, ev, market, r, f_use, evv, "below minimum", adj=bool(adj))
+                    continue
+                _why = fresh_check(con, ev["event_id"], market, _sharp_book, r["book"], now)
+                if _why:
+                    _n_stale += 1
+                    _cand(con, now, ev, market, r, f_use, evv, "unavailable: " + _why, adj=bool(adj))
                     continue
                 if evv >= PRICE_EDGE_MIN and player:
                     # roster cross-check (#5): The Odds API sometimes returns a player's prop
@@ -1362,6 +1442,7 @@ def price_edges(con, now):
                     if ok is False:
                         con.execute("insert or replace into meta(k,v) values(?,?)",
                                     (f"label_reject_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
+                        _cand(con, now, ev, market, r, f_use, evv, "unavailable: player not on either team", None, bool(adj))
                         continue
                 # active-player gate (2026-10-27, strengthened 2026-11-05): players who did not play or
                 # who are listed Out/Doubtful are dropped. Soft-book edges on injured or low-minutes
@@ -1376,6 +1457,7 @@ def price_edges(con, now):
                     if st_ == "dnp":
                         con.execute("insert or replace into meta(k,v) values(?,?)",
                                     (f"inactive_skip_{ev['sport']}_{player}"[:120], f"{now.isoformat(timespec='seconds')} {ev['away']} @ {ev['home']}"))
+                        _cand(con, now, ev, market, r, f_use, evv, "unavailable: did not play last game", None, bool(adj))
                         continue
                     activity = {"low": f"LOW MINUTES ({mins_:.0f} last game)" if mins_ is not None else "LOW MINUTES",
                                 "unknown": "MINUTES UNVERIFIED"}.get(st_)
@@ -1390,6 +1472,7 @@ def price_edges(con, now):
                         if evv < PRICE_EDGE_MIN:
                             con.execute("insert or replace into meta(k,v) values(?,?)",
                                         ("consensus_reject_last", f"{now.isoformat(timespec='seconds')} {player} {market} {r['outcome']}"))
+                            _cand(con, now, ev, market, r, f_use, evv, "filter: consensus fair below minimum", tags, bool(adj))
                             continue
                 if evv >= PRICE_EDGE_MIN and player and ev["sport"] in ("NBA", "NHL"):
                     try:
@@ -1398,6 +1481,7 @@ def price_edges(con, now):
                     except Exception:
                         inj = None
                     if inj == "out":
+                        _cand(con, now, ev, market, r, f_use, evv, "unavailable: player out", tags, bool(adj))
                         continue
                     if inj == "doubtful":
                         tags.append("QUESTIONABLE")
@@ -1411,11 +1495,13 @@ def price_edges(con, now):
                         if r["outcome"] in ("Under", "No"):
                             con.execute("insert or replace into meta(k,v) values(?,?)",
                                         (f"role_change_skip_{player}"[:120], f"{now.isoformat(timespec='seconds')} {pc.get('note')}"))
+                            _cand(con, now, ev, market, r, f_use, evv, "filter: role change", tags, bool(adj))
                             continue
                         tags.append("ROLE CHANGE")
                     elif pc.get("verdict") == "disagrees":
                         con.execute("insert or replace into meta(k,v) values(?,?)",
                                     (f"projection_skip_{player}"[:120], f"{now.isoformat(timespec='seconds')} {pc.get('note')}"))
+                        _cand(con, now, ev, market, r, f_use, evv, "filter: projection disagrees", tags, bool(adj))
                         continue
                     elif pc.get("verdict") == "agrees":
                         tags.append(f"PROJECTION AGREES ({pc['p_side']:.0%})")
@@ -1431,6 +1517,7 @@ def price_edges(con, now):
                     except Exception:
                         _nfl_snap, _nfl_inj = None, None
                     if _nfl_inj and _nfl_inj.lower() in ("out", "doubtful", "injured reserve"):
+                        _cand(con, now, ev, market, r, f_use, evv, "unavailable: player out", tags, bool(adj))
                         continue
                     if _nfl_inj and _nfl_inj.lower() == "questionable":
                         tags.append("QUESTIONABLE")
@@ -1448,6 +1535,7 @@ def price_edges(con, now):
                         big = abs(mv) >= max(1.0, 0.12 * abs(float(o_[0])))
                         against = (mv > 0 and r["outcome"] in ("Under", "No")) or (mv < 0 and r["outcome"] in ("Over", "Yes"))
                         if big and against:
+                            _cand(con, now, ev, market, r, f_use, evv, "filter: line moved against", tags, bool(adj))
                             continue
                         if big:
                             tags.append(f"LINE MOVED {float(o_[0]):g}->{float(r['line']):g}")
@@ -1500,10 +1588,18 @@ def price_edges(con, now):
                     row["flag_text"] = _sig.get("text") if _sig else ""
                     row["_sig"] = _sig
                     out.append(row)
-                    con.execute("""insert or replace into value_edges(event_id,market,outcome,player,line,book,price,fair,ev,ts,flag,activity)
-                                   values(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    con.execute("""insert or replace into value_edges(event_id,market,outcome,player,line,book,price,fair,ev,ts,flag,activity,line_adj)
+                                   values(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                                 (row["event_id"], market, r["outcome"], player, r["line"], r["book"], r["price"], row["fair"], row["ev"],
-                                 now.isoformat(timespec="seconds"), row["flag"], row.get("activity")))
+                                 now.isoformat(timespec="seconds"), row["flag"], row.get("activity"), int(bool(adj))))
+                    _cand(con, now, ev, market, r, f_use, evv, "passed", tags, bool(adj))
+                else:
+                    _cand(con, now, ev, market, r, f_use, evv, "below minimum after adjustments", tags, bool(adj))
+    try:
+        con.execute("insert or replace into meta(k,v) values('fresh_reject_last', ?)",
+                    (f"{now.isoformat(timespec='seconds')} {_n_stale} edges stopped as stale, {len(out)} passed",))
+    except Exception:
+        pass
     # paper-trade them too (one per outcome, first book seen) — but only inside 2 hours of start.
     # 2026-10-29: losing value to the close was the #1 cause of losses, and props taken 6h+ out ran
     # -52% vs about break-even inside 2h. An edge seen early is logged at a later pull if it survives,
@@ -1550,16 +1646,18 @@ CARD_EXCLUDE = ("ROLE CHANGE", "MINUTES UNVERIFIED", "QUESTIONABLE", "NO PROJECT
 
 
 def _category_proven(con, sport, is_prop):
-    """A category earns real-money card spots only when its flat-stake ROI's 90% range sits above zero
-    over 50+ graded bets (2026-10-29). Today: NBA props. Others join automatically if they earn it."""
-    q = """select pnl, stake from bets where paper=1 and sport=? and evidence_kind in ('price','price_adj')
-           and result in ('W','L','P') and market """ + ("like 'player_%'" if is_prop else "not like 'player_%'")
-    xs = [float(p or 0) / float(st or 1) for p, st in con.execute(q, (sport,))]
-    if len(xs) < 50:
+    """Rules v2: there is ONE gate (kronos_fix.gate_groups). A family is proven only when that gate says LIVE.
+    For props/game lines as a whole: any LIVE price-edge family of that type for the sport."""
+    kf = sys.modules.get("kronos_fix")
+    if kf is None or not hasattr(kf, "gate_groups"):
         return False
-    mu = sum(xs) / len(xs)
-    sd = (sum((x - mu) ** 2 for x in xs) / (len(xs) - 1)) ** 0.5
-    return mu - 1.645 * sd / len(xs) ** 0.5 > 0
+    try:
+        groups = kf.gate_groups(con)
+    except Exception:
+        return False
+    fams = ("props",) if is_prop else ("moneyline", "spread", "total")
+    return any(g.get("tier") == "LIVE" for k, g in groups.items()
+               if any(k == f"{sport} {f} (price edge)" for f in fams))
 
 
 def _category_record(con, sport, is_prop):
