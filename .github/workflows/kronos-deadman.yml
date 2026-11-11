@@ -1,0 +1,23 @@
+# KRONOS dead-man switch: alerts on Telegram if the desk stops pushing summary.txt for 40+ minutes.
+name: kronos-deadman
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - name: Check feed age
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          last=$
