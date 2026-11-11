@@ -9683,6 +9683,300 @@ except Exception:
     traceback.print_exc()
     print("[fix] WARNING audit batch wiring failed; desk starts with the previous behaviour", flush=True)
 
+# ================================================================= watchdog (rules v2, 2026-11-11)
+# Alerts only when something is wrong; silence means healthy. Every WATCHDOG_EVERY_SEC (15 min) it checks:
+# deploy (files running = files in the Jerrybot repo), collector health, stale-price rejects, credit pace,
+# gate tier changes, sub-market kill switches, new desk errors, ungraded bets and new unresolved names.
+# A problem alerts once when it starts, again every 12 h while it lasts, and once when it clears.
+# Railway variables: WATCHDOG=0 turns it off. JERRYBOT_REPO (owner/name) and JERRYBOT_BRANCH name the code
+# repo if Railway's own RAILWAY_GIT_* variables are not present. JERRYBOT_TOKEN (or FEED_TOKEN) reads it.
+import hashlib as _wd_hash
+WATCHDOG_EVERY_SEC = int(os.environ.get("WATCHDOG_EVERY_SEC", "900"))
+WD_FILES = ("boot.py", "jerry_desk.py", "jerry_live.py")
+WD_REPEAT_H, WD_DEPLOY_GRACE_MIN = 12, 20
+WD_HEARTBEAT_MAX_MIN, WD_STALE_SHARE, WD_STALE_MIN_N = 30, 0.5, 10
+WD_PACE_OVER, WD_PENDING_H, WD_RESERVE = 1.10, 24, 400
+_WD = {"status": "not run yet", "deploy": "not checked yet", "open": {}}
+
+
+def _wd_meta(c, k, default=None):
+    r = c.execute("select v from meta where k=?", (k,)).fetchone()
+    if not r:
+        return default
+    try:
+        return json.loads(r[0])
+    except Exception:                                                  # noqa: BLE001
+        return default
+
+
+def _wd_meta_set(c, k, v):
+    c.execute("insert or replace into meta(k, v) values(?, ?)", (k, json.dumps(v)))
+
+
+def _wd_send(text):
+    try:
+        fn = getattr(sys.modules.get("kronos_fix"), "TG", None) or (L.telegram if L is not None else None)
+        return bool(fn and fn(text))
+    except Exception:                                                  # noqa: BLE001
+        return False
+
+
+def _wd_blob_sha(path):
+    data = open(path, "rb").read()
+    return _wd_hash.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def _wd_deploy(c, now):
+    """Compare each running file with the same file on the deployed branch, by git blob hash."""
+    repo = os.environ.get("JERRYBOT_REPO") or (
+        f"{os.environ['RAILWAY_GIT_REPO_OWNER']}/{os.environ['RAILWAY_GIT_REPO_NAME']}"
+        if os.environ.get("RAILWAY_GIT_REPO_OWNER") and os.environ.get("RAILWAY_GIT_REPO_NAME") else None)
+    branch = os.environ.get("JERRYBOT_BRANCH") or os.environ.get("RAILWAY_GIT_BRANCH") or "main"
+    if not repo:
+        _WD["deploy"] = "not checked: set JERRYBOT_REPO (owner/name) in Railway"
+        return [("deploy_unchecked", "Deploy check off: Railway gives no repo name. Set JERRYBOT_REPO (owner/name).")]
+    tok = os.environ.get("JERRYBOT_TOKEN") or os.environ.get("FEED_TOKEN")
+    h = {"Accept": "application/vnd.github+json"}
+    if tok:
+        h["Authorization"] = f"Bearer {tok}"
+    here = os.path.dirname(os.path.abspath(__file__))
+    behind, unread = [], []
+    for f in WD_FILES:
+        try:
+            r = requests.get(f"https://api.github.com/repos/{repo}/contents/{f}", params={"ref": branch},
+                             headers=h, timeout=20)
+            if r.status_code != 200:
+                unread.append(f"{f} HTTP {r.status_code}")
+                continue
+            if r.json().get("sha") != _wd_blob_sha(os.path.join(here, f)):
+                behind.append(f)
+        except Exception as e:                                         # noqa: BLE001
+            unread.append(f"{f} {str(e)[:60]}")
+    if unread and not behind:
+        _WD["deploy"] = f"could not read {repo}@{branch}: {', '.join(unread)}"
+        return [("deploy_unchecked", f"Deploy check cannot read {repo}@{branch} ({unread[0]}). A private repo needs "
+                                     "JERRYBOT_TOKEN in Railway with read access to it.")]
+    first = _wd_meta(c, "wd_deploy_first")
+    if not behind:
+        _wd_meta_set(c, "wd_deploy_first", None)
+        _WD["deploy"] = f"in sync with {repo}@{branch} ({', '.join(WD_FILES)})"
+        return []
+    if not first:
+        first = now.isoformat(timespec="seconds")
+        _wd_meta_set(c, "wd_deploy_first", first)
+    mins = (now - datetime.fromisoformat(first)).total_seconds() / 60
+    _WD["deploy"] = f"{', '.join(behind)} differ from {repo}@{branch} for {mins:.0f} min"
+    if mins < WD_DEPLOY_GRACE_MIN:                                     # a deploy may still be building
+        return []
+    return [("deploy", f"Deploy mismatch: {', '.join(behind)} running here differ from {repo}@{branch} "
+                       f"for {mins:.0f} min. Railway has not deployed the latest commit, or the commit is incomplete.")]
+
+
+def _wd_collector(now):
+    try:
+        txt = _summary_text()
+    except Exception as e:                                             # noqa: BLE001
+        return [("desk_page", f"Desk page not answering: {str(e)[:120]}")]
+    m = re.search(r"COLLECTOR: (\{.*?\})\s*$", txt, flags=re.M)
+    if not m:
+        return [("collector", "Collector status missing from the desk summary.")]
+    try:
+        s = json.loads(m.group(1))
+    except Exception:                                                  # noqa: BLE001
+        return [("collector", "Collector status unreadable in the desk summary.")]
+    hb = s.get("last_heartbeat")
+    age = (now - datetime.fromisoformat(hb.replace("Z", "+00:00"))).total_seconds() / 60 if hb else None
+    if not s.get("alive") or s.get("stalled") or age is None or age > WD_HEARTBEAT_MAX_MIN:
+        return [("collector", f"Odds collector not healthy: alive {s.get('alive')}, stalled {s.get('stalled')}, "
+                              f"last heartbeat {('%.0f min ago' % age) if age is not None else 'never'}, "
+                              f"last error {s.get('last_error')}.")]
+    return []
+
+
+def _wd_stale(c, now):
+    if not c.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        return []
+    since = (now - timedelta(hours=2)).isoformat(timespec="seconds")
+    rows = c.execute("""select stop from candidates where last_ts>=? and ev>=0.02 and stop is not null
+                        and stop not like 'below%'""", (since,)).fetchall()
+    n = len(rows)
+    st = sum(1 for r in rows if r["stop"].startswith("unavailable: ") and ("min" in r["stop"] or "timestamp" in r["stop"]))
+    if n >= WD_STALE_MIN_N and st / n > WD_STALE_SHARE:
+        return [("stale", f"Stale prices: {st} of {n} edges in the last 2 h stopped by the freshness check. "
+                          "If this holds, raise FRESH_SHARP_MAX_MIN to 20 in Railway.")]
+    return []
+
+
+def _wd_credits(c, now):
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    try:
+        rem = float(_wd_meta(c, "remaining", None) or c.execute("select v from meta where k='remaining'").fetchone()[0])
+    except Exception:                                                  # noqa: BLE001
+        return []
+    nxt = (now.replace(day=1, hour=0, minute=0, second=0, microsecond=0) + timedelta(days=32)).replace(day=1)
+    days = max((nxt - now).total_seconds() / 86400, 0.05)
+    allow = max(rem - WD_RESERVE, 0) / days
+    day0 = now.astimezone(et).replace(hour=0, minute=0, second=0, microsecond=0)
+    spent = []
+    for d in (1, 2, 3):
+        a, b = (day0 - timedelta(days=d)).astimezone(UTC), (day0 - timedelta(days=d - 1)).astimezone(UTC)
+        spent.append(c.execute("select coalesce(sum(cost),0) from usage where ts>=? and ts<?",
+                               (a.isoformat(timespec="seconds"), b.isoformat(timespec="seconds"))).fetchone()[0])
+    out = []
+    if allow and spent[0] > WD_PACE_OVER * allow and spent[1] > WD_PACE_OVER * allow:
+        out.append(("credit_pace", f"Credit pace: spent {spent[1]} and {spent[0]} the last two days against "
+                                   f"{allow:.0f}/day available ({rem:.0f} left, {days:.1f} days to reset)."))
+    avg = sum(spent) / 3
+    if avg * days > rem - WD_RESERVE and avg > 0:
+        out.append(("credit_runout", f"Credits run out early: ~{avg:.0f}/day for {days:.1f} days needs "
+                                     f"{avg * days:.0f}, only {rem - WD_RESERVE:.0f} above the reserve."))
+    return out
+
+
+def _wd_gate(c):
+    kf = sys.modules.get("kronos_fix")
+    if kf is None or not hasattr(kf, "gate_groups"):
+        return [], []
+    groups = kf.gate_groups(c, force=True)
+    tiers = {k: g.get("tier") for k, g in groups.items()}
+    killed = sorted(k for k, m in (getattr(kf, "_GATE", {}).get("markets") or {}).items()
+                    if m["n"] >= getattr(kf, "SUB_N", 40) and m["clv"] < getattr(kf, "SUB_CLV", -0.5))
+    old_t, old_k = _wd_meta(c, "wd_gate_tiers"), _wd_meta(c, "wd_killed")
+    _wd_meta_set(c, "wd_gate_tiers", tiers)
+    _wd_meta_set(c, "wd_killed", killed)
+    events = []
+    if old_t is not None:
+        for k, t in sorted(tiers.items()):
+            if old_t.get(k, "PAPER") != t:
+                g = groups[k]
+                events.append(f"GATE: {k} {old_t.get(k, 'PAPER')} -> {t} | valid-CLV bets {g.get('n')} | "
+                              f"CLV {g.get('clv') or 0:+.2f} (95% floor {g.get('clv_lo') or 0:+.2f})"
+                              + (f" | {g['why']}" if g.get("why") else ""))
+    if old_k is not None:
+        for k in killed:
+            if k not in old_k:
+                events.append(f"KILL SWITCH: {k.replace('|', ' ')} sent back to PAPER (40+ bets, CLV under -0.5pp).")
+    return events, []
+
+
+def _wd_errors(c):
+    cur = {r["k"]: r["v"] for r in c.execute("select k, v from meta where k like 'error%'")}
+    old = _wd_meta(c, "wd_errors")
+    _wd_meta_set(c, "wd_errors", cur)
+    if old is None:
+        return []
+    return [f"ERROR {k}: {str(v)[:200]}" for k, v in sorted(cur.items()) if old.get(k) != v]
+
+
+def _wd_grading(c, now):
+    out = []
+    cut = (now - timedelta(hours=WD_PENDING_H)).isoformat(timespec="seconds")
+    n = c.execute("select count(*) from bets where result='pending' and commence<?", (cut,)).fetchone()[0]
+    if n:
+        out.append(("ungraded", f"{n} bet(s) still ungraded {WD_PENDING_H}+ h after start."))
+    events = []
+    try:
+        q = c.execute("select count(*) from grade_quarantine").fetchone()[0]
+        old = _wd_meta(c, "wd_quarantine")
+        _wd_meta_set(c, "wd_quarantine", q)
+        if old is not None and q > old:
+            events.append(f"GRADING: {q - old} new unresolved player name(s), {q} quarantined in total (/api/quarantine).")
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return out, events
+
+
+def watchdog_pass():
+    now = datetime.now(UTC)
+    c = _drops_con()
+    try:
+        conds, events, failed = [], [], []
+        for name, fn in (("deploy", lambda: _wd_deploy(c, now)), ("collector", lambda: _wd_collector(now)),
+                         ("stale", lambda: _wd_stale(c, now)), ("credits", lambda: _wd_credits(c, now))):
+            try:
+                conds += fn()
+            except Exception as e:                                     # noqa: BLE001
+                failed.append(f"{name}: {str(e)[:80]}")
+        try:
+            ev, _ = _wd_gate(c)
+            events += ev
+        except Exception as e:                                         # noqa: BLE001
+            failed.append(f"gate: {str(e)[:80]}")
+        try:
+            events += _wd_errors(c)
+        except Exception as e:                                         # noqa: BLE001
+            failed.append(f"errors: {str(e)[:80]}")
+        try:
+            cd, ev = _wd_grading(c, now)
+            conds += cd
+            events += ev
+        except Exception as e:                                         # noqa: BLE001
+            failed.append(f"grading: {str(e)[:80]}")
+
+        # condition lifecycle: alert on start, every WD_REPEAT_H while it lasts, once when it clears
+        state = _wd_meta(c, "wd_state", {}) or {}
+        nowi = now.isoformat(timespec="seconds")
+        msgs, live = [], {k for k, _ in conds}
+        for k, text in conds:
+            s = state.get(k)
+            if s is None:
+                state[k] = {"since": nowi, "sent": nowi, "text": text}
+                msgs.append("NEW  " + text)
+            else:
+                s["text"] = text
+                if (now - datetime.fromisoformat(s["sent"])).total_seconds() >= WD_REPEAT_H * 3600:
+                    s["sent"] = nowi
+                    msgs.append(f"STILL (since {s['since'][:16]}Z)  " + text)
+        for k in [k for k in state if k not in live]:
+            msgs.append(f"CLEARED  {k} (open since {state[k]['since'][:16]}Z)")
+            del state[k]
+        _wd_meta_set(c, "wd_state", state)
+        msgs += events
+        if msgs:
+            _wd_send("KRONOS WATCHDOG\n" + "\n".join(msgs))
+        _wd_meta_set(c, "wd_last", {"ts": nowi, "open": len(state), "failed": failed})
+        c.commit()
+        _WD.update(status=f"{nowi} {len(state)} open, {len(msgs)} message line(s) sent"
+                          + (f", checks failed: {'; '.join(failed)}" if failed else ""), open=state)
+    finally:
+        c.close()
+
+
+def _wd_block():
+    lines = [f"\n\nWATCHDOG (every {WATCHDOG_EVERY_SEC // 60} min; Telegram only when something is wrong): {_WD['status']}",
+             f"  deploy: {_WD['deploy']}"]
+    for k, s in sorted((_WD.get("open") or {}).items()):
+        lines.append(f"  OPEN since {s['since'][:16]}Z: {s['text']}")
+    if not _WD.get("open"):
+        lines.append("  no open problems")
+    return "\n".join(lines) + "\n"
+
+
+def _wd_loop():
+    time.sleep(300)                                                    # let the desk and the first pulls start
+    while True:
+        try:
+            watchdog_pass()
+        except Exception as e:                                         # noqa: BLE001
+            _WD["status"] = f"{datetime.now(UTC).isoformat(timespec='seconds')} pass failed: {str(e)[:150]}"
+            print(f"[watchdog] pass failed: {e}", flush=True)
+        time.sleep(WATCHDOG_EVERY_SEC)
+
+
+if os.environ.get("WATCHDOG", "1") != "0":
+    _orig_edge_block_wd = _edge_block
+
+    def _edge_block():
+        try:
+            return _wd_block() + _orig_edge_block_wd()
+        except Exception as _e:                                        # noqa: BLE001
+            return f"\n\nWATCHDOG: block failed ({str(_e)[:120]})\n" + _orig_edge_block_wd()
+
+    threading.Thread(target=_wd_loop, daemon=True).start()
+    print("[watchdog] active", flush=True)
+
+
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
     runpy.run_path("jerry_desk.py", run_name="__main__")
