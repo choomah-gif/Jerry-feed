@@ -70,7 +70,7 @@ BOOKS_EXTRA = "betfair_ex_eu,matchbook,smarkets,marathonbet,williamhill,hardrock
 BOOKS = os.environ.get("BOOKS", BOOKS_CORE)   # BOOKS_EXTRA is no longer pulled by default (set BOOKS in Railway to override)
 # closing line value is only valid against one of these, from a close pull taken after the bet (rules v2 s4)
 CLV_SHARP = ("pinnacle", "lowvig", "betonlineag", "betfair_ex_eu", "matchbook", "smarkets")
-CLV_MIN_GAP_MIN = 10
+CLV_MIN_GAP_MIN = 5    # 2026-11-12: the close must come from a LATER pull, 5+ min after the bet (10 rejected T-15 -> T-5 props)
 BOOK_UNITS = max(1, -(-len([b for b in BOOKS.split(",") if b.strip()]) // 10))   # credits multiplier per market
 SHARP = {"pinnacle", "lowvig", "betonlineag"}
 FAMILY = {"lowvig": "betonline", "betonlineag": "betonline"}   # LowVig is BetOnline's sister book
@@ -375,6 +375,84 @@ def _close_fair(con, b, c):
     except Exception:
         return None
 
+def select_close(con, b):
+    """Closing number for a bet (2026-11-12). A SHARP book's close comes first, at the bet's own line
+    if a sharp quoted it, else at the sharp's own closing line (translated later). The old order
+    preferred any book at the same line, so when Pinnacle moved, DraftKings' stale same-line price
+    was picked as "the close" and the CLV was then blanked as invalid."""
+    sharp = "(" + ",".join("'%s'" % x for x in CLV_SHARP) + ")"
+    q = """select book, line, price, ts, is_close from ticks where event_id=? and market=? and outcome=? and player=?
+           and ts<=? {extra} order by (book='pinnacle') desc, ts desc limit 1"""
+    args = (b["event_id"], b["market"], b["selection"], b["player"] or "", b["commence"])
+    for extra in (f"and is_close=1 and book in {sharp} and line is ?", f"and is_close=1 and book in {sharp}",
+                  "and is_close=1 and line is ?", "and is_close=1", "and line is ?", ""):
+        a = args + ((b["line"],) if "line is ?" in extra else ())
+        r = con.execute(q.format(extra=extra), a).fetchone()
+        if r:
+            if "book in" in extra and "line is ?" in extra:
+                # a sharp that still quotes the bet's line at close, but only if it is that book's latest close
+                last = con.execute("""select max(ts) from ticks where event_id=? and market=? and outcome=? and player=?
+                                      and book=? and is_close=1 and ts<=?""",
+                                   (b["event_id"], b["market"], b["selection"], b["player"] or "", r["book"],
+                                    b["commence"])).fetchone()[0]
+                if last != r["ts"]:
+                    continue
+            return r
+    return None
+
+
+def repair_clv_2026_11_12(con, now):
+    """One-time: re-select every close with select_close() and recompute CLV under the 5-minute,
+    later-pull rule and the new prop/low-total translation. Runs once (meta key), from auto_grade."""
+    if con.execute("select 1 from meta where k='clv_fix_2026_11_12'").fetchone():
+        return None
+    rows = con.execute("""select * from bets where commence<=? and paper in (0,1)""", (iso(now),)).fetchall()
+    n = ok = 0
+    for b in rows:
+        c = select_close(con, b)
+        if not c or not c["price"]:
+            continue
+        n += 1
+        valid = clv_is_valid(b["placed_ts"], c["book"], c["ts"], c["is_close"])
+        clv = _clv_for(b, c, con) if valid else None
+        ok += clv is not None
+        con.execute("update bets set close_book=?, close_line=?, close_price=?, clv_pp=?, clv_valid=? where id=?",
+                    (c["book"], c["line"], c["price"], clv, int(clv is not None), b["id"]))
+    msg = f"{iso(now)} {n} closes re-selected, {ok} with a valid CLV"
+    meta_set(con, "clv_fix_2026_11_12", msg)
+    con.commit()
+    return msg
+
+
+VOID_QUARANTINE_H, VOID_STALE_D = 72, 7
+
+
+def void_unresolvable(con, now):
+    """2026-11-12: a prop bet that cannot be settled is VOID, never left pending forever.
+    - quarantined 72h+ after start (player not in either box = did not play; name never resolved)
+    - any bet still pending 7 days after start (no results feed for it)
+    Void = result 'V', 0 units; it leaves every record and the gate untouched."""
+    n = 0
+    try:
+        cut_q = iso(now - timedelta(hours=VOID_QUARANTINE_H))
+        cut_s = iso(now - timedelta(days=VOID_STALE_D))
+        q = con.execute("""select b.id, coalesce(g.reason, 'no result source') reason from bets b
+                           left join grade_quarantine g on g.bet_id=b.id
+                           where b.result='pending' and ((g.bet_id is not null and b.commence<?) or b.commence<?)""",
+                        (cut_q, cut_s)).fetchall()
+        for r in q:
+            con.execute("""update bets set result='V', pnl=0, graded_ts=?, note=coalesce(note,'')||? where id=? and result='pending'""",
+                        (iso(now), f" | void: {r['reason']}, could not be settled", r["id"]))
+            n += 1
+        if n:
+            con.execute("delete from grade_quarantine where bet_id in (select id from bets where result!='pending')")
+            meta_set(con, "void_unresolvable_last", f"{iso(now)} {n} voided")
+        con.commit()
+    except sqlite3.Error as e:
+        meta_set(con, "error_void_unresolvable", f"{iso(now)} {e}"[:200])
+    return n
+
+
 def clv_is_valid(placed_ts, close_book, close_ts, is_close):
     """Rules v2 s4: a close counts only if it is a sharp book's price from a close pull taken at least
     CLV_MIN_GAP_MIN minutes after the bet was logged. Otherwise the bet would be graded against the
@@ -382,7 +460,7 @@ def clv_is_valid(placed_ts, close_book, close_ts, is_close):
     try:
         if not is_close or close_book not in CLV_SHARP:
             return False
-        return parse(close_ts) >= parse(placed_ts) + timedelta(minutes=CLV_MIN_GAP_MIN)
+        return parse(close_ts) >= parse(placed_ts) + timedelta(minutes=CLV_MIN_GAP_MIN) - timedelta(seconds=30)
     except Exception:
         return False
 
@@ -1126,19 +1204,16 @@ class Desk:
         return None   # player props are settled by jerry_grade, not from team scores
 
     def closing(self, con, b):
-        """Closing number for the bet: Pinnacle close at the same line if possible, else any close, else last tick."""
-        q = """select book, line, price, ts, is_close from ticks where event_id=? and market=? and outcome=? and player=?
-               and ts<=? {extra} order by (book='pinnacle') desc,
-               (book in ('lowvig','betonlineag','betfair_ex_eu','matchbook','smarkets')) desc, ts desc limit 1"""
-        args = (b["event_id"], b["market"], b["selection"], b["player"] or "", b["commence"])
-        for extra in ("and is_close=1 and line is ?", "and is_close=1", "and line is ?", ""):
-            a = args + ((b["line"],) if "line is ?" in extra else ())
-            r = con.execute(q.format(extra=extra), a).fetchone()
-            if r:
-                return r
-        return None
+        return select_close(con, b)
 
     def auto_grade(self, con, now):
+        try:
+            r = repair_clv_2026_11_12(con, now)
+            if r:
+                print(f"[desk] CLV repair 2026-11-12: {r}", flush=True)
+        except Exception as e:   # noqa: BLE001 - a repair must never stop grading
+            meta_set(con, "error_clv_repair_1112", f"{iso(now)} {e}"[:200])
+        void_unresolvable(con, now)
         pend = con.execute("select * from bets where result='pending' and commence<=?",
                            (iso(now - timedelta(hours=3)),)).fetchall()
         for b in pend:   # closing line value can be filled as soon as the game starts, even for props we can't score
