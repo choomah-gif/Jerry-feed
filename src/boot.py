@@ -363,6 +363,58 @@ def slope_for(market, sd=None, mu=None, line=None):
     return LINE_SLOPE.get(market, 0.02)
 
 
+# 2026-11-12: count markets move by whole events, so a moved line is translated with a Poisson
+# model fitted to the sharp close itself (one parameter, solved from the closing fair price).
+POISSON_PROPS = {"player_rebounds", "player_assists", "player_threes", "player_blocks", "player_steals",
+                 "player_shots_on_goal", "player_goals", "player_receptions", "player_pass_tds",
+                 "player_shots_on_target", "player_shots", "player_power_play_points", "player_blocked_shots"}
+
+
+def _pois_side(lam, line, over):
+    """P(side wins | no push) for a Poisson count against a half or whole line."""
+    k_max = int(math.floor(line))
+    p, cdf = math.exp(-lam), 0.0
+    for k in range(0, k_max + 1):
+        if k > 0:
+            p *= lam / k
+        cdf += p
+    p_eq = p if abs(line - k_max) < 1e-9 else 0.0
+    p_under = cdf - p_eq
+    p_over = max(1.0 - cdf, 0.0)
+    den = p_over + p_under
+    if den <= 0:
+        return None
+    return (p_over if over else p_under) / den
+
+
+def poisson_translate(p_close, close_line, bet_line, over):
+    """Fair probability of the bet's side at bet_line, given the sharp fair p_close at close_line."""
+    try:
+        lo, hi = 1e-3, 80.0
+        for _ in range(80):
+            mid = (lo + hi) / 2
+            po = _pois_side(mid, float(close_line), True)
+            if po is None:
+                return None
+            target = p_close if over else 1.0 - p_close
+            if po < target:
+                lo = mid
+            else:
+                hi = mid
+        return _pois_side((lo + hi) / 2, float(bet_line), over)
+    except Exception:
+        return None
+
+
+def _poisson_market(market, close_line):
+    m = str(market)
+    if m in POISSON_PROPS:
+        return True
+    if m.startswith("player_") and close_line is not None and float(close_line) <= 3.5:
+        return True        # low-count props (NHL points, anytime-style lines)
+    return m == "totals" and close_line is not None and float(close_line) < 15   # hockey and soccer totals
+
+
 def clv_pp(bet_line, bet_price, close_line, close_price, market, selection,
            sd=None, mu=None, close_fair=None):
     """Closing line value in probability points, valid across line movement.
@@ -383,8 +435,16 @@ def clv_pp(bet_line, bet_price, close_line, close_price, market, selection,
     if p_bet is None or p_close is None:
         return None
     if bet_line is not None and close_line is not None:
-        d = float(close_line) - float(bet_line)
+        # 2026-11-12: translate FROM the close line TO the bet line. The sign was inverted before
+        # (d = close - bet), so a bet at -3.5 closing -4.5 scored as a LOSS of value instead of a gain.
+        d = float(bet_line) - float(close_line)
         if abs(d) > 1e-9:
+            sel = (selection or "").strip().lower()
+            if sel in ("over", "under") and not (sd and sd > 0) and _poisson_market(market, close_line):
+                pt = poisson_translate(p_close, close_line, bet_line, sel == "over")
+                if pt is None:
+                    return None
+                return round((min(max(pt, 0.001), 0.999) - p_bet) * 100, 2)
             if str(market).startswith("player_") and not (sd and sd > 0):
                 # rules v2: one flat slope is wrong for every prop market (rebounds ~0.13/unit, yards
                 # ~0.016/unit). Until per-market slopes are fitted from the tape, a moved prop line
@@ -7221,7 +7281,7 @@ def gate_groups(con, force=False):
             a["pnl"] += float(r["pnl"] or 0)
             a["st"] += float(r["stake"] or 0)
             a["run"].append(float(r["pnl"] or 0))
-        if r["clv_valid"] and r["clv_pp"] is not None:
+        if r["clv_valid"] and r["clv_pp"] is not None and r["result"] != "V":   # a void (did not play) never counts
             c = float(r["clv_pp"])
             a["clv"].append(c)
             m = mk.setdefault(f"{r['sport']}|{r['market']}|{kind}", [])
@@ -9773,10 +9833,24 @@ def _wd_deploy(c, now):
 
 
 def _wd_collector(now):
-    try:
-        txt = _summary_text()
-    except Exception as e:                                             # noqa: BLE001
-        return [("desk_page", f"Desk page not answering: {str(e)[:120]}")]
+    txt, err = None, None
+    for _ in range(2):                                                 # one retry: the page is slow while the desk is busy
+        try:
+            port = os.environ.get("PORT", "8000")
+            page = requests.get(f"http://127.0.0.1:{port}/", timeout=90).text
+            for block in re.findall(r"<pre[^>]*>(.*?)</pre>", page, flags=re.S):
+                t = _html.unescape(re.sub(r"<[^>]+>", "", block))
+                if "KRONOS DESK SUMMARY" in t or "JERRY DESK SUMMARY" in t:
+                    txt = t
+                    break
+            if txt:
+                break
+            err = "summary block not found on desk page"
+        except Exception as e:                                         # noqa: BLE001
+            err = str(e)[:120]
+        time.sleep(20)
+    if txt is None:
+        return [("desk_page", f"Desk page not answering after two tries: {err}")]
     m = re.search(r"COLLECTOR: (\{.*?\})\s*$", txt, flags=re.M)
     if not m:
         return [("collector", "Collector status missing from the desk summary.")]
@@ -9797,13 +9871,18 @@ def _wd_stale(c, now):
     if not c.execute("select 1 from sqlite_master where name='candidates'").fetchone():
         return []
     since = (now - timedelta(hours=2)).isoformat(timespec="seconds")
-    rows = c.execute("""select stop from candidates where last_ts>=? and ev>=0.02 and stop is not null
-                        and stop not like 'below%'""", (since,)).fetchall()
+    # 2026-11-12: only edges inside the 2-hour play window count. Games further out are pulled less
+    # often, so their quotes are stale by design and can never become plays anyway.
+    rows = [r for r in c.execute("""select stop, commence, last_ts from candidates where last_ts>=? and ev>=0.02
+                                    and stop is not null and stop not like 'below%'""", (since,)).fetchall()
+            if r["commence"] and r["last_ts"] and
+            0 <= (datetime.fromisoformat(r["commence"].replace("Z", "+00:00")) -
+                  datetime.fromisoformat(r["last_ts"].replace("Z", "+00:00"))).total_seconds() <= 7200]
     n = len(rows)
     st = sum(1 for r in rows if r["stop"].startswith("unavailable: ") and ("min" in r["stop"] or "timestamp" in r["stop"]))
     if n >= WD_STALE_MIN_N and st / n > WD_STALE_SHARE:
-        return [("stale", f"Stale prices: {st} of {n} edges in the last 2 h stopped by the freshness check. "
-                          "If this holds, raise FRESH_SHARP_MAX_MIN to 20 in Railway.")]
+        return [("stale", f"Stale prices: {st} of {n} edges inside the 2-hour play window were stopped by the "
+                          "freshness check in the last 2 h. If this holds, raise FRESH_SHARP_MAX_MIN to 20 in Railway.")]
     return []
 
 
@@ -9872,9 +9951,17 @@ def _wd_errors(c):
 def _wd_grading(c, now):
     out = []
     cut = (now - timedelta(hours=WD_PENDING_H)).isoformat(timespec="seconds")
-    n = c.execute("select count(*) from bets where result='pending' and commence<?", (cut,)).fetchone()[0]
+    # quarantined bets have their own alert (and are voided after 72 h), so they are left out here
+    rows = c.execute("""select sport, market, count(*) n from bets where result='pending' and commence<?
+                        and id not in (select bet_id from grade_quarantine) group by sport, market order by n desc""",
+                     (cut,)).fetchall() if c.execute("select 1 from sqlite_master where name='grade_quarantine'").fetchone() \
+        else c.execute("""select sport, market, count(*) n from bets where result='pending' and commence<?
+                          group by sport, market order by n desc""", (cut,)).fetchall()
+    n = sum(r["n"] for r in rows)
     if n:
-        out.append(("ungraded", f"{n} bet(s) still ungraded {WD_PENDING_H}+ h after start."))
+        top = ", ".join(f"{r['sport']} {r['market']} {r['n']}" for r in rows[:5])
+        out.append(("ungraded", f"{n} bet(s) still ungraded {WD_PENDING_H}+ h after start ({top}). "
+                                "Bets that cannot be settled are voided 7 days after start."))
     events = []
     try:
         q = c.execute("select count(*) from grade_quarantine").fetchone()[0]
@@ -9889,10 +9976,18 @@ def _wd_grading(c, now):
 
 def watchdog_pass():
     now = datetime.now(UTC)
-    c = _drops_con()
+    conds, events, failed = [], [], []
+    # 2026-11-12: read the desk page BEFORE opening a database connection. The first version held an open
+    # write transaction while the page rendered, so the page waited on the watchdog's own lock and timed out.
     try:
-        conds, events, failed = [], [], []
-        for name, fn in (("deploy", lambda: _wd_deploy(c, now)), ("collector", lambda: _wd_collector(now)),
+        conds += _wd_collector(now)
+    except Exception as e:                                             # noqa: BLE001
+        failed.append(f"collector: {str(e)[:80]}")
+    c = sqlite3.connect(_desk_db(), timeout=30, isolation_level=None)  # autocommit: no lock held between writes
+    c.row_factory = sqlite3.Row
+    try:
+        c.execute("pragma busy_timeout=30000")
+        for name, fn in (("deploy", lambda: _wd_deploy(c, now)),
                          ("stale", lambda: _wd_stale(c, now)), ("credits", lambda: _wd_credits(c, now))):
             try:
                 conds += fn()
@@ -9936,7 +10031,6 @@ def watchdog_pass():
         if msgs:
             _wd_send("KRONOS WATCHDOG\n" + "\n".join(msgs))
         _wd_meta_set(c, "wd_last", {"ts": nowi, "open": len(state), "failed": failed})
-        c.commit()
         _WD.update(status=f"{nowi} {len(state)} open, {len(msgs)} message line(s) sent"
                           + (f", checks failed: {'; '.join(failed)}" if failed else ""), open=state)
     finally:
