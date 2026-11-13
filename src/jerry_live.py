@@ -1140,7 +1140,7 @@ MODEL_VERSIONS = {
     ("UFC", "model"): "ufc-v1-2026-10-24",
     ("NBA", "model"): "nba-v1-2026-10-26",
     ("MLB", "model"): "mlb-v1-2026-10-24",
-    ("ANY", "price"): "price-v8-fresh-validclv-2026-11-10",   # rules v2: freshness check + valid-close CLV; the 150 count restarts here
+    ("ANY", "price"): "price-v9-learned-prop-weights-2026-11-13",   # rules v2: freshness check + valid-close CLV; the 150 count restarts here
 }
 
 
@@ -1270,6 +1270,10 @@ def paper_log(con, rows, now):
         # only large edges and cannot answer whether edge size predicts anything —
         # the exact question raised when the three largest edges were the three
         # largest misses.
+        if os.environ.get("KRONOS_MODEL_PAPER", "0") != "1":
+            _sp = con.execute("select sport from events where event_id=?", (r["event_id"],)).fetchone()
+            if not (_sp and _sp["sport"] == "NHL" and r.get("market") == "totals"):
+                continue          # 2026-11-13: from-scratch projections are retired from the ledger (sandbox only)
         is_bet = _is_call(r.get("call"))
         sel, line, p = _selection(r)
         player = r.get("player", "") or ""
@@ -1321,7 +1325,24 @@ CONSENSUS_W = {"pinnacle": 3.0, "betfair_ex_eu": 3.0, "lowvig": 2.0, "betonlinea
                "matchbook": 2.0, "smarkets": 2.0, "marathonbet": 1.5}
 
 
-def _consensus_fair(rows, outcome, line, exclude_book):
+_BOOK_W = {"ts": 0.0, "w": {}}
+
+
+def learned_book_weights(con, sport, market):
+    """2026-11-13: per-market book weights measured from the desk's own tape (which books' early prices sit
+    closest to where the market closes). Written by the learning pass into meta; {} until enough history."""
+    import time as _t, json as _j
+    if _t.time() - _BOOK_W["ts"] > 900:
+        try:
+            r = con.execute("select v from meta where k='book_weights'").fetchone()
+            _BOOK_W["w"] = _j.loads(r[0]) if r else {}
+        except Exception:
+            _BOOK_W["w"] = {}
+        _BOOK_W["ts"] = _t.time()
+    return _BOOK_W["w"].get(f"{sport}|{market}") or {}
+
+
+def _consensus_fair(rows, outcome, line, exclude_book, wmap=None):
     """De-vigged fair probability for `outcome` averaged across every book quoting both sides at
     the same line, excluding the book offering the edge. Pinnacle weighs 3, other sharp books 2,
     retail 1. Returns (fair, n_books) or (None, 0).
@@ -1345,7 +1366,8 @@ def _consensus_fair(rows, outcome, line, exclude_book):
             if me["line"] is None or abs(float(me["line"]) - float(line)) > 1e-9:
                 continue
         f = fair_two_way(me["price"], other["price"])
-        w = CONSENSUS_W.get(bk, 1.0)
+        # props with measured weights use them; otherwise the old fixed weights (Pinnacle 3, sharps 2, retail 1)
+        w = float(wmap.get(bk, 1.0)) if wmap else CONSENSUS_W.get(bk, 1.0)
         num += f * w; den += w; n += 1
     if n < 3 or den <= 0:
         return None, n
@@ -1464,7 +1486,10 @@ def price_edges(con, now):
                 # ---- 2026-10-28 checks: consensus price, injuries, role change, projection ----
                 tags = [activity] if activity else []
                 if evv >= PRICE_EDGE_MIN and not adj and market != "spreads":
-                    f_con, n_con = _consensus_fair(rows, r["outcome"], r["line"], r["book"])
+                    _wm = learned_book_weights(con, ev["sport"], market) if player else None
+                    f_con, n_con = _consensus_fair(rows, r["outcome"], r["line"], r["book"], _wm)
+                    if _wm:
+                        tags.append("LEARNED BOOK WEIGHTS")
                     if f_con is not None:
                         f_use = f_con
                         evv = float(r["price"]) * f_use - 1
