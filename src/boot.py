@@ -7771,7 +7771,8 @@ def _wrap_edge():
     ke.bets_reply = lambda con, now=None: plays_text(con, now)
     ke.card = card
     ke.HELP = ("KRONOS commands:\n• bets — plays right now (DraftKings/FanDuel, gated, with floor prices)\n"
-               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n• help — this list")
+               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n"
+               "• slip — probability board: highest-chance legs with a matchup edge\n• help — this list")
     ke._fix_wrapped = True
     return "ok"
 
@@ -8361,6 +8362,9 @@ def telegram_poll(get_con, tg_send):
                         reply = ke.bets_reply(c)
                     elif low in ("card", "/card"):
                         reply = "GAME CARD (play/sit)\n" + "\n".join(ke.card(c) or ["No games locked yet today."])
+                    elif low in ("slip", "/slip", "probs", "/probs"):
+                        kp = sys.modules.get("kronos_prob")
+                        reply = kp.slip_text(c) if kp else "Probability track is off (PROB_TRACK=0)."
                     elif low in ("help", "/help", "/start"):
                         reply = ke.HELP
                     else:
@@ -8382,7 +8386,8 @@ def _wrap_learn():
     ke.HELP = ("KRONOS commands:\n• bets — plays right now (DraftKings/FanDuel, gated, with floor prices)\n"
                "• call <pick> <price> [conf N] — log a Claude call to be graded, e.g. call Bears +3.5 1.84 conf 5\n"
                "• calls — the Claude-call scorecard\n• learn — this week's learning report\n"
-               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n• help — this list")
+               "• boost <bet> <odds> — prices a boost against the sharp fair price\n• card — today's play/sit card\n"
+               "• slip — probability board: highest-chance legs with a matchup edge\n• help — this list")
     return _wrap_holdout()
 
 
@@ -10069,6 +10074,360 @@ if os.environ.get("WATCHDOG", "1") != "0":
 
     threading.Thread(target=_wd_loop, daemon=True).start()
     print("[watchdog] active", flush=True)
+
+
+# ================================================================= probability track (2026-11-13)
+# The owner's own method, kept apart from the price-edge desk: legs ranked by how likely they are to hit,
+# backed by a matchup. Probability = the sharp no-vig line (Pinnacle first, then the other sharp books).
+# Evidence shown beside it, never mixed into it: the player's hit rate on that exact line (last 10 games,
+# season) and what the opponent allows of that stat against the league average (NFL: by position).
+# Legs are logged once, inside 3 hours of start, as paper=3 at 0 units and graded by the desk like any bet,
+# so the track builds its own record: did legs called 65% hit 65% of the time?
+# Telegram: "slip" sends the current board. Railway: PROB_TRACK=0 turns it off.
+PROB_EVERY_SEC = int(os.environ.get("PROB_EVERY_SEC", "1800"))
+PROB_BOARD_H, PROB_LOG_H = 12, 3
+PROB_SHARPS = ("pinnacle", "betonlineag", "lowvig", "betfair_ex_eu")
+PROB_MISMATCH = 1.08          # opponent allows 8%+ more (overs) or 8%+ less (unders) than league average
+PROB_FORM = 0.60              # and the player cleared this side in 6+ of his last 10
+PROB_ANCHOR = 0.65
+PROB_VERSION = "prob-v1-2026-11-13"
+PROB_STAT = {
+    "NBA": {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m",
+            "player_blocks": "blk"},
+    "NHL": {"player_points": "points", "player_shots_on_goal": "sog", "player_goals": "goals"},
+    "NFL": {"player_receptions": "receptions", "player_reception_yds": "receiving_yards",
+            "player_rush_yds": "rushing_yards", "player_pass_yds": "passing_yards", "player_pass_tds": "passing_tds"},
+}
+PROB_LABEL = {"pts": "points", "reb": "rebounds", "ast": "assists", "fg3m": "threes", "blk": "blocks",
+              "points": "points", "sog": "shots", "goals": "goals", "receptions": "receptions",
+              "receiving_yards": "rec yds", "rushing_yards": "rush yds", "passing_yards": "pass yds",
+              "passing_tds": "pass TDs"}
+_PROB = {"board": [], "ts": None, "status": "not run yet", "logged": 0}
+
+
+def _pnorm(s):
+    fn = getattr(sys.modules.get("jerry_feeds"), "_norm", None)      # the grader's own normaliser (drops Jr., III)
+    if fn:
+        try:
+            return fn(s)
+        except Exception:                                             # noqa: BLE001
+            pass
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z ]", "", str(s).lower().replace(".", "").replace("-", " "))).strip()
+
+
+def _ptwo_way(a, b):
+    """Power de-vig of a two-way pair of decimal prices -> (p_a, p_b)."""
+    p1, p2 = 1 / a, 1 / b
+    lo, hi = 0.5, 3.0
+    for _ in range(60):
+        k = (lo + hi) / 2
+        if p1 ** k + p2 ** k > 1:
+            lo = k
+        else:
+            hi = k
+    return p1 ** k, p2 ** k
+
+
+def _team_id(sport, name):
+    if not name:
+        return ""
+    if sport == "NHL":
+        fm = sys.modules.get("jerry_feeds")
+        ab = getattr(fm, "NHL_ABBR", {}) if fm else {}
+        return str(ab.get(name, name)).upper()
+    if sport == "NFL":
+        nt = getattr(L, "NFL_TEAMS", {}) if L is not None else {}
+        return str(nt.get(name, name)).upper()
+    n = _pnorm(name).replace("st louis", "st. louis")
+    return n.split()[-1] if n.split() else n
+
+
+def _side_hit(v, line, over):
+    return (v > line) if over else (v < line)
+
+
+def _hit_rates(vals, line, over):
+    """vals newest first. -> (hits10, n10, hits_season, n_season)."""
+    l10 = vals[:10]
+    return (sum(_side_hit(v, line, over) for v in l10), len(l10),
+            sum(_side_hit(v, line, over) for v in vals), len(vals))
+
+
+def _box_data(c, sport, since):
+    """Per-player values newest first, and opponent-allowed ratios per stat, from the desk's box scores."""
+    players, team_tot = {}, {}
+    q = """select bl.source_id, bl.team, bl.player_norm, bl.stats, gr.game_date from box_lines bl join game_results gr
+           using(sport, source_id) where bl.sport=? and gr.game_date>=? order by gr.game_date desc"""
+    for sid, team, pn, st, gd in c.execute(q, (sport, since)):
+        try:
+            s = json.loads(st)
+        except Exception:                                             # noqa: BLE001
+            continue
+        if s.get("played") is False:
+            continue
+        players.setdefault(pn, {"team": team, "lines": []})["lines"].append(s)
+        tt = team_tot.setdefault((sid, team), {})
+        for k, v in s.items():
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                tt[k] = tt.get(k, 0.0) + float(v)
+    by_game = {}
+    for (sid, team), tot in team_tot.items():
+        by_game.setdefault(sid, []).append((team, tot))
+    allowed, league = {}, {}
+    for sid, teams in by_game.items():
+        if len(teams) != 2:
+            continue
+        for (ta, tota), (tb, totb) in ((teams[0], teams[1]), (teams[1], teams[0])):
+            for k, v in tota.items():
+                allowed.setdefault((_team_id(sport, tb), k), []).append(v)
+                league.setdefault(k, []).append(v)
+    ratio = {}
+    for (tid, k), vs in allowed.items():
+        lg = league.get(k) or []
+        if len(vs) >= 5 and lg and sum(lg) > 0:
+            ratio[(tid, k)] = (sum(vs) / len(vs)) / (sum(lg) / len(lg)), len(vs)
+    return players, ratio
+
+
+def _nfl_data(c, now):
+    """Per-player weekly values (newest first) and position/team, plus positional defence ratios."""
+    players, ratio = {}, {}
+    try:
+        season = L.nfl_season(now)
+        pw = L.JM._cached_csv(f"{L.NFLVERSE}/stats_player/stats_player_week_{season}.csv",
+                              f"nfl_player_week_{season}.csv", refresh=False)
+    except Exception as e:                                            # noqa: BLE001
+        return players, ratio, f"nfl weekly stats failed: {str(e)[:80]}"
+    if "season_type" in pw.columns:
+        pw = pw[pw["season_type"] == "REG"]
+    name_col = "player_display_name" if "player_display_name" in pw.columns else "player_name"
+    team_col = "recent_team" if "recent_team" in pw.columns else "team"
+    pw = pw.sort_values("week", ascending=False)
+    for _, r in pw.iterrows():
+        pn = _pnorm(r[name_col])
+        d = players.setdefault(pn, {"team": str(r.get(team_col, "")).upper(), "pos": r.get("position"), "lines": []})
+        d["lines"].append({k: float(r.get(k) or 0) for k in
+                           ("receptions", "receiving_yards", "rushing_yards", "passing_yards", "passing_tds")})
+    try:
+        srow = c.execute("select max(season) from nfl_pos_def").fetchone()
+        if srow and srow[0]:
+            for team, pos, stat, al, lg, n in c.execute(
+                    "select team, position, stat, allowed_pg, league_pg, n from nfl_pos_def where season=?", (srow[0],)):
+                if lg and n and n >= 3:
+                    ratio[(str(team).upper(), pos, stat)] = (al / lg, n)
+    except Exception:                                                 # noqa: BLE001
+        pass
+    return players, ratio, None
+
+
+def prob_board(c, now):
+    """Every two-way prop with a sharp price for games in the next PROB_BOARD_H hours, scored."""
+    lim = (now + timedelta(hours=PROB_BOARD_H)).isoformat(timespec="seconds")
+    evs = c.execute("""select event_id, sport, commence, home, away from events where commence>? and commence<?
+                       and sport in ('NBA','NHL','NFL')""", (now.isoformat(timespec="seconds"), lim)).fetchall()
+    season_start = (now - timedelta(days=150)).date().isoformat()
+    cache, out, why = {}, [], []
+    for ev in evs:
+        sport = ev["sport"]
+        if sport not in cache:
+            if sport == "NFL":
+                p, r, err = _nfl_data(c, now)
+                if err:
+                    why.append(err)
+            else:
+                p, r = _box_data(c, sport, season_start)
+            cache[sport] = (p, r)
+        players, ratio = cache[sport]
+        stats = PROB_STAT[sport]
+        q = [dict(x) for x in c.execute("""select book, market, outcome, player, line, price from last_quote
+                                            where event_id=? and player!='' and market in (%s)""" %
+                                         ",".join("?" * len(stats)), (ev["event_id"], *stats))]
+        by = {}
+        for x in q:
+            by.setdefault((x["market"], x["player"], x["line"]), []).append(x)
+        home_id, away_id = _team_id(sport, ev["home"]), _team_id(sport, ev["away"])
+        for (market, player, line), rows in by.items():
+            if line is None:
+                continue
+            fair = None
+            for bk in PROB_SHARPS:
+                o = [x for x in rows if x["book"] == bk and x["outcome"] == "Over"]
+                u = [x for x in rows if x["book"] == bk and x["outcome"] == "Under"]
+                if o and u and o[0]["price"] > 1 and u[0]["price"] > 1:
+                    fair = (_ptwo_way(o[0]["price"], u[0]["price"]), bk)
+                    break
+            if not fair:
+                continue
+            (po, pu), sbook = fair
+            pdat = players.get(_pnorm(player))
+            stat = stats[market]
+            vals = [float(l.get(stat) or 0) for l in (pdat or {}).get("lines", []) if l.get(stat) is not None]
+            pteam = (pdat or {}).get("team", "")
+            if sport != "NFL":
+                pteam = _team_id(sport, pteam)
+            opp = away_id if pteam and pteam == home_id else home_id if pteam and pteam == away_id else None
+            if sport == "NFL":
+                rk = (opp, (pdat or {}).get("pos"), stat)
+            else:
+                rk = (opp, stat)
+            orat = ratio.get(rk) if opp else None
+            opp_name = ev["away"] if opp and opp == away_id else ev["home"] if opp else None
+            for side, p in (("Over", po), ("Under", pu)):
+                over = side == "Over"
+                h10, n10, hs, ns = _hit_rates(vals, float(line), over)
+                soft = [x for x in rows if x["outcome"] == side and x["book"] in ("draftkings", "fanduel")]
+                mism = bool(orat and n10 >= 5 and h10 / n10 >= PROB_FORM and
+                            ((over and orat[0] >= PROB_MISMATCH) or (not over and orat[0] <= 1 / PROB_MISMATCH)))
+                out.append({"sport": sport, "event_id": ev["event_id"], "commence": ev["commence"],
+                            "game": f"{ev['away']} @ {ev['home']}", "player": player, "market": market,
+                            "stat": stat, "side": side, "line": float(line), "p": round(p, 4), "sharp": sbook,
+                            "h10": h10, "n10": n10, "hs": hs, "ns": ns, "opp": opp_name or opp,
+                            "opp_ratio": round(orat[0], 3) if orat else None, "opp_n": orat[1] if orat else 0,
+                            "dk": next((x["price"] for x in soft if x["book"] == "draftkings"), None),
+                            "fd": next((x["price"] for x in soft if x["book"] == "fanduel"), None),
+                            "mismatch": mism, "anchor": p >= PROB_ANCHOR})
+    out.sort(key=lambda r: (not r["mismatch"], -r["p"]))
+    return out, why
+
+
+def prob_log(c, board, now):
+    """Log mismatch legs once each, inside PROB_LOG_H hours of start, as 0-unit paper (paper=3)."""
+    cols = {r[1] for r in c.execute("pragma table_info(bets)")}
+    n = 0
+    for r in board:
+        if not r["mismatch"]:
+            continue
+        hrs = (datetime.fromisoformat(r["commence"].replace("Z", "+00:00")) - now).total_seconds() / 3600
+        if not 0 < hrs <= PROB_LOG_H:
+            continue
+        if c.execute("""select 1 from bets where paper=3 and event_id=? and market=? and selection=? and player=?""",
+                     (r["event_id"], r["market"], r["side"], r["player"])).fetchone():
+            continue
+        price = max([x for x in (r["dk"], r["fd"]) if x] or [round(1 / r["p"], 2)])
+        book = "draftkings" if price == r["dk"] else "fanduel" if price == r["fd"] else "fair"
+        note = (f"prob track: {r['p']:.0%} ({r['sharp']} no-vig) | last 10 {r['h10']}/{r['n10']}, season {r['hs']}/{r['ns']}"
+                f" | opp {r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])}")
+        row = {"placed_ts": now.isoformat(timespec="seconds"), "sport": r["sport"], "event_id": r["event_id"],
+               "game": r["game"], "commence": r["commence"], "market": r["market"], "selection": r["side"],
+               "player": r["player"], "line": r["line"], "price": price, "book": book, "stake": 0.0,
+               "model_prob": r["p"], "note": note, "result": "pending", "paper": 3,
+               "evidence_kind": "prob", "model_version": PROB_VERSION}
+        row = {k: v for k, v in row.items() if k in cols}
+        c.execute(f"insert into bets({','.join(row)}) values({','.join('?' * len(row))})", tuple(row.values()))
+        n += 1
+    return n
+
+
+def prob_record(c):
+    """Calibration: hits against the probabilities the track called."""
+    rows = c.execute("""select model_prob, result from bets where paper=3 and result in ('W','L')""").fetchall()
+    if not rows:
+        return "no graded legs yet"
+    hits = sum(1 for r in rows if r["result"] == "W")
+    exp = sum(float(r["model_prob"] or 0) for r in rows)
+    out = f"{hits} hit of {len(rows)} graded, expected {exp:.1f}"
+    for lo, hi in ((0.5, 0.6), (0.6, 0.7), (0.7, 1.01)):
+        b = [r for r in rows if lo <= float(r["model_prob"] or 0) < hi]
+        if b:
+            out += f" | called {lo:.0%}-{min(hi, 1):.0%}: {sum(r['result'] == 'W' for r in b)}/{len(b)}"
+    return out
+
+
+def _prob_line(r):
+    from zoneinfo import ZoneInfo
+    t = datetime.fromisoformat(r["commence"].replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York"))
+    px = " / ".join(f"{b} {p:.2f}" for b, p in (("DK", r["dk"]), ("FD", r["fd"])) if p) or "not at DK/FD"
+    opp = (f"{r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])} (n {r['opp_n']})"
+           if r["opp_ratio"] else "no matchup data")
+    tag = "MISMATCH" + (" + ANCHOR" if r["anchor"] else "") if r["mismatch"] else ("ANCHOR" if r["anchor"] else "")
+    return (f"{r['sport']} {t.strftime('%-I:%M %p')} | {r['player']} {r['side']} {r['line']:g} "
+            f"{PROB_LABEL.get(r['stat'], r['stat'])} | {r['p']:.0%} | last 10 {r['h10']}/{r['n10']}, season {r['hs']}/{r['ns']} "
+            f"| {opp} | {px}" + (f" | {tag}" if tag else ""))
+
+
+def slip_text(c=None, top=12):
+    b = _PROB.get("board") or []
+    picks = [r for r in b if r["mismatch"]][:top]
+    L_ = [f"KRONOS PROBABILITY BOARD ({_PROB.get('ts') or 'not run yet'})",
+          "Probability = sharp no-vig line. MISMATCH = opponent allows 8%+ more of the stat (less, for unders) "
+          "AND the player cleared this side in 6+ of his last 10. Not a price edge: 0 units, tracked for its own record."]
+    if not picks:
+        L_.append("No mismatch legs on the board right now.")
+    for r in picks:
+        L_.append("• " + _prob_line(r))
+    if len(picks) >= 2:
+        pr = 1.0
+        for r in picks[:4]:
+            pr *= r["p"]
+        L_.append(f"Top {min(4, len(picks))} together: {pr:.0%} if independent (same-game legs move together, so treat as rough).")
+    try:
+        if c is not None:
+            L_.append("Track record: " + prob_record(c))
+    except Exception:                                                 # noqa: BLE001
+        pass
+    return "\n".join(L_)
+
+
+def prob_pass():
+    now = datetime.now(UTC)
+    c = sqlite3.connect(_desk_db(), timeout=30, isolation_level=None)
+    c.row_factory = sqlite3.Row
+    try:
+        c.execute("pragma busy_timeout=30000")
+        board, why = prob_board(c, now)
+        n = prob_log(c, board, now)
+        _PROB.update(board=board, ts=now.isoformat(timespec="seconds"), logged=_PROB.get("logged", 0) + n,
+                     status=f"{now.isoformat(timespec='seconds')} {len(board)} legs scored, "
+                            f"{sum(r['mismatch'] for r in board)} mismatches, {n} logged" +
+                            (f" | {'; '.join(why)}" if why else ""))
+    finally:
+        c.close()
+
+
+def _prob_block():
+    lines = [f"\n\nPROBABILITY TRACK ({PROB_VERSION}; every {PROB_EVERY_SEC // 60} min): {_PROB['status']}"]
+    c = None
+    try:
+        c = sqlite3.connect(_desk_db(), timeout=10)
+        c.row_factory = sqlite3.Row
+        lines.append("  record: " + prob_record(c))
+    except Exception as e:                                            # noqa: BLE001
+        lines.append(f"  record: failed ({str(e)[:80]})")
+    finally:
+        if c:
+            c.close()
+    picks = [r for r in (_PROB.get("board") or []) if r["mismatch"]][:15]
+    for r in picks:
+        lines.append("  " + _prob_line(r))
+    if not picks:
+        lines.append("  no mismatch legs on the board")
+    return "\n".join(lines) + "\n"
+
+
+def _prob_loop():
+    time.sleep(420)
+    while True:
+        try:
+            prob_pass()
+        except Exception as e:                                        # noqa: BLE001
+            _PROB["status"] = f"{datetime.now(UTC).isoformat(timespec='seconds')} pass failed: {str(e)[:150]}"
+            print(f"[prob] pass failed: {e}", flush=True)
+        time.sleep(PROB_EVERY_SEC)
+
+
+if os.environ.get("PROB_TRACK", "1") != "0":
+    import types as _ptypes
+    sys.modules["kronos_prob"] = _ptypes.SimpleNamespace(slip_text=slip_text, prob_pass=prob_pass)
+    _orig_edge_block_prob = _edge_block
+
+    def _edge_block():
+        try:
+            return _prob_block() + _orig_edge_block_prob()
+        except Exception as _e:                                       # noqa: BLE001
+            return f"\n\nPROBABILITY TRACK: block failed ({str(_e)[:120]})\n" + _orig_edge_block_prob()
+
+    threading.Thread(target=_prob_loop, daemon=True).start()
+    print("[prob] probability track active", flush=True)
 
 
 if __name__ == "__main__":
