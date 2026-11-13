@@ -1862,8 +1862,12 @@ def espn_nba_box(game_id):
                         fg3m = None
                 mins = g("MIN")
                 dnp = bool(ath.get("didNotPlay")) or (mins is None and not st)
+                try:
+                    pos = str(((ath.get("athlete") or {}).get("position") or {}).get("abbreviation") or "")
+                except Exception:
+                    pos = ""
                 lines.append({"player": name, "pts": g("PTS"), "reb": g("REB"), "ast": g("AST"), "fg3m": fg3m, "blk": g("BLK"),
-                              "min": mins, "played": (not dnp) and (mins or 0) > 0})
+                              "min": mins, "played": (not dnp) and (mins or 0) > 0, "pos": pos})
         out[team] = lines
     # possessions ~ FGA - OREB + TOV + 0.44*FTA, from team totals when ESPN provides them
     try:
@@ -1928,7 +1932,8 @@ def nhl_box(game_id):
                 except (ValueError, IndexError):
                     mins = 0.0
                 lines.append({"player": name, "goals": p.get("goals"), "assists": p.get("assists"),
-                              "points": p.get("points"), "sog": p.get("sog", p.get("shots")), "played": mins > 0})
+                              "points": p.get("points"), "sog": p.get("sog", p.get("shots")), "played": mins > 0,
+                              "min": round(mins, 1), "pos": "D" if grp == "defense" else "F"})
         out[team] = lines
     return out
 
@@ -5475,7 +5480,8 @@ def news_scan(con, tg=None, now=None):
         con.commit()
         report[sp] = {"listed": len(rows), "new_outs": len(changed)}
         for team, player, st in changed:
-            ev = next((e for e in evs if max(_match(team, e["home"]), _match(team, e["away"])) >= 0.5), None)
+            _nick = lambda s: (re.sub(r"[^a-z ]", "", str(s).lower()).split() or [""])[-1]
+            ev = next((e for e in evs if _nick(team) in (_nick(e["home"]), _nick(e["away"]))), None)
             if not ev:
                 continue
             day = now.strftime("%Y%m%d")
@@ -5506,6 +5512,13 @@ def news_scan(con, tg=None, now=None):
                     msg.append(f"Couldn't re-pull prices: {str(e)[:80]}")
             else:
                 msg.append(f"Daily re-pull limit ({NEWS_MAX_PULLS_DAY}) reached; check prices by hand.")
+            try:
+                import sys as _sys
+                _hk = getattr(_sys.modules.get("kronos_learn2"), "news_hook", None)
+                if _hk:
+                    msg += _hk(con, sp, ev, team, player, st, now) or []
+            except Exception as e:                             # noqa: BLE001
+                msg.append(f"(teammate check failed: {str(e)[:60]})")
             log(con, "news", sp, ev["event_id"], " | ".join(msg))
             con.commit()
             if tg:
@@ -10090,7 +10103,7 @@ PROB_SHARPS = ("pinnacle", "betonlineag", "lowvig", "betfair_ex_eu")
 PROB_MISMATCH = 1.08          # opponent allows 8%+ more (overs) or 8%+ less (unders) than league average
 PROB_FORM = 0.60              # and the player cleared this side in 6+ of his last 10
 PROB_ANCHOR = 0.65
-PROB_VERSION = "prob-v1-2026-11-13"
+PROB_VERSION = "prob-v2-2026-11-13"
 PROB_STAT = {
     "NBA": {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_threes": "fg3m",
             "player_blocks": "blk"},
@@ -10131,15 +10144,58 @@ def _ptwo_way(a, b):
 def _team_id(sport, name):
     if not name:
         return ""
-    if sport == "NHL":
-        fm = sys.modules.get("jerry_feeds")
-        ab = getattr(fm, "NHL_ABBR", {}) if fm else {}
-        return str(ab.get(name, name)).upper()
     if sport == "NFL":
         nt = getattr(L, "NFL_TEAMS", {}) if L is not None else {}
         return str(nt.get(name, name)).upper()
     n = _pnorm(name).replace("st louis", "st. louis")
     return n.split()[-1] if n.split() else n
+
+
+def _pos_group(sport, pos):
+    p = str(pos or "").upper()
+    if sport == "NBA":
+        return "G" if p in ("PG", "SG", "G") else "F" if p in ("SF", "PF", "F") else "C" if p == "C" else ""
+    if sport == "NHL":
+        return "D" if p == "D" else "F" if p in ("F", "C", "L", "R", "LW", "RW") else ""
+    return ""
+
+
+def _outs(c, sport):
+    """{team nickname: [player_norm, ...]} currently listed out, from the desk's injury snapshot."""
+    out = {}
+    try:
+        for team, player, st in c.execute("select team, player, status from news_snap where sport=?", (sport,)):
+            if any(w in str(st).lower() for w in ("out", "injured reserve", "suspend")):
+                n = re.sub(r"[^a-z ]", "", str(team).lower()).split()
+                out.setdefault(n[-1] if n else "", []).append(_pnorm(player))
+    except Exception:                                                 # noqa: BLE001
+        pass
+    return out
+
+
+def _role_up(players, pdat, outs, stat, line, over, sport):
+    """Market plus adjustment: with a regular teammate out, has this player produced more without him?
+    -> (flag, note). Needs 3+ games without him this season."""
+    if not pdat or not over:
+        return False, ""
+    min_reg = 24 if sport == "NBA" else 15
+    my = {l.get("_sid"): float(l.get(stat) or 0) for l in pdat["lines"] if l.get(stat) is not None}
+    best = None
+    for mate in outs:
+        md = players.get(mate)
+        if not md or md is pdat:
+            continue
+        mins = [float(l.get("min") or 0) for l in md["lines"][:10]]
+        if not mins or sum(mins) / len(mins) < min_reg:
+            continue
+        mate_games = {l.get("_sid") for l in md["lines"]}
+        wo = [v for sid, v in my.items() if sid not in mate_games]
+        wi = [v for sid, v in my.items() if sid in mate_games]
+        if len(wo) >= 3 and wi:
+            a_wo, a_wi = sum(wo) / len(wo), sum(wi) / len(wi)
+            if a_wo >= float(line) and a_wo >= 1.10 * a_wi and (best is None or a_wo - a_wi > best[0]):
+                best = (a_wo - a_wi, f"without {md['lines'][0].get('player', mate)}: {a_wo:.1f} in {len(wo)} games vs {a_wi:.1f} with")
+    return (True, best[1]) if best else (False, "")
 
 
 def _side_hit(v, line, over):
@@ -10155,7 +10211,7 @@ def _hit_rates(vals, line, over):
 
 def _box_data(c, sport, since):
     """Per-player values newest first, and opponent-allowed ratios per stat, from the desk's box scores."""
-    players, team_tot = {}, {}
+    players, team_tot, raw = {}, {}, []
     q = """select bl.source_id, bl.team, bl.player_norm, bl.stats, gr.game_date from box_lines bl join game_results gr
            using(sport, source_id) where bl.sport=? and gr.game_date>=? order by gr.game_date desc"""
     for sid, team, pn, st, gd in c.execute(q, (sport, since)):
@@ -10165,27 +10221,34 @@ def _box_data(c, sport, since):
             continue
         if s.get("played") is False:
             continue
-        players.setdefault(pn, {"team": team, "lines": []})["lines"].append(s)
-        tt = team_tot.setdefault((sid, team), {})
-        for k, v in s.items():
-            if isinstance(v, (int, float)) and not isinstance(v, bool):
-                tt[k] = tt.get(k, 0.0) + float(v)
-    by_game = {}
-    for (sid, team), tot in team_tot.items():
-        by_game.setdefault(sid, []).append((team, tot))
+        s["_sid"] = sid
+        pd_ = players.setdefault(pn, {"team": team, "lines": [], "pos": ""})
+        pd_["lines"].append(s)
+        if not pd_["pos"] and s.get("pos"):
+            pd_["pos"] = _pos_group(sport, s.get("pos"))
+        raw.append((sid, team, pn, s))
+    for sid, team, pn, s in raw:                    # team totals, overall ("") and by position group
+        for grp in {"", players[pn]["pos"]}:
+            tt = team_tot.setdefault((sid, team, grp), {})
+            for k, v in s.items():
+                if k not in ("min", "_sid") and isinstance(v, (int, float)) and not isinstance(v, bool):
+                    tt[k] = tt.get(k, 0.0) + float(v)
+    games = {}
+    for (sid, team, grp), tot in team_tot.items():
+        games.setdefault(sid, set()).add(team)
     allowed, league = {}, {}
-    for sid, teams in by_game.items():
-        if len(teams) != 2:
+    for (sid, team, grp), tot in team_tot.items():
+        opp = [t for t in games[sid] if t != team]
+        if len(games[sid]) != 2 or not opp:
             continue
-        for (ta, tota), (tb, totb) in ((teams[0], teams[1]), (teams[1], teams[0])):
-            for k, v in tota.items():
-                allowed.setdefault((_team_id(sport, tb), k), []).append(v)
-                league.setdefault(k, []).append(v)
+        for k, v in tot.items():
+            allowed.setdefault((_team_id(sport, opp[0]), grp, k), []).append(v)
+            league.setdefault((grp, k), []).append(v)
     ratio = {}
-    for (tid, k), vs in allowed.items():
-        lg = league.get(k) or []
+    for (tid, grp, k), vs in allowed.items():
+        lg = league.get((grp, k)) or []
         if len(vs) >= 5 and lg and sum(lg) > 0:
-            ratio[(tid, k)] = (sum(vs) / len(vs)) / (sum(lg) / len(lg)), len(vs)
+            ratio[(tid, grp, k)] = (sum(vs) / len(vs)) / (sum(lg) / len(lg)), len(vs)
     return players, ratio
 
 
@@ -10206,8 +10269,14 @@ def _nfl_data(c, now):
     for _, r in pw.iterrows():
         pn = _pnorm(r[name_col])
         d = players.setdefault(pn, {"team": str(r.get(team_col, "")).upper(), "pos": r.get("position"), "lines": []})
-        d["lines"].append({k: float(r.get(k) or 0) for k in
-                           ("receptions", "receiving_yards", "rushing_yards", "passing_yards", "passing_tds")})
+        ln = {k: float(r.get(k) or 0) for k in
+              ("receptions", "receiving_yards", "rushing_yards", "passing_yards", "passing_tds")}
+        ln["opp"] = str(r.get("opponent_team", "")).upper()
+        try:
+            ln["week"] = int(r.get("week"))
+        except Exception:                                             # noqa: BLE001
+            ln["week"] = None
+        d["lines"].append(ln)
     try:
         srow = c.execute("select max(season) from nfl_pos_def").fetchone()
         if srow and srow[0]:
@@ -10227,6 +10296,7 @@ def prob_board(c, now):
                        and sport in ('NBA','NHL','NFL')""", (now.isoformat(timespec="seconds"), lim)).fetchall()
     season_start = (now - timedelta(days=150)).date().isoformat()
     cache, out, why = {}, [], []
+    outs_by = {sp: _outs(c, sp) for sp in ("NBA", "NHL")}
     for ev in evs:
         sport = ev["sport"]
         if sport not in cache:
@@ -10266,16 +10336,23 @@ def prob_board(c, now):
             if sport != "NFL":
                 pteam = _team_id(sport, pteam)
             opp = away_id if pteam and pteam == home_id else home_id if pteam and pteam == away_id else None
+            grp = ""
             if sport == "NFL":
-                rk = (opp, (pdat or {}).get("pos"), stat)
+                orat = ratio.get((opp, (pdat or {}).get("pos"), stat)) if opp else None
+                grp = (pdat or {}).get("pos") or ""
             else:
-                rk = (opp, stat)
-            orat = ratio.get(rk) if opp else None
+                grp = (pdat or {}).get("pos") or ""
+                orat = (ratio.get((opp, grp, stat)) if grp else None) if opp else None
+                if orat is None and opp:
+                    orat, grp = ratio.get((opp, "", stat)), ""
             opp_name = ev["away"] if opp and opp == away_id else ev["home"] if opp else None
             for side, p in (("Over", po), ("Under", pu)):
                 over = side == "Over"
                 h10, n10, hs, ns = _hit_rates(vals, float(line), over)
                 soft = [x for x in rows if x["outcome"] == side and x["book"] in ("draftkings", "fanduel")]
+                ru, ru_note = (False, "")
+                if sport != "NFL" and pteam:
+                    ru, ru_note = _role_up(players, pdat, outs_by.get(sport, {}).get(pteam, []), stat, line, over, sport)
                 mism = bool(orat and n10 >= 5 and h10 / n10 >= PROB_FORM and
                             ((over and orat[0] >= PROB_MISMATCH) or (not over and orat[0] <= 1 / PROB_MISMATCH)))
                 out.append({"sport": sport, "event_id": ev["event_id"], "commence": ev["commence"],
@@ -10285,8 +10362,9 @@ def prob_board(c, now):
                             "opp_ratio": round(orat[0], 3) if orat else None, "opp_n": orat[1] if orat else 0,
                             "dk": next((x["price"] for x in soft if x["book"] == "draftkings"), None),
                             "fd": next((x["price"] for x in soft if x["book"] == "fanduel"), None),
-                            "mismatch": mism, "anchor": p >= PROB_ANCHOR})
-    out.sort(key=lambda r: (not r["mismatch"], -r["p"]))
+                            "mismatch": mism, "anchor": p >= PROB_ANCHOR,
+                            "pos": grp, "role_up": ru, "role_note": ru_note})
+    out.sort(key=lambda r: (not (r["mismatch"] or r["role_up"]), -r["p"]))
     return out, why
 
 
@@ -10295,7 +10373,7 @@ def prob_log(c, board, now):
     cols = {r[1] for r in c.execute("pragma table_info(bets)")}
     n = 0
     for r in board:
-        if not r["mismatch"]:
+        if not (r["mismatch"] or r.get("role_up")):
             continue
         hrs = (datetime.fromisoformat(r["commence"].replace("Z", "+00:00")) - now).total_seconds() / 3600
         if not 0 < hrs <= PROB_LOG_H:
@@ -10306,7 +10384,8 @@ def prob_log(c, board, now):
         price = max([x for x in (r["dk"], r["fd"]) if x] or [round(1 / r["p"], 2)])
         book = "draftkings" if price == r["dk"] else "fanduel" if price == r["fd"] else "fair"
         note = (f"prob track: {r['p']:.0%} ({r['sharp']} no-vig) | last 10 {r['h10']}/{r['n10']}, season {r['hs']}/{r['ns']}"
-                f" | opp {r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])}")
+                + (f" | opp {r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])}" if r["opp_ratio"] else "")
+                + (f" | ROLE UP: {r['role_note']}" if r.get("role_note") else ""))
         row = {"placed_ts": now.isoformat(timespec="seconds"), "sport": r["sport"], "event_id": r["event_id"],
                "game": r["game"], "commence": r["commence"], "market": r["market"], "selection": r["side"],
                "player": r["player"], "line": r["line"], "price": price, "book": book, "stake": 0.0,
@@ -10315,6 +10394,29 @@ def prob_log(c, board, now):
         row = {k: v for k, v in row.items() if k in cols}
         c.execute(f"insert into bets({','.join(row)}) values({','.join('?' * len(row))})", tuple(row.values()))
         n += 1
+    return n
+
+
+def prob_log_all(c, board, now):
+    """Every scored leg, mismatch or not, once inside PROB_LOG_H hours of start: the control group that
+    shows whether MISMATCH and ROLE UP legs really hit more often than their implied chance."""
+    c.execute("""create table if not exists prob_legs(event_id text, market text, selection text, player text, line real,
+                 sport text, commence text, game text, ts text, p real, sharp text, h10 int, n10 int, hs int, ns int,
+                 opp_ratio real, mismatch int, anchor int, role_up int, dk real, fd real, note text,
+                 result text, value real, graded_ts text, primary key(event_id, market, selection, player))""")
+    n = 0
+    for r in board:
+        hrs = (datetime.fromisoformat(r["commence"].replace("Z", "+00:00")) - now).total_seconds() / 3600
+        if not 0 < hrs <= PROB_LOG_H:
+            continue
+        cur = c.execute("""insert or ignore into prob_legs(event_id, market, selection, player, line, sport, commence, game, ts,
+                           p, sharp, h10, n10, hs, ns, opp_ratio, mismatch, anchor, role_up, dk, fd, note)
+                           values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (r["event_id"], r["market"], r["side"], r["player"], r["line"], r["sport"], r["commence"], r["game"],
+                         now.isoformat(timespec="seconds"), r["p"], r["sharp"], r["h10"], r["n10"], r["hs"], r["ns"],
+                         r["opp_ratio"], int(r["mismatch"]), int(r["anchor"]), int(bool(r.get("role_up"))), r["dk"], r["fd"],
+                         r.get("role_note") or ""))
+        n += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
     return n
 
 
@@ -10337,9 +10439,14 @@ def _prob_line(r):
     from zoneinfo import ZoneInfo
     t = datetime.fromisoformat(r["commence"].replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York"))
     px = " / ".join(f"{b} {p:.2f}" for b, p in (("DK", r["dk"]), ("FD", r["fd"])) if p) or "not at DK/FD"
-    opp = (f"{r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])} (n {r['opp_n']})"
+    who = {"G": " to guards", "F": " to forwards", "C": " to centers", "D": " to defensemen"}.get(r.get("pos") or "", "") \
+        if r["sport"] != "NFL" else (f" to {r['pos']}s" if r.get("pos") else "")
+    opp = (f"{r['opp']} allows {r['opp_ratio']:.2f}x league {PROB_LABEL.get(r['stat'], r['stat'])}{who} (n {r['opp_n']})"
            if r["opp_ratio"] else "no matchup data")
-    tag = "MISMATCH" + (" + ANCHOR" if r["anchor"] else "") if r["mismatch"] else ("ANCHOR" if r["anchor"] else "")
+    tags = [t for t, on in (("MISMATCH", r["mismatch"]), ("ROLE UP", r.get("role_up")), ("ANCHOR", r["anchor"])) if on]
+    tag = " + ".join(tags)
+    if r.get("role_note"):
+        opp += f" | {r['role_note']}"
     return (f"{r['sport']} {t.strftime('%-I:%M %p')} | {r['player']} {r['side']} {r['line']:g} "
             f"{PROB_LABEL.get(r['stat'], r['stat'])} | {r['p']:.0%} | last 10 {r['h10']}/{r['n10']}, season {r['hs']}/{r['ns']} "
             f"| {opp} | {px}" + (f" | {tag}" if tag else ""))
@@ -10347,7 +10454,7 @@ def _prob_line(r):
 
 def slip_text(c=None, top=12):
     b = _PROB.get("board") or []
-    picks = [r for r in b if r["mismatch"]][:top]
+    picks = [r for r in b if r["mismatch"] or r.get("role_up")][:top]
     L_ = [f"KRONOS PROBABILITY BOARD ({_PROB.get('ts') or 'not run yet'})",
           "Probability = sharp no-vig line. MISMATCH = opponent allows 8%+ more of the stat (less, for unders) "
           "AND the player cleared this side in 6+ of his last 10. Not a price edge: 0 units, tracked for its own record."]
@@ -10376,9 +10483,15 @@ def prob_pass():
         c.execute("pragma busy_timeout=30000")
         board, why = prob_board(c, now)
         n = prob_log(c, board, now)
+        try:
+            n_all = prob_log_all(c, board, now)
+        except Exception as e:                                        # noqa: BLE001
+            n_all = 0
+            why.append(f"control log failed: {str(e)[:60]}")
         _PROB.update(board=board, ts=now.isoformat(timespec="seconds"), logged=_PROB.get("logged", 0) + n,
                      status=f"{now.isoformat(timespec='seconds')} {len(board)} legs scored, "
-                            f"{sum(r['mismatch'] for r in board)} mismatches, {n} logged" +
+                            f"{sum(r['mismatch'] for r in board)} mismatches, "
+                            f"{sum(bool(r.get('role_up')) for r in board)} role-up, {n} logged, {n_all} to the control log" +
                             (f" | {'; '.join(why)}" if why else ""))
     finally:
         c.close()
@@ -10396,7 +10509,7 @@ def _prob_block():
     finally:
         if c:
             c.close()
-    picks = [r for r in (_PROB.get("board") or []) if r["mismatch"]][:15]
+    picks = [r for r in (_PROB.get("board") or []) if r["mismatch"] or r.get("role_up")][:15]
     for r in picks:
         lines.append("  " + _prob_line(r))
     if not picks:
@@ -10428,6 +10541,428 @@ if os.environ.get("PROB_TRACK", "1") != "0":
 
     threading.Thread(target=_prob_loop, daemon=True).start()
     print("[prob] probability track active", flush=True)
+
+
+
+# ================================================================= fast learning (2026-11-13)
+# 1. BOOK WEIGHTS: for every prop market, which books' early prices sit closest to where the market
+#    closes. The fair price for props is then built from those books (jerry_live.learned_book_weights).
+# 2. GRADE EVERYTHING: every flagged edge in the candidate log and every probability leg (mismatch or
+#    not) is settled from the desk's own results, free. Reports show hit rate against the price-implied
+#    chance, by filter, edge size and book, and whether MISMATCH legs beat their implied probability.
+# 3. NEWS LAG: when a player is ruled out, teammates' props are checked for books that have not moved,
+#    and the minutes each book takes to move are recorded.
+LEARN2_EVERY_SEC = int(os.environ.get("LEARN2_EVERY_SEC", "3600"))
+LEARN2_DAYS = 30
+BW_MIN_N, BW_EARLY_MIN = 40, 90        # 40+ props per book and market; "early" = price 90+ min before start
+_L2 = {"status": "not run yet", "weights": {}, "cand": [], "prob": [], "lag": []}
+
+
+def _l2_two(a, b):
+    try:
+        return _ptwo_way(float(a), float(b))[0]
+    except Exception:                                                 # noqa: BLE001
+        return None
+
+
+def book_weights(c, now):
+    """MSE of each book's early no-vig price against the leave-one-out closing consensus, same line."""
+    lo = (now - timedelta(days=LEARN2_DAYS)).isoformat(timespec="seconds")
+    err = {}
+    evs = c.execute("select event_id, sport, commence from events where commence>? and commence<?",
+                    (lo, now.isoformat(timespec="seconds"))).fetchall()
+    for ev in evs:
+        try:
+            ct = datetime.fromisoformat(ev["commence"].replace("Z", "+00:00"))
+        except Exception:                                             # noqa: BLE001
+            continue
+        early_cut = (ct - timedelta(minutes=BW_EARLY_MIN)).isoformat(timespec="seconds")
+        state = {}
+        for t in c.execute("""select ts, book, market, outcome, player, line, price, is_close from ticks
+                              where event_id=? and market like 'player_%' and ts<=? order by ts""",
+                           (ev["event_id"], ev["commence"])):
+            k = (t["market"], t["player"], t["book"])
+            d = state.setdefault(k, {"early": {}, "close": {}})
+            if t["ts"] <= early_cut:
+                d["early"][t["outcome"]] = (t["line"], t["price"])
+            if t["is_close"]:
+                d["close"][t["outcome"]] = (t["line"], t["price"])
+        props = {}
+        for (market, player, book), d in state.items():
+            props.setdefault((market, player), {})[book] = d
+        for (market, player), books in props.items():
+            closes = {}
+            for bk, d in books.items():
+                o, u = d["close"].get("Over"), d["close"].get("Under")
+                if o and u and o[0] is not None and o[0] == u[0]:
+                    p = _l2_two(o[1], u[1])
+                    if p is not None:
+                        closes[bk] = (o[0], p)
+            if len(closes) < 3:
+                continue
+            lines = [v[0] for v in closes.values()]
+            modal = max(set(lines), key=lines.count)
+            at = {bk: p for bk, (ln, p) in closes.items() if ln == modal}
+            if len(at) < 3:
+                continue
+            for bk, d in books.items():
+                o, u = d["early"].get("Over"), d["early"].get("Under")
+                if not (o and u) or o[0] != modal or u[0] != modal:
+                    continue
+                pe = _l2_two(o[1], u[1])
+                others = [p for b2, p in at.items() if b2 != bk]
+                if pe is None or len(others) < 2:
+                    continue
+                e = err.setdefault((ev["sport"], market, bk), [0.0, 0])
+                e[0] += (pe - sum(others) / len(others)) ** 2
+                e[1] += 1
+    out, report = {}, []
+    by_mkt = {}
+    for (sport, market, bk), (sse, n) in err.items():
+        if n >= BW_MIN_N:
+            by_mkt.setdefault((sport, market), {})[bk] = (sse / n, n)
+    for (sport, market), d in by_mkt.items():
+        if len(d) < 3:
+            continue
+        mses = sorted(v[0] for v in d.values())
+        med = mses[len(mses) // 2] or 1e-9
+        w = {bk: round(min(max(med / max(m, 1e-9), 0.33), 3.0), 2) for bk, (m, n) in d.items()}
+        out[f"{sport}|{market}"] = w
+        rank = sorted(d.items(), key=lambda kv: kv[1][0])
+        report.append(f"{sport} {market}: " + ", ".join(f"{bk} {w[bk]:g}x (rmse {m ** 0.5 * 100:.1f}pp, n {n})"
+                                                         for bk, (m, n) in rank))
+    c.execute("insert or replace into meta(k, v) values('book_weights', ?)", (json.dumps(out),))
+    return out, sorted(report)
+
+
+def _l2_nick(s):
+    n = re.sub(r"[^a-z ]", "", str(s).lower()).split()
+    return n[-1] if n else ""
+
+
+def _l2_game(c, sport, ev):
+    """The desk's result row for an event: (source_id, home_score, away_score) or None."""
+    try:
+        d0 = datetime.fromisoformat(ev["commence"].replace("Z", "+00:00"))
+    except Exception:                                                 # noqa: BLE001
+        return None
+    days = [(d0 + timedelta(days=k)).date().isoformat() for k in (-1, 0, 1)]
+    for r in c.execute("""select source_id, home, away, home_score, away_score from game_results
+                          where sport=? and game_date in (?,?,?)""", (sport, *days)):
+        if _l2_nick(r["home"]) == _l2_nick(ev["home"]) and _l2_nick(r["away"]) == _l2_nick(ev["away"]):
+            return r["source_id"], r["home_score"], r["away_score"]
+    return None
+
+
+def _nfl_week(commence):
+    """NFL week number from the kickoff date: week 1 starts the Tuesday after Labor Day."""
+    d = datetime.fromisoformat(commence.replace("Z", "+00:00")) - timedelta(hours=6)   # late games stay on their US date
+    yr = d.year if d.month >= 8 else d.year - 1
+    sep1 = datetime(yr, 9, 1, tzinfo=d.tzinfo)
+    labor = sep1 + timedelta(days=(0 - sep1.weekday()) % 7)
+    return (d - (labor + timedelta(days=1))).days // 7 + 1
+
+
+def _l2_wl(v, line, side):
+    if v is None or line is None:
+        return None
+    if abs(v - line) < 1e-9:
+        return "P"
+    return "W" if ((v > line) == (side.lower() in ("over", "yes"))) else "L"
+
+
+def settle(c, sport, ev, market, outcome, player, line, now, nfl=None):
+    """-> (result, value) or None while the result is not on file. 'V' = player did not play."""
+    if player:
+        stat = (PROB_STAT.get(sport) or {}).get(market)
+        if not stat:
+            return None
+        if sport in ("NBA", "NHL"):
+            g = _l2_game(c, sport, ev)
+            if not g:
+                return None
+            pn = _pnorm(player)
+            for st, pnorm in c.execute("select stats, player_norm from box_lines where sport=? and source_id=?", (sport, g[0])):
+                if pnorm == pn or _pnorm(pnorm) == pn:
+                    s = json.loads(st)
+                    if s.get("played") is False or s.get(stat) is None:
+                        return "V", None
+                    return _l2_wl(float(s[stat]), float(line), outcome), float(s[stat])
+            return "V", None
+        if sport == "NFL":
+            if nfl is None or (now - datetime.fromisoformat(ev["commence"].replace("Z", "+00:00"))).total_seconds() < 30 * 3600:
+                return None
+            pd_ = nfl.get(_pnorm(player))
+            if not pd_:
+                return None
+            teams = {_team_id("NFL", ev["home"]), _team_id("NFL", ev["away"])}
+            wk = _nfl_week(ev["commence"])
+            for ln in pd_["lines"]:
+                if ln.get("week") == wk and ln.get("opp") in teams:
+                    return _l2_wl(float(ln.get(stat) or 0), float(line), outcome), float(ln.get(stat) or 0)
+            # the week's stats are on file for this matchup but he has no line: he did not play
+            if any(l2.get("week") == wk and l2.get("opp") in teams for d2 in nfl.values() for l2 in d2["lines"][:1]):
+                return "V", None
+            return None
+        return None
+    hs = as_ = None
+    if sport in ("NBA", "NHL"):
+        g = _l2_game(c, sport, ev)
+        if g:
+            hs, as_ = g[1], g[2]
+    if hs is None:
+        r = c.execute("select home_score, away_score from bets where event_id=? and home_score is not null limit 1",
+                      (ev["event_id"],)).fetchone() if "home_score" in {x[1] for x in c.execute("pragma table_info(bets)")} else None
+        if r:
+            hs, as_ = r[0], r[1]
+    if hs is None or as_ is None:
+        return None
+    hs, as_ = float(hs), float(as_)
+    if market == "totals":
+        return _l2_wl(hs + as_, float(line), outcome), hs + as_
+    mine, other = (hs, as_) if _l2_nick(outcome) == _l2_nick(ev["home"]) else (as_, hs)
+    if market == "h2h":
+        return ("W" if mine > other else "L" if mine < other else "P"), mine - other
+    if market == "spreads" and line is not None:
+        m = mine + float(line) - other
+        return ("W" if m > 0 else "L" if m < 0 else "P"), mine - other
+    return None
+
+
+def _l2_schema(c):
+    c.execute("""create table if not exists prob_legs(event_id text, market text, selection text, player text, line real,
+                 sport text, commence text, game text, ts text, p real, sharp text, h10 int, n10 int, hs int, ns int,
+                 opp_ratio real, mismatch int, anchor int, role_up int, dk real, fd real, note text,
+                 result text, value real, graded_ts text, primary key(event_id, market, selection, player))""")
+    c.execute("""create table if not exists news_lag(event_id text, team text, player_out text, news_ts text,
+                 teammate text, market text, book text, moved_ts text, primary key(event_id, player_out, teammate, market, book))""")
+    if c.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        cols = {r[1] for r in c.execute("pragma table_info(candidates)")}
+        for col, typ in (("result", "text"), ("value", "real"), ("graded_ts", "text")):
+            if col not in cols:
+                c.execute(f"alter table candidates add column {col} {typ}")
+
+
+def grade_all(c, now):
+    """Settle every ungraded candidate edge and probability leg whose game is over."""
+    cut = (now - timedelta(hours=3)).isoformat(timespec="seconds")
+    nfl = None
+    n = 0
+    jobs = []
+    if c.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        jobs.append(("candidates", "outcome", c.execute(
+            """select rowid, event_id, sport, commence, market, outcome as side, player, line from candidates
+               where result is null and commence<? and commence>?""",
+            (cut, (now - timedelta(days=LEARN2_DAYS)).isoformat(timespec="seconds"))).fetchall()))
+    jobs.append(("prob_legs", "selection", c.execute(
+        """select rowid, event_id, sport, commence, market, selection as side, player, line from prob_legs
+           where result is null and commence<?""", (cut,)).fetchall()))
+    evc = {}
+    for table, _, rows in jobs:
+        for r in rows:
+            ev = evc.get(r["event_id"])
+            if ev is None:
+                ev = c.execute("select event_id, commence, home, away from events where event_id=?", (r["event_id"],)).fetchone()
+                evc[r["event_id"]] = ev or False
+            if not ev:
+                continue
+            if r["sport"] == "NFL" and nfl is None and r["player"]:
+                nfl = _nfl_data(c, now)[0]
+            try:
+                res = settle(c, r["sport"], ev, r["market"], r["side"], r["player"] or "", r["line"], now, nfl)
+            except Exception:                                         # noqa: BLE001
+                res = None
+            if res and res[0]:
+                c.execute(f"update {table} set result=?, value=?, graded_ts=? where rowid=?",
+                          (res[0], res[1], now.isoformat(timespec="seconds"), r["rowid"]))
+                n += 1
+    return n
+
+
+def _l2_bucket(rows, key):
+    out = {}
+    for r in rows:
+        a = out.setdefault(key(r), [0, 0, 0.0, 0.0])
+        a[0] += 1
+        a[1] += r["result"] == "W"
+        a[2] += float(r["fair"] or 0)
+        a[3] += (float(r["price"]) - 1) if r["result"] == "W" else -1.0
+    return out
+
+
+def learn_reports(c):
+    cand, prob = [], []
+    if c.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        rows = c.execute("""select stop, ev, book, sport, player, fair, coalesce(first_price, price) price, result
+                            from candidates where result in ('W','L')""").fetchall()
+        def fmt(title, d):
+            L_ = [title]
+            for k, (n, w, f, pnl) in sorted(d.items(), key=lambda kv: -kv[1][0]):
+                if n >= 5:
+                    L_.append(f"    {k}: {w}/{n} hit ({w / n:.0%}) vs fair {f / n:.0%} | flat ROI {pnl / n:+.1%}")
+            return L_
+        if rows:
+            cand += fmt("  every flagged edge, by what happened to it:",
+                        _l2_bucket(rows, lambda r: (r["stop"] or "").split(":")[0][:40]))
+            cand += fmt("  by edge size:", _l2_bucket(rows, lambda r: "1-2%" if r["ev"] < 0.02 else "2-4%" if r["ev"] < 0.04
+                                                      else "4-6%" if r["ev"] < 0.06 else "6%+"))
+            cand += fmt("  by sport and type:", _l2_bucket(rows, lambda r: f"{r['sport']} {'props' if r['player'] else 'game lines'}"))
+            cand += fmt("  by book:", _l2_bucket(rows, lambda r: r["book"]))
+    rows = c.execute("select p, mismatch, anchor, role_up, sport, result from prob_legs where result in ('W','L')").fetchall()
+    def pl(label, sel):
+        b = [r for r in rows if sel(r)]
+        if len(b) >= 5:
+            w = sum(r["result"] == "W" for r in b)
+            exp = sum(float(r["p"]) for r in b)
+            prob.append(f"    {label}: {w}/{len(b)} hit ({w / len(b):.0%}) vs implied {exp / len(b):.0%} "
+                        f"| {w - exp:+.1f} hits against the price")
+    if rows:
+        prob.append("  probability legs, hit rate against the implied chance (the test of the mismatch method):")
+        pl("MISMATCH legs", lambda r: r["mismatch"])
+        pl("all other legs (control)", lambda r: not r["mismatch"])
+        pl("ROLE UP legs (teammate out, better without him)", lambda r: r["role_up"])
+        pl("ANCHOR legs (65%+)", lambda r: r["anchor"])
+        for sp in ("NBA", "NHL", "NFL"):
+            pl(f"{sp} mismatch", lambda r, sp=sp: r["mismatch"] and r["sport"] == sp)
+    return cand, prob
+
+
+def news_hook(c, sport, ev, team, player, status, now):
+    """Called by the news scan right after its re-pull. Flags teammates' props where other books moved in
+    this pull and a CT book did not, and opens a lag record for every book."""
+    _l2_schema(c)
+    lines = []
+    tn = _l2_nick(team)
+    mates = set()
+    for pn, tm in c.execute("select player_norm, team from player_team where sport=?", (sport,)):
+        if (_l2_nick(tm) == tn or _team_id(sport, tm) == _team_id(sport, team)) and pn != _pnorm(player):
+            mates.add(pn)
+    if not mates:
+        return lines
+    news_ts = now.isoformat(timespec="seconds")
+    recent = (now - timedelta(minutes=3)).isoformat(timespec="seconds")
+    q = c.execute("select book, market, outcome, player, line, price, ts from last_quote where event_id=? and player!=''",
+                  (ev["event_id"],)).fetchall()
+    by = {}
+    for x in q:
+        if _pnorm(x["player"]) in mates:
+            by.setdefault((x["player"], x["market"]), {}).setdefault(x["book"], []).append(x)
+    stale = []
+    for (mate, market), books in by.items():
+        moved = {bk for bk, rs in books.items() if any(str(r["ts"]) >= recent for r in rs)}
+        for bk in books:
+            c.execute("insert or ignore into news_lag values(?,?,?,?,?,?,?,?)",
+                      (ev["event_id"], team, player, news_ts, mate, market, bk, news_ts if bk in moved else None))
+        others = moved - {"draftkings", "fanduel"}
+        for bk in ("draftkings", "fanduel"):
+            if bk in books and bk not in moved and len(others) >= 2:
+                o = next((r for r in books[bk] if r["outcome"] == "Over"), None)
+                if o:
+                    stale.append(f"• {mate} {PROB_LABEL.get((PROB_STAT.get(sport) or {}).get(market, ''), market)} "
+                                 f"{o['line']:g}: {len(others)} books moved, {'DK' if bk == 'draftkings' else 'FD'} still {o['price']:.2f} over")
+    if stale:
+        lines.append(f"Teammate props not yet moved at DK/FD ({len(stale)}):")
+        lines += stale[:6]
+    return lines
+
+
+def news_lag_update(c, now):
+    """Fill in when each book first moved after a news event; report median minutes by book."""
+    open_ = c.execute("""select rowid, event_id, news_ts, teammate, market, book from news_lag
+                         where moved_ts is null and news_ts>?""",
+                      ((now - timedelta(hours=8)).isoformat(timespec="seconds"),)).fetchall()
+    for r in open_:
+        t = c.execute("""select min(ts) from ticks where event_id=? and market=? and player=? and book=? and ts>?""",
+                      (r["event_id"], r["market"], r["teammate"], r["book"], r["news_ts"])).fetchone()[0]
+        if t:
+            c.execute("update news_lag set moved_ts=? where rowid=?", (t, r["rowid"]))
+    lag = {}
+    for r in c.execute("select book, news_ts, moved_ts from news_lag where moved_ts is not null"):
+        try:
+            m = (datetime.fromisoformat(r["moved_ts"]) - datetime.fromisoformat(r["news_ts"])).total_seconds() / 60
+        except Exception:                                             # noqa: BLE001
+            continue
+        lag.setdefault(r["book"], []).append(max(m, 0.0))
+    never = {r[0]: r[1] for r in c.execute("select book, count(*) from news_lag where moved_ts is null group by book")}
+    out = []
+    for bk, v in sorted(lag.items(), key=lambda kv: sorted(kv[1])[len(kv[1]) // 2]):
+        v = sorted(v)
+        out.append(f"    {bk}: median {v[len(v) // 2]:.0f} min to move (n {len(v)}; {never.get(bk, 0)} not moved yet)")
+    return out
+
+
+def learn2_pass():
+    now = datetime.now(UTC)
+    c = sqlite3.connect(_desk_db(), timeout=30, isolation_level=None)
+    c.row_factory = sqlite3.Row
+    try:
+        c.execute("pragma busy_timeout=30000")
+        _l2_schema(c)
+        notes = []
+        try:
+            n = grade_all(c, now)
+            notes.append(f"{n} settled")
+        except Exception as e:                                        # noqa: BLE001
+            notes.append(f"grading failed: {str(e)[:80]}")
+        try:
+            last = c.execute("select v from meta where k='book_weights_ts'").fetchone()
+            if not last or (now - datetime.fromisoformat(last[0])).total_seconds() > 6 * 3600:
+                w, rep = book_weights(c, now)
+                c.execute("insert or replace into meta(k, v) values('book_weights_ts', ?)", (now.isoformat(timespec="seconds"),))
+                c.execute("insert or replace into meta(k, v) values('book_weights_report', ?)", (json.dumps(rep),))
+            rep = json.loads((c.execute("select v from meta where k='book_weights_report'").fetchone() or ["[]"])[0])
+            _L2["weights"] = rep
+            notes.append(f"book weights for {len(rep)} prop markets")
+        except Exception as e:                                        # noqa: BLE001
+            notes.append(f"book weights failed: {str(e)[:80]}")
+        try:
+            _L2["cand"], _L2["prob"] = learn_reports(c)
+        except Exception as e:                                        # noqa: BLE001
+            notes.append(f"reports failed: {str(e)[:80]}")
+        try:
+            _L2["lag"] = news_lag_update(c, now)
+        except Exception as e:                                        # noqa: BLE001
+            notes.append(f"news lag failed: {str(e)[:80]}")
+        _L2["status"] = f"{now.isoformat(timespec='seconds')} " + ", ".join(notes)
+    finally:
+        c.close()
+
+
+def _l2_block():
+    L_ = [f"\n\nFAST LEARNING (every {LEARN2_EVERY_SEC // 60} min; grades every flagged edge and probability leg): {_L2['status']}"]
+    L_ += _L2["cand"] or ["  no graded candidate edges yet"]
+    L_ += _L2["prob"] or ["  no graded probability legs yet"]
+    L_.append("  book weights for prop fair prices (1x = average; higher = early price closer to the close):")
+    L_ += [f"    {x}" for x in (_L2["weights"] or ["not enough history yet (40+ props per book and market)"])]
+    L_.append("  minutes to move teammates' props after a player is ruled out:")
+    L_ += _L2["lag"] or ["    no news events recorded yet"]
+    return "\n".join(L_) + "\n"
+
+
+def _l2_loop():
+    time.sleep(540)
+    while True:
+        try:
+            learn2_pass()
+        except Exception as e:                                        # noqa: BLE001
+            _L2["status"] = f"{datetime.now(UTC).isoformat(timespec='seconds')} pass failed: {str(e)[:150]}"
+            print(f"[learn2] pass failed: {e}", flush=True)
+        time.sleep(LEARN2_EVERY_SEC)
+
+
+if os.environ.get("LEARN2", "1") != "0":
+    import types as _l2types
+    sys.modules["kronos_learn2"] = _l2types.SimpleNamespace(news_hook=news_hook, learn2_pass=learn2_pass, settle=settle)
+    _orig_edge_block_l2 = _edge_block
+
+    def _edge_block():
+        try:
+            return _l2_block() + _orig_edge_block_l2()
+        except Exception as _e:                                       # noqa: BLE001
+            return f"\n\nFAST LEARNING: block failed ({str(_e)[:120]})\n" + _orig_edge_block_l2()
+
+    threading.Thread(target=_l2_loop, daemon=True).start()
+    print("[learn2] fast learning active", flush=True)
 
 
 if __name__ == "__main__":
