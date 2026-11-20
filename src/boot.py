@@ -2045,7 +2045,19 @@ def grade_props(con, sport, now_iso, lookback_days=3, limit=400):
                 continue                                   # game not ingested yet; stays pending
             cands = {r["player"]: r for r in rows}
             feed = res.resolve(sport, b["player"], list(cands.keys()), now_iso)
+            if feed and feed not in cands:
+                # 2026-11-19: the alias cache returned a name from an earlier game that is not in this
+                # box (KeyError 'Andrew Nembhard' left 11 props stuck). Match fresh against this box only.
+                res.con.execute("delete from player_alias where sport=? and book_name=?", (sport, jg._norm(b["player"])))
+                feed = res.resolve(sport, b["player"], list(cands.keys()), now_iso)
             if not feed:
+                sn = (_norm(b["player"]).split() or [""])[-1]
+                if sn and not any((_norm(c).split() or [""])[-1] == sn for c in cands) and len(cands) >= 16:
+                    # complete box (16+ players), nobody with his surname: he did not dress. Books void it.
+                    con.execute("""update bets set result='V', pnl=0, graded_ts=?, note=coalesce(note,'')||? where id=?""",
+                                (now_iso, " | void: not in the box score (inactive)", b["id"]))
+                    graded += 1; voided += 1
+                    continue
                 res.quarantine(b["id"], sport, b["player"], b["market"], "player not in either team's box", now_iso); quar += 1
                 continue
             ln = json.loads(cands[feed]["stats"])
@@ -10803,7 +10815,8 @@ def learn_reports(c):
             return L_
         if rows:
             cand += fmt("  every flagged edge, by what happened to it:",
-                        _l2_bucket(rows, lambda r: (r["stop"] or "").split(":")[0][:40]))
+                        _l2_bucket(rows, lambda r: "soft book led (v1.3 stop)" if "soft book led" in (r["stop"] or "")
+                                   else (r["stop"] or "").split(":")[0][:40]))
             cand += fmt("  by edge size:", _l2_bucket(rows, lambda r: "1-2%" if r["ev"] < 0.02 else "2-4%" if r["ev"] < 0.04
                                                       else "4-6%" if r["ev"] < 0.06 else "6%+"))
             cand += fmt("  by sport and type:", _l2_bucket(rows, lambda r: f"{r['sport']} {'props' if r['player'] else 'game lines'}"))
@@ -10963,6 +10976,345 @@ if os.environ.get("LEARN2", "1") != "0":
 
     threading.Thread(target=_l2_loop, daemon=True).start()
     print("[learn2] fast learning active", flush=True)
+
+
+
+# ================================================================= fix-v1.3 (2026-11-19): soft-led filter, steam holdout, version lock, grading
+# From the 2026-11-19 status review:
+#  1) SOFT BOOK LED. Flagged prop edges lose ground before start: Pinnacle moved our way on only 44% of NBA and
+#     35% of NHL prop flags (z -3.4 / -3.0), and graded candidates hit 50-51% against a "fair" of 53-54%.
+#     A DK/FD price that just moved while the sharp book has not followed is usually the soft book being
+#     ahead, not stale. New stop: an edge is skipped when its DK/FD quote moved 1.5pp+ toward our side (or
+#     its line moved our way) in the last 2 hours and the sharp book moved less than half as far. Stopped
+#     edges stay in the candidate log as "soft book led" and are graded, so the filter is measured both ways.
+#  2) VERSION LOCK. The price version stays price-v9 (clock 19/150 NBA, 7/150 NHL). Filters and stops do not
+#     bump it; rows carry the filter era in the candidate log instead. Only a change to the fair-price math
+#     earns a new version and a fresh 150-bet clock.
+#  3) STEAM. The only signal with a real effect in the audit (z +2.0, n 736). Rules v2 R9: a signal needs a
+#     100-row holdout before it can steer anything, so steam's holdout starts now on new graded rows. If it
+#     repeats (z >= 1.65, same direction), plays require steam from then on. Until then the feed shows the
+#     steam vs no-steam split for each price-edge market.
+#  4) GRADING. NBA/NHL props stuck on "grading error: '<name>'": the alias cache returned a name that was not in
+#     that game's box (KeyError). Now re-matched fresh against the box; a player missing from a complete box
+#     with no surname match is voided as inactive (book rules). Settled bets leave the quarantine list.
+#  5) Old errors (3+ days) are cleared from the summary so it only shows live problems.
+# Railway: SOFT_LED=0 turns the soft-led stop off; STEAM_GATE=0 keeps plays from ever requiring steam.
+import json as _v13_json, math as _v13_math, os as _v13_os, sys as _v13_sys, threading as _v13_thr, time as _v13_time
+import sqlite3 as _v13_sql
+from datetime import datetime as _v13_dt, timedelta as _v13_td, timezone as _v13_tz
+
+V13 = "fix-v1.3-2026-11-19"
+_V13_UTC = _v13_tz.utc
+SOFT_LED_ON = _v13_os.environ.get("SOFT_LED", "1") != "0"
+SOFT_LED_PP = float(_v13_os.environ.get("SOFT_LED_PP", "0.015"))      # soft book's move toward our side
+SOFT_LED_RATIO = 0.5                                                  # sharp book followed less than half
+SOFT_LED_WINDOW_MIN = 120
+STEAM_GATE_ON = _v13_os.environ.get("STEAM_GATE", "1") != "0"
+_V13 = {"soft_led": 0, "checked": 0, "last": None, "steam": "not run yet", "steam_split": [], "bias": [],
+        "cleanup": "not run yet"}
+
+
+def _v13_db():
+    c = _v13_sql.connect(_v13_os.path.join(_v13_os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
+    c.row_factory = _v13_sql.Row
+    try:
+        c.execute("pragma busy_timeout=60000")
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return c
+
+
+def _v13_ts(x):
+    try:
+        t = _v13_dt.fromisoformat(str(x).replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=_V13_UTC)
+    except Exception:                                                  # noqa: BLE001
+        return None
+
+
+def _v13_line_better(market, outcome, old, new):
+    """+1 when the line moved in this side's favour, -1 against, 0 unchanged/unknown."""
+    if old is None or new is None or float(old) == float(new):
+        return 0
+    up = float(new) > float(old)
+    if outcome in ("Over", "Yes"):
+        return -1 if up else 1
+    if outcome in ("Under", "No"):
+        return 1 if up else -1
+    if market == "spreads":
+        return 1 if up else -1                                        # more points for this side
+    return 0
+
+
+def soft_led(con, event_id, market, outcome, player, soft_book, sharp_book, now):
+    """None, or a short reason when the soft book moved toward this side and the sharp book did not follow."""
+    lo = (now - _v13_td(minutes=SOFT_LED_WINDOW_MIN)).isoformat(timespec="seconds")
+    ticks = con.execute("""select ts, book, line, price from ticks where event_id=? and market=? and outcome=? and player=?
+                           and book in (?, ?) and ts>=? order by ts""",
+                        (event_id, market, outcome, player or "", soft_book, sharp_book, lo)).fetchall()
+    soft = [t for t in ticks if t[1] == soft_book and t[3]]
+    if len(soft) < 2:
+        return None
+    cur = soft[-1]
+    prev = next((t for t in reversed(soft[:-1]) if (t[2], t[3]) != (cur[2], cur[3])), None)
+    if prev is None:
+        return None
+    lb = _v13_line_better(market, outcome, prev[2], cur[2])
+    if lb < 0:
+        return None
+    d_soft = (1 / float(prev[3]) - 1 / float(cur[3])) if lb == 0 else SOFT_LED_PP * 2   # + = cheaper for us
+    if d_soft < SOFT_LED_PP:
+        return None
+    sharp = [t for t in ticks if t[1] == sharp_book and t[3]]
+    before = [t for t in sharp if t[0] <= prev[0]] or sharp[:1]
+    if not sharp or not before:
+        d_sharp, sl = 0.0, 0
+    else:
+        a, b = before[-1], sharp[-1]
+        sl = _v13_line_better(market, outcome, a[2], b[2])
+        d_sharp = SOFT_LED_PP * 2 if sl > 0 else (1 / float(a[3]) - 1 / float(b[3])) if sl == 0 else -1.0
+    if d_sharp >= SOFT_LED_RATIO * d_soft:
+        return None
+    t_prev = _v13_ts(cur[0])
+    ago = f"{(now - t_prev).total_seconds() / 60:.0f}m" if t_prev else "?"
+    what = "line" if lb > 0 else f"{d_soft * 100:.1f}pp"
+    return f"soft book led: {soft_book} moved {what} our way ({ago} ago), {sharp_book} {max(d_sharp, 0) * 100:.1f}pp"
+
+
+def _v13_wrap_fresh():
+    jl = _v13_sys.modules.get("jerry_live")
+    if jl is None or getattr(jl, "_v13_fresh", False) or not hasattr(jl, "fresh_check"):
+        return False
+    orig = jl.fresh_check
+
+    def fresh_check(con, event_id, market, sharp_book, soft_book, now):
+        why = orig(con, event_id, market, sharp_book, soft_book, now)
+        if why or not SOFT_LED_ON:
+            return why
+        try:
+            f = _v13_sys._getframe(1)                                 # price_edges(): the row being checked
+            r = f.f_locals.get("r")
+            if r is None:
+                return None
+            _V13["checked"] += 1
+            led = soft_led(con, event_id, market, r["outcome"], f.f_locals.get("player") or "", soft_book, sharp_book, now)
+            if led:
+                _V13["soft_led"] += 1
+                _V13["last"] = f"{now.isoformat(timespec='minutes')} {r['player'] or market} {r['outcome']}: {led}"
+            return led
+        except Exception as e:                                         # noqa: BLE001
+            _V13["last"] = f"check failed: {str(e)[:100]}"
+            return None
+
+    jl.fresh_check, jl._v13_fresh = fresh_check, True
+    return True
+
+
+# ---------------------------------------------------------------- steam holdout + plays gate
+def _v13_split(rows, k="steam"):
+    vals = [(r[2].get(k), r) for r in rows if isinstance(r[2].get(k), (int, float))]
+    hi = [r for v, r in vals if v > 0]
+    lo = [r for v, r in vals if v <= 0]
+    if len(hi) < 8 or len(lo) < 8:
+        return None
+    def st(rs):
+        return (sum(y - f for y, f, _s, _b in rs) / len(rs), sum(f * (1 - f) for _y, f, _s, _b in rs) / len(rs) ** 2)
+    eh, vh = st(hi)
+    el, vl = st(lo)
+    z = (eh - el) / _v13_math.sqrt(vh + vl) if vh + vl > 0 else 0.0
+    return {"n": len(vals), "n_hi": len(hi), "eh": eh, "el": el, "z": z}
+
+
+def steam_holdout(con, now):
+    con.execute("""create table if not exists v13_steam(k text primary key, frozen_ts text, status text, z_hold real,
+                   n_hold int, decided_ts text)""")
+    row = con.execute("select * from v13_steam where k='steam'").fetchone()
+    if row is None:
+        con.execute("insert into v13_steam values('steam', ?, 'holdout', null, 0, null)", (now.isoformat(timespec="seconds"),))
+        con.commit()
+        row = con.execute("select * from v13_steam where k='steam'").fetchone()
+    if row["status"] != "holdout":
+        return row["status"], row
+    hold = getattr(_v13_sys.modules.get("kronos_fix"), "_holdout_rows", None)
+    if hold is None:
+        return "holdout", row
+    rows = [r for r in hold(con, row["frozen_ts"]) if isinstance(r[2].get("steam"), (int, float))]
+    sp = _v13_split(rows)
+    hn = (_v13_sys.modules.get("kronos_fix").HOLDOUT_N if hasattr(_v13_sys.modules.get("kronos_fix"), "HOLDOUT_N") else 100)
+    hz = getattr(_v13_sys.modules.get("kronos_fix"), "HOLDOUT_Z", 1.65)
+    if len(rows) < hn or sp is None:
+        con.execute("update v13_steam set n_hold=? where k='steam'", (len(rows),))
+        con.commit()
+        return "holdout", con.execute("select * from v13_steam where k='steam'").fetchone()
+    status = "passed" if sp["z"] >= hz else "failed"
+    con.execute("update v13_steam set status=?, z_hold=?, n_hold=?, decided_ts=? where k='steam'",
+                (status, round(sp["z"], 2), len(rows), now.isoformat(timespec="seconds")))
+    con.commit()
+    if status == "passed":
+        _v13_tg(f"KRONOS: steam passed its holdout (z {sp['z']:+.1f} on {len(rows)} new bets). Plays now require steam.")
+    return status, con.execute("select * from v13_steam where k='steam'").fetchone()
+
+
+def _v13_tg(text):
+    try:
+        fn = getattr(_v13_sys.modules.get("kronos_fix"), "TG", None)
+        return bool(fn and fn(text))
+    except Exception:                                                  # noqa: BLE001
+        return False
+
+
+def _v13_steam_on(con, p):
+    jr = _v13_sys.modules.get("jerry_reason")
+    if jr is None:
+        return False
+    s = jr.sharp_signal(con, p["event_id"], p["market"], p["outcome"], p.get("player") or "")
+    return ((s or {}).get("steam_for") or 0) - ((s or {}).get("steam_against") or 0) > 0
+
+
+def _v13_wrap_plays():
+    kf = _v13_sys.modules.get("kronos_fix")
+    if kf is None or getattr(kf, "_v13_plays", False):
+        return False
+    orig = kf.build_plays
+
+    def build_plays(con, now=None):
+        plays, paper_n = orig(con, now)
+        if not STEAM_GATE_ON:
+            return plays, paper_n
+        try:
+            r = con.execute("select status from v13_steam where k='steam'").fetchone()
+        except Exception:                                              # noqa: BLE001
+            r = None
+        if not r or r[0] != "passed":
+            return plays, paper_n
+        keep = [p for p in plays if _v13_steam_on(con, p)]
+        kf.STATUS.setdefault("last_build", {})["no_steam"] = len(plays) - len(keep)
+        return keep, paper_n + (len(plays) - len(keep))
+
+    kf.build_plays, kf._v13_plays = build_plays, True
+    return True
+
+
+def steam_split_lines(con):
+    """Steam vs no steam on graded paper price edges, per market group (what the holdout is testing)."""
+    out = []
+    groups = {}
+    for b in con.execute("""select result, fair_prob, price, signals, sport, market from bets where paper=1 and result in ('W','L')
+                            and signals is not null and evidence_kind in ('price','price_adj')"""):
+        try:
+            sg = _v13_json.loads(b["signals"])
+        except Exception:                                              # noqa: BLE001
+            continue
+        if not isinstance(sg.get("steam"), (int, float)) or not b["fair_prob"]:
+            continue
+        g = f"{b['sport']} {'props' if str(b['market']).startswith('player_') else 'game lines'}"
+        side = "steam" if sg["steam"] > 0 else "no steam"
+        a = groups.setdefault((g, side), [0, 0, 0.0, 0.0])
+        a[0] += 1
+        a[1] += b["result"] == "W"
+        a[2] += float(b["fair_prob"])
+        a[3] += (float(b["price"]) - 1) if b["result"] == "W" else -1.0
+    for (g, side), (n, w, f, u) in sorted(groups.items()):
+        if n >= 5:
+            out.append(f"    {g} · {side}: {w}-{n - w} | hit {w / n:.0%} vs fair {f / n:.0%} | {u:+.1f}u | ROI {u / n:+.1%} (n {n})")
+    return out or ["    not enough graded price edges with a steam reading yet"]
+
+
+def fair_bias_lines(con):
+    """Does 'fair' over-rate our side? Graded candidate edges: hit rate minus fair, overall and by sport/type."""
+    if not con.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        return ["    no candidate log"]
+    rows = con.execute("""select sport, player, fair, result from candidates where result in ('W','L') and fair>0""").fetchall()
+    out, groups = [], {"all flagged edges": rows}
+    for r in rows:
+        groups.setdefault(f"{r['sport']} {'props' if r['player'] else 'game lines'}", []).append(r)
+    for g, rs in groups.items():
+        if len(rs) < 30:
+            continue
+        n = len(rs)
+        bias = sum((r["result"] == "W") - float(r["fair"]) for r in rs) / n
+        se = _v13_math.sqrt(sum(float(r["fair"]) * (1 - float(r["fair"])) for r in rs)) / n
+        out.append(f"    {g}: hit minus fair {bias * 100:+.1f}pp ± {se * 100:.1f} (n {n})"
+                   + (" — fair over-rates our side; an edge smaller than this is noise" if bias < -2 * se else ""))
+    return out or ["    under 30 graded candidates"]
+
+
+# ---------------------------------------------------------------- cleanup + loop + feed block
+def _v13_cleanup(con, now):
+    n_q = con.execute("""delete from grade_quarantine where bet_id in (select id from bets where coalesce(result,'pending')<>'pending')""").rowcount \
+        if con.execute("select 1 from sqlite_master where name='grade_quarantine'").fetchone() else 0
+    cut = (now - _v13_td(days=3)).isoformat(timespec="seconds")
+    old = [r[0] for r in con.execute("select k, v from meta where k like 'error_%'").fetchall()
+           if (_v13_ts(str(r[1])[:25].split(" ")[0]) or now) < _v13_ts(cut)]
+    for k in old:
+        con.execute("delete from meta where k=?", (k,))
+    con.commit()
+    return f"{now.isoformat(timespec='minutes')} cleared {n_q} settled quarantine rows, {len(old)} old errors"
+
+
+def _v13_pass():
+    now = _v13_dt.now(_V13_UTC)
+    c = _v13_db()
+    try:
+        _V13["cleanup"] = _v13_cleanup(c, now)
+        st, row = steam_holdout(c, now)
+        n_hold = row["n_hold"] if row is not None else 0
+        hn = getattr(_v13_sys.modules.get("kronos_fix"), "HOLDOUT_N", 100)
+        _V13["steam"] = {"holdout": f"holdout {n_hold}/{hn} new graded bets since {row['frozen_ts'][:16]}Z; plays do not require steam yet",
+                         "passed": f"PASSED (z {row['z_hold']:+.1f} on {row['n_hold']} new bets): plays require steam",
+                         "failed": f"failed holdout (z {row['z_hold']:+.1f} on {row['n_hold']} new bets): steam stays a logged signal only"
+                         }.get(st, st) if row is not None else st
+        _V13["steam_split"] = steam_split_lines(c)
+        _V13["bias"] = fair_bias_lines(c)
+    finally:
+        c.close()
+
+
+def _v13_loop():
+    for _ in range(120):                                               # modules register at start-up
+        if _v13_wrap_fresh() | _v13_wrap_plays():
+            pass
+        if getattr(_v13_sys.modules.get("jerry_live"), "_v13_fresh", False) and \
+                getattr(_v13_sys.modules.get("kronos_fix"), "_v13_plays", False):
+            break
+        _v13_time.sleep(5)
+    print(f"[v1.3] soft-led check {'on' if getattr(_v13_sys.modules.get('jerry_live'), '_v13_fresh', False) else 'NOT INSTALLED'}, "
+          f"steam gate {'on' if getattr(_v13_sys.modules.get('kronos_fix'), '_v13_plays', False) else 'NOT INSTALLED'}", flush=True)
+    _v13_time.sleep(120)
+    while True:
+        try:
+            _v13_pass()
+        except Exception as e:                                         # noqa: BLE001
+            _V13["cleanup"] = f"pass failed: {str(e)[:150]}"
+            print(f"[v1.3] pass failed: {e}", flush=True)
+        _v13_time.sleep(1800)
+
+
+def _v13_block():
+    L_ = ["", "", f"FIX v1.3 ({V13}; price version locked at price-v9, filters no longer reset the 150-bet clock):",
+          f"  soft-book-led stop: {'on' if SOFT_LED_ON else 'off (SOFT_LED=0)'} | stopped {_V13['soft_led']} of {_V13['checked']} "
+          f"edges checked since start | last: {_V13['last'] or 'none yet'}",
+          f"  steam holdout: {_V13['steam']}",
+          "  steam vs no steam (graded paper price edges):"]
+    L_ += _V13["steam_split"]
+    L_.append("  is 'fair' honest? (graded candidate edges; negative = the soft book was right more often than fair said):")
+    L_ += _V13["bias"]
+    L_.append(f"  cleanup: {_V13['cleanup']}")
+    return "\n".join(L_) + "\n"
+
+
+_orig_edge_block_v13 = _edge_block
+
+
+def _edge_block():
+    try:
+        return _v13_block() + _orig_edge_block_v13()
+    except Exception as _e:                                            # noqa: BLE001
+        return f"\n\nFIX v1.3: block failed ({str(_e)[:120]})\n" + _orig_edge_block_v13()
+
+
+_v13_thr.Thread(target=_v13_loop, daemon=True).start()
+print(f"[v1.3] {V13} loaded", flush=True)
 
 
 if __name__ == "__main__":
