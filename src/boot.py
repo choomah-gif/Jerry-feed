@@ -11003,7 +11003,7 @@ import json as _v13_json, math as _v13_math, os as _v13_os, sys as _v13_sys, thr
 import sqlite3 as _v13_sql
 from datetime import datetime as _v13_dt, timedelta as _v13_td, timezone as _v13_tz
 
-V13 = "fix-v1.3-2026-11-19"
+V13 = "fix-v1.3.1-2026-11-21"
 _V13_UTC = _v13_tz.utc
 SOFT_LED_ON = _v13_os.environ.get("SOFT_LED", "1") != "0"
 SOFT_LED_PP = float(_v13_os.environ.get("SOFT_LED_PP", "0.015"))      # soft book's move toward our side
@@ -11256,16 +11256,35 @@ def _v13_pass():
     now = _v13_dt.now(_V13_UTC)
     c = _v13_db()
     try:
-        _V13["cleanup"] = _v13_cleanup(c, now)
-        st, row = steam_holdout(c, now)
-        n_hold = row["n_hold"] if row is not None else 0
-        hn = getattr(_v13_sys.modules.get("kronos_fix"), "HOLDOUT_N", 100)
-        _V13["steam"] = {"holdout": f"holdout {n_hold}/{hn} new graded bets since {row['frozen_ts'][:16]}Z; plays do not require steam yet",
-                         "passed": f"PASSED (z {row['z_hold']:+.1f} on {row['n_hold']} new bets): plays require steam",
-                         "failed": f"failed holdout (z {row['z_hold']:+.1f} on {row['n_hold']} new bets): steam stays a logged signal only"
-                         }.get(st, st) if row is not None else st
-        _V13["steam_split"] = steam_split_lines(c)
-        _V13["bias"] = fair_bias_lines(c)
+        # v1.3.1: each step runs on its own, so one failure no longer blanks the others
+        def _step(key, fn):
+            try:
+                _V13[key] = fn()
+            except Exception as e:                                     # noqa: BLE001
+                _V13[key] = f"{key} failed: {str(e)[:150]}" if key in ("cleanup", "steam") else [f"    failed: {str(e)[:150]}"]
+                print(f"[v1.3] {key} failed: {e}", flush=True)
+
+        def _steam_status():
+            st, row = steam_holdout(c, now)
+            if row is None:
+                return st
+            n_hold = row["n_hold"] or 0
+            hn = getattr(_v13_sys.modules.get("kronos_fix"), "HOLDOUT_N", 100)
+            z = row["z_hold"]
+            zs = f"z {z:+.1f}" if isinstance(z, (int, float)) else "z n/a"
+            # build only the message for the current status (z is null while the holdout is still filling)
+            if st == "holdout":
+                return f"holdout {n_hold}/{hn} new graded bets since {str(row['frozen_ts'])[:16]}Z; plays do not require steam yet"
+            if st == "passed":
+                return f"PASSED ({zs} on {n_hold} new bets): plays require steam"
+            if st == "failed":
+                return f"failed holdout ({zs} on {n_hold} new bets): steam stays a logged signal only"
+            return st
+
+        _step("cleanup", lambda: _v13_cleanup(c, now))
+        _step("steam", _steam_status)
+        _step("steam_split", lambda: steam_split_lines(c))
+        _step("bias", lambda: fair_bias_lines(c))
     finally:
         c.close()
 
