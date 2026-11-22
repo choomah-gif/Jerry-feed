@@ -1,7 +1,7 @@
-KRONOS DESK SUMMARY  (generated 2026-11-22T21:15:07+00:00)
-credits left 5612 | budget/day 642 | spent today 696 | reset in 8.11d | backfill days {'NHL': 23}
-COLLECTOR: {"alive": true, "fenced_thread_alive": false, "generation": 1, "last_error": null, "last_finish": "2026-11-22T21:14:09+00:00", "last_heartbeat": "2026-11-22T21:14:09+00:00", "last_start": "2026-11-22T21:14:09+00:00", "restarts": 0, "stalled": false}
-CREDIT FORECAST: ~843/day over the last 3 days (NBA 293, NHL 220, NFL 203, EPL 120, UCL 5, UFC 2) -> ~6834 to reset vs 5612 left: SHORT by ~1222 — KRONOS will stretch pull intervals | 10 books
+KRONOS DESK SUMMARY  (generated 2026-11-22T21:25:09+00:00)
+credits left 5597 | budget/day 641 | spent today 711 | reset in 8.11d | backfill days {'NHL': 23}
+COLLECTOR: {"alive": true, "fenced_thread_alive": false, "generation": 1, "last_error": null, "last_finish": "2026-11-22T21:24:10+00:00", "last_heartbeat": "2026-11-22T21:24:10+00:00", "last_start": "2026-11-22T21:24:10+00:00", "restarts": 0, "stalled": false}
+CREDIT FORECAST: ~848/day over the last 3 days (NBA 293, NHL 220, NFL 208, EPL 120, UCL 5, UFC 2) -> ~6875 to reset vs 5597 left: SHORT by ~1278 — KRONOS will stretch pull intervals | 10 books
 UFC CARDS: 2026-11-22T15:27:39+00:00 [ESPN] 1 numbered cards: UFC 335: Oliveira vs. Lopes (7 fights)
 errors: {'error_props_EPL': '2026-11-21T14:00:22+00:00 HTTP Error 502: Bad Gateway', 'error_props_NHL': '2026-11-21T22:00:03+00:00 HTTP Error 429: Too Many Requests', 'error_NHL': '2026-11-21T18:30:38+00:00 HTTP Error 502: Bad Gateway', 'error_EPL': '2026-11-22T15:00:25+00:00 HTTP Error 502: Bad Gateway'}
 
@@ -16,7 +16,7 @@ UFC by fighter faded: {}
 RECENT BETS:
 
 PAPER LEDGER (every call auto-logged at 1u; the evidence for which markets have a real edge): 1696 rows
-all: {"n": 1696, "closed": 1087, "clv_pp_avg": -1.59, "beat_close_pct": 0.24, "graded": 1330, "record": "636-686-8", "units": -17.72, "roi": -0.024, "roi_90ci_by_game": [-0.0942, 0.0452, 247]}
+all: {"n": 1696, "closed": 1087, "clv_pp_avg": -1.59, "beat_close_pct": 0.24, "graded": 1333, "record": "637-688-8", "units": -17.72, "roi": -0.024, "roi_90ci_by_game": [-0.0942, 0.0452, 247]}
   EPL moneyline (model): {"n": 5, "closed": 3, "clv_pp_avg": 17.81, "beat_close_pct": 1.0, "graded": 5, "record": "1-4-0", "units": 1.04, "roi": 0.2971, "roi_90ci_by_game": null}
   EPL props (price edge): {"n": 6, "closed": 5, "clv_pp_avg": -1.01, "beat_close_pct": 0.4, "graded": 5, "record": "2-3-0", "units": 0.3, "roi": 0.06, "roi_90ci_by_game": null}
   EPL total (model): {"n": 7, "closed": 3, "clv_pp_avg": 0.11, "beat_close_pct": 0.333, "graded": 7, "record": "3-4-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
@@ -33,7 +33,7 @@ all: {"n": 1696, "closed": 1087, "clv_pp_avg": -1.59, "beat_close_pct": 0.24, "g
   NFL spread (model): {"n": 26, "closed": 26, "clv_pp_avg": -1.99, "beat_close_pct": 0.192, "graded": 26, "record": "17-9-0", "units": 7.65, "roi": 0.2942, "roi_90ci_by_game": [0.005, 0.5888, 25]}
   NFL spread (price edge): {"n": 3, "closed": 1, "clv_pp_avg": 2.79, "beat_close_pct": 1.0, "graded": 3, "record": "0-3-0", "units": -3.0, "roi": -1.0, "roi_90ci_by_game": null}
   NFL spread (price edge, line-adj): {"n": 1, "closed": 0, "clv_pp_avg": null, "beat_close_pct": null, "graded": 0, "record": "0-0-0", "units": 0, "roi": null, "roi_90ci_by_game": null}
-  NFL total (model): {"n": 80, "closed": 61, "clv_pp_avg": -1.78, "beat_close_pct": 0.197, "graded": 72, "record": "34-37-1", "units": -6.42, "roi": -0.2469, "roi_90ci_by_game": [-0.5477, 0.0565, 26]}
+  NFL total (model): {"n": 80, "closed": 61, "clv_pp_avg": -1.78, "beat_close_pct": 0.197, "graded": 75, "record": "35-39-1", "units": -6.42, "roi": -0.2469, "roi_90ci_by_game": [-0.5477, 0.0565, 26]}
   NFL total (price edge, line-adj): {"n": 1, "closed": 1, "clv_pp_avg": -0.17, "beat_close_pct": 0.0, "graded": 1, "record": "1-0-0", "units": 1.02, "roi": 1.02, "roi_90ci_by_game": null}
   NHL moneyline (model): {"n": 17, "closed": 16, "clv_pp_avg": -0.41, "beat_close_pct": 0.375, "graded": 17, "record": "8-9-0", "units": 0.03, "roi": 0.0035, "roi_90ci_by_game": [-0.3935, 0.4341, 17]}
   NHL props (price edge): {"n": 137, "closed": 69, "clv_pp_avg": 1.59, "beat_close_pct": 0.957, "graded": 135, "record": "64-71-0", "units": -14.87, "roi": -0.1101, "roi_90ci_by_game": [-0.2182, 0.0236, 64]}
@@ -46,7 +46,7 @@ all: {"n": 1696, "closed": 1087, "clv_pp_avg": -1.59, "beat_close_pct": 0.24, "g
   UFC moneyline (model): {"n": 3, "closed": 3, "clv_pp_avg": -4.57, "beat_close_pct": 0.0, "graded": 3, "record": "2-0-1", "units": 0.47, "roi": 0.3133, "roi_90ci_by_game": null}
  by model version (the 150-bet clock runs per version):
   epl-soccer-v1-2026-11-01: n 12 | CLV 8.96 | beat close 0.667 | 4-8-0 | 1.04u | ROI 0.2971
-  nfl-v3-anchor25-qbstatus-2026-10-26: n 42 | CLV -1.6 | beat close 0.13 | 17-16-1 | 0u | ROI None
+  nfl-v3-anchor25-qbstatus-2026-10-26: n 42 | CLV -1.6 | beat close 0.13 | 18-18-1 | 0u | ROI None
   nflprops-v2-paperonly-2026-10-26: n 598 | CLV -2.95 | beat close 0.051 | 140-147-0 | 0u | ROI None
   nhl-v3-goaliejson-2026-10-26: n 211 | CLV -1.79 | beat close 0.236 | 86-110-4 | -1.4u | ROI -0.0852
   pre-version (before 2026-10-26): n 441 | CLV -1.65 | beat close 0.216 | 197-218-1 | -8.41u | ROI -0.0237
@@ -67,7 +67,7 @@ all: {"n": 1696, "closed": 1087, "clv_pp_avg": -1.59, "beat_close_pct": 0.24, "g
   price edge 6%+: n 44 | CLV 2.84 | beat close 0.765 | 25-17-0 | 8.78u | ROI 0.209
  by hours before start when logged:
   1-6h: n 714 | CLV -2.34 | beat close 0.167 | 205-203-0 | 1.59u | ROI 0.0118
-  24h+: n 234 | CLV -0.5 | beat close 0.255 | 96-115-4 | 2.41u | ROI 0.1785
+  24h+: n 234 | CLV -0.5 | beat close 0.255 | 97-117-4 | 2.41u | ROI 0.1785
   6-24h: n 56 | CLV 0.32 | beat close 0.5 | 25-28-3 | 2.29u | ROI 0.0993
   <1h: n 251 | CLV 0.9 | beat close 0.675 | 113-122-0 | -15.6u | ROI -0.0732
 
@@ -76,7 +76,7 @@ PRICE EDGES (soft-book price beats Pinnacle fair; CT books):
 PRICE-EDGE PAPER (the working category; soft-book vs Pinnacle fair):
   n=495 closed=188 CLV=1.1 beat=0.782 graded=479 242-237-0 units=-6.33 ROI=-0.0132
 MODEL PAPER (projections vs market; currently losing to the close):
-  n=1201 closed=899 CLV=-2.15 beat=0.127 graded=851 394-449-8 units=-11.39 ROI=-0.0439
+  n=1201 closed=899 CLV=-2.15 beat=0.127 graded=854 395-451-8 units=-11.39 ROI=-0.0439
 
 MODEL EDGES (KRONOS models vs Pinnacle fair price; [flag] = where the sharp and public money is):
 NBA 2026-11-23T01:40Z Boston Celtics @ Golden State Warriors | >> Lean: Over 210.5 total points — KRONOS 77% vs market 50%
@@ -94,15 +94,6 @@ NBA 2026-11-23T01:40Z Boston Celtics @ Golden State Warriors | h2h  Golden State
 NBA 2026-11-23T00:10Z Orlando Magic @ Washington Wizards | >> Lean: Washington Wizards to win — KRONOS 43% vs market 35%
 NBA 2026-11-23T00:10Z Orlando Magic @ Washington Wizards | h2h  Washington Wizards  | model 43.3% fair 35.2% edge +8.1 | Lean Washington Wizards [SHARP · DROPPING · SHARP-LED DROP · PRICED IN] | NBA ratings margin -2.1
       why: Ratings margin -2.1 implies Washington Wizards 57% to win versus 65% at fair. Moneyline is colour only — no backtest, no graded history, and 16 games of data on the thinner side. Market read [SHARP · DROPPING · SHARP-LED DROP · PRICED IN]: pinnacle has moved toward it since open; sharp/steam alerts 17.3 for, 0.0 against; DraftKings 22% of bets / 37% of money; odds dropping: Pinnacle +9.3% since open, +0.0% in 1h, sharp-led; already priced in at CT books, do not chase. Sharp money agrees.
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | >> Avoid: Michael Mayer to score a TD — market 20%, KRONOS 14%. Overpriced to score — not a bet; keep him out of parlays.
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | player_anytime_td Michael Mayer Yes  | model 13.7% fair 19.5% edge -5.8 | AVOID Yes [AGAINST SHARP · THIN MARKET] | proj 0.0 (sd 0.0) from last 6 games x opp factor 0.96; raw model 3.0%, anchored 35%; ratio 2.63
-      why: Michael Mayer projects 0.03 touchdowns per game over his last 6 games on about 5 touches a week, shrunk toward a role prior of 0.08. That is 14% to score versus a de-vigged market of 20%. The disagreement is 2.63 error bands, past the point where the model's usual error explains it. The number on the other side was set by a book that can see red-zone role, goal-line committee, depth-chart position — none of which this model ingests. Falsifier: Michael Mayer scores. Market read [AGAINST SHARP · THIN MARKET]: sharp/steam alerts 0.0 for, 6.6 against. Caution: sharp money has moved the other way.
-NFL 2026-11-22T21:25Z Jacksonville Jaguars @ New York Giants | >> Avoid: Malik Nabers to score a TD — market 32%, KRONOS 27%. Overpriced to score — not a bet; keep him out of parlays.
-NFL 2026-11-22T21:25Z Jacksonville Jaguars @ New York Giants | player_anytime_td Malik Nabers Yes  | model 27.0% fair 32.2% edge -5.2 | AVOID Yes [AGAINST SHARP · THIN MARKET] | proj 0.2 (sd 0.0) from last 6 games x opp factor 0.88; raw model 17.4%, anchored 35%; ratio 1.11
-      why: Malik Nabers projects 0.19 touchdowns per game over his last 6 games on about 10 touches a week, shrunk toward a role prior of 0.24. That is 27% to score versus a de-vigged market of 32%. The disagreement is 1.11 error bands — larger than the model's typical miss, a half-unit Lean. The number on the other side was set by a book that can see red-zone role, goal-line committee, depth-chart position — none of which this model ingests. Falsifier: Malik Nabers scores. Market read [AGAINST SHARP · THIN MARKET]: sharp/steam alerts 1.0 for, 4.9 against. Caution: sharp money has moved the other way.
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | >> Avoid: Mike Washington Jr. to score a TD — market 20%, KRONOS 16%. Overpriced to score — not a bet; keep him out of parlays.
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | player_anytime_td Mike Washington Jr. Yes  | model 16.4% fair 19.8% edge -3.4 | AVOID Yes [NEUTRAL] | proj 0.1 (sd 0.0) from last 6 games x opp factor 0.96; raw model 10.2%, anchored 35%; ratio 0.84
-      why: Mike Washington Jr. projects 0.11 touchdowns per game over his last 6 games on about 11 touches a week, shrunk toward a role prior of 0.28. That is 16% to score versus a de-vigged market of 20%. The disagreement is 0.84 error bands: real but small, which caps this at a quarter-unit Lean. The number on the other side was set by a book that can see red-zone role, goal-line committee, depth-chart position — none of which this model ingests. Falsifier: Mike Washington Jr. scores. Market read [NEUTRAL]: no sharp or public signal yet.
 UCL 2026-11-24T20:00Z PSV Eindhoven @ Real Madrid | >> Lean: PSV Eindhoven to win — KRONOS 12% vs market 9%
 UCL 2026-11-24T20:00Z PSV Eindhoven @ Real Madrid | h2h  PSV Eindhoven  | model 11.9% fair 8.6% edge +3.3 | Lean PSV Eindhoven [NEUTRAL] | soccer-v1-2026-11-01 raw 0.196
       why: KRONOS soccer: xG 2.52-1.41; ratings att/def Real Madrid +0.60/+0.35, PSV Eindhoven +0.42/+0.12; games 68/58; set pieces: psv eindhoven 6.6 corners/game vs real madrid conceding 4.2 (+3% xG); likely scorers Kylian Mbappé 57%, Jude Bellingham 57%; model weight 0.30 Market read [NEUTRAL]: no sharp or public signal yet.
@@ -118,10 +109,6 @@ UCL 2026-11-24T20:00Z RC Lens @ RB Leipzig | h2h  RC Lens  | model 18.2% fair 16
 (models last refreshed: 2026-11-22T21:05:08+00:00 {"NFL": 126, "NFL_PROPS": 166, "NHL": 66, "UFC": 0, "PRICE": 0, "CARD": 0, "SPLITS": {"table_rows": 30, "article_rows": 0}, "LEARN": {"soccer_graded": 0, "trends": 72, "nfl": "2026-11-22T17:03:53+00:00 snaps 14097 | injuries 3481 | positional defense 512 rows"}, "MLB": 0, "GRADE": [{"week": 11, "graded": 0, "voided": 0, "quarantined": 0, "note": "nothing pending for this week"}], "FEEDS": {"NBA": {"games_ingested": 0, "backfill_days": 0, "injuries": 108, "graded": 0, "voided": 0, "quarantined": 0}, "NHL": {"games_ingested": 1, "backfill_days": 0, "injuries": 116, "graded": 0, "voided": 0, "quarantined": 0}}, "ROSTER": {"NFL": {"injuries": 800, "sched_calls": 3}, "NBA": {"injuries": 108, "sched_calls": 3}, "NHL": {"injuries": 116, "sched_calls": 3}}, "SOCCER": {"data": {"espn_calls": 0, "rows": 0, "europe_days_left": 0, "matches_on_file": 5726, "errors": []}, "fit": "cached 2026-11-22T18:04:21+00:00", "rows": 45, "matched": 9, "unmatched": ["LASK @ Bod\u00f8/Glimt"]}, "NBA": 36})
 
 KRONOS SPIN (KRONOS's own projection vs the market; EXPLOIT = gap >= 0.75 error bands; [flag] shows the sharp/public side, warnings show failed blind-spot checks):
-NFL 2026-11-22T21:25Z | KRONOS Las Vegas Raiders 15.3 @ Denver Broncos 27.0 | market 14.8-26.2 | gap margin +0.2 (0.02), total +1.3 (0.14)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj -0.5 margin -0.0 total; DEN: 1 skill/OL out (+0.5); LV: starting QB Kirk Cousins missed last game, not on this week's report (presu
-NFL 2026-11-22T21:25Z | KRONOS Jacksonville Jaguars 25.7 @ New York Giants 20.3 | market 25.5-19.5 | gap margin +0.6 (0.06), total +1.0 (0.11)
-      no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.5 margin -0.0 total; JAX: 1 skill/OL out (+0.5)
 NHL 2026-11-22T22:10Z | KRONOS Buffalo Sabres 2.8 @ Tampa Bay Lightning 4.2 | market total 6.5 | gap total +0.4 (0.23), home win 69% vs 67%
       no gap large enough to be a mispricing | xG 4.16-2.78; Dennis Hildeby (Confirmed) / goalie unconfirmed (team avg)
 NBA 2026-11-22T23:10Z | KRONOS Oklahoma City Thunder 116.0 @ Miami Heat 113.8 | market 113.5-117.5 | gap margin -6.2 (0.62), total -1.2 (0.09)
@@ -143,7 +130,7 @@ NBA 2026-11-23T01:10Z | KRONOS Indiana Pacers 107.0 @ New York Knicks 115.9 | ma
 NFL 2026-11-23T01:20Z | KRONOS Minnesota Vikings 20.5 @ San Francisco 49ers 25.7 | market 20.8-24.2 | gap margin +1.7 (0.18), total +1.2 (0.13)
       no gap large enough to be a mispricing | EPA ridge + rest; injury adj +0.5 margin -0.0 total; MIN: 1 skill/OL out (+0.5)
 NBA 2026-11-23T01:40Z | KRONOS Boston Celtics 113.6 @ Golden State Warriors 110.1 | market 109.5-101.0 | gap margin +5.0 (0.50), total +13.2 (0.95)
-      EXPLOIT CANDIDATE [RLM FADE · BIG MONEY]: Over totals, 0.95 error bands; pinnacle has moved away from it since open; sharp/steam alerts 6.9 for, 9.9 against; DraftKings 78% of bets / 99% of money; reverse line movement — the public is on it and the sharp book moved away | ridge ratings; games 17/17
+      EXPLOIT CANDIDATE [RLM FADE · BIG MONEY]: Over totals, 0.95 error bands; pinnacle has moved away from it since open; sharp/steam alerts 6.8 for, 9.7 against; DraftKings 78% of bets / 99% of money; reverse line movement — the public is on it and the sharp book moved away | ridge ratings; games 17/17
 EPL 2026-11-23T20:00Z | KRONOS Everton 1.1 @ Brentford 1.4 | market 1.3-1.5 | gap margin +0.0 (0.03), total -0.3 (0.22), home win 42% vs 42%
       no gap large enough to be a mispricing | xG 1.39-1.11; ratings att/def Brentford +0.33/+0.42, Everton +0.28/+0.44; games 48/48; likely scorers Thierno Barry 57%, Kiernan Dewsbury-Hall 24%
 NHL 2026-11-24T00:10Z | KRONOS Columbus Blue Jackets 2.9 @ New Jersey Devils 3.6 | market total 6.25 | gap total +0.2 (0.13), home win 64% vs 65%
@@ -269,51 +256,51 @@ SPIN SCORECARD (mean absolute error on completed games; lower is better):
 EPL: 21 games | margin KRONOS 1.33 vs market 1.45 | total KRONOS 1.43 vs market 1.54
 MLB: 3 games | margin KRONOS None vs market None | total KRONOS 1.73 vs market 1.67
 NBA: 186 games | margin KRONOS 11.67 vs market 10.74 | total KRONOS 15.47 vs market 14.55
-NFL: 49 games | margin KRONOS 9.64 vs market 9.73 | total KRONOS 10.42 vs market 10.35
+NFL: 52 games | margin KRONOS 9.31 vs market 9.43 | total KRONOS 10.39 vs market 10.29
 NHL: 185 games | margin KRONOS None vs market None | total KRONOS 1.89 vs market 1.9
 UCL: 17 games | margin KRONOS 2.02 vs market 1.92 | total KRONOS 1.63 vs market 1.58
 
 RECENT SIGNALS (Steam/Sharp/Move):
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  New York Giants 6.0->6.0 1.96->2.02 (pinnacle)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  Jacksonville Jaguars -6.0->-6.0 1.94->1.88 (pinnacle)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.37->1.35 (pinnacle)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  New York Giants 6.0->6.5 1.95->1.91 (espnbet)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  Jacksonville Jaguars -6.0->-6.5 1.87->1.91 (espnbet)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.36->1.34 (espnbet)
-2026-11-22T21:13:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | h2h  New York Giants None->None 3.37->3.5 (lowvig)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.36->1.34 (fanduel)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  New York Giants 6.0->6.0 1.88->1.94 (williamhill_us)
-2026-11-22T21:13:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  Jacksonville Jaguars -6.0->-6.0 1.93->1.88 (williamhill_us)
-2026-11-22T21:13:09+00:00 Move NFL Las Vegas Raiders @ Denver Broncos | spreads  Las Vegas Raiders 11.5->12.0 1.89->1.92 (betrivers)
-2026-11-22T21:13:09+00:00 Move NFL Las Vegas Raiders @ Denver Broncos | spreads  Denver Broncos -11.5->-12.0 1.89->1.88 (betrivers)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Shai Gilgeous-Alexander Under 3.5->3.5 2.12->2.3 (pinnacle)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Shai Gilgeous-Alexander Over 3.5->3.5 1.68->1.57 (pinnacle)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Isaiah Hartenstein Over 10.5->10.5 1.97->1.93 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Bam Adebayo Under 9.5->9.5 1.65->1.6 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Bam Adebayo Over 9.5->9.5 2.15->2.25 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_points Pelle Larsson Under 10.5->10.5 1.85->2.0 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_points Pelle Larsson Over 10.5->10.5 1.89->1.75 (pinnacle)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_points Davion Mitchell Under 14.5->14.5 1.93->1.83 (pinnacle)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_points Davion Mitchell Over 14.5->14.5 1.81->1.91 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Pelle Larsson Under 3.5->3.5 1.58->1.62 (pinnacle)
-2026-11-22T21:10:09+00:00 Sharp NBA Oklahoma City Thunder @ Miami Heat | player_assists Pelle Larsson Over 3.5->3.5 2.29->2.2 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Shai Gilgeous-Alexander Under 5.5->5.5 1.75->1.88 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Shai Gilgeous-Alexander Over 5.5->5.5 2.0->1.86 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Ajay Mitchell Under 4.5->4.5 1.74->1.94 (pinnacle)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Ajay Mitchell Over 4.5->4.5 2.02->1.8 (pinnacle)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Jared McCain Over 3.5->3.5 2.25->2.2 (espnbet)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_rebounds Giannis Antetokounmpo Over 12.5->12.5 1.91->1.95 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_points Pelle Larsson Under 10.5->10.5 1.83->1.87 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_points Pelle Larsson Over 10.5->10.5 1.91->1.87 (espnbet)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_points Ajay Mitchell Under 20.5->20.5 1.87->1.83 (espnbet)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_points Ajay Mitchell Over 20.5->20.5 1.87->1.91 (espnbet)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_points Bam Adebayo Over 20.5->19.5 1.91->1.8 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_points Giannis Antetokounmpo Under 26.5->26.5 1.95->1.91 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Aday Mara Under 2.5->2.5 1.59->1.62 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Aday Mara Over 2.5->2.5 2.3->2.2 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Jared McCain Over 2.5->2.5 2.25->2.2 (espnbet)
-2026-11-22T21:10:09+00:00 Move NBA Oklahoma City Thunder @ Miami Heat | player_assists Isaiah Hartenstein Over 4.5->4.5 2.15->2.1 (espnbet)
-2026-11-22T21:10:09+00:00 Steam NBA Oklahoma City Thunder @ Miami Heat | player_assists Giannis Antetokounmpo Under 6.5->5.5 1.62->2.15 (espnbet)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | totals  Under 45.0->44.0 1.9->1.99 (pinnacle)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | totals  Over 45.0->44.0 1.99->1.9 (pinnacle)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | h2h  New York Giants None->None 3.47->3.31 (pinnacle)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.35->1.38 (pinnacle)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.34->1.36 (espnbet)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.33->1.31 (lowvig)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | h2h  New York Giants None->None 3.47->3.63 (betonlineag)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.33->1.31 (betonlineag)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  New York Giants 6.0->6.5 1.94->1.88 (williamhill_us)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  Jacksonville Jaguars -6.0->-6.5 1.88->1.94 (williamhill_us)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | h2h  Jacksonville Jaguars None->None 1.36->1.34 (williamhill_us)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | totals  Under 45.5->44.5 1.89->1.92 (draftkings)
+2026-11-22T21:21:10+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | totals  Over 45.5->44.5 1.93->1.91 (draftkings)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  New York Giants 6.0->6.5 1.91->1.91 (draftkings)
+2026-11-22T21:21:10+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | spreads  Jacksonville Jaguars -6.0->-6.5 1.91->1.91 (draftkings)
+2026-11-22T21:21:10+00:00 Sharp NFL Las Vegas Raiders @ Denver Broncos | h2h  Denver Broncos None->None 1.17->1.19 (betfair_ex_eu)
+2026-11-22T21:21:10+00:00 Sharp NFL Las Vegas Raiders @ Denver Broncos | h2h  Las Vegas Raiders None->None 6.19->5.39 (pinnacle)
+2026-11-22T21:21:10+00:00 Sharp NFL Las Vegas Raiders @ Denver Broncos | h2h  Denver Broncos None->None 1.15->1.18 (pinnacle)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Under 10.5->8.5 1.84->1.86 (pinnacle)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Over 10.5->8.5 1.98->1.96 (pinnacle)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Cam Skattebo Under 54.5->54.5 2.14->2.09 (pinnacle)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Cam Skattebo Over 54.5->54.5 1.72->1.76 (pinnacle)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Under 12.5->7.5 1.62->1.95 (espnbet)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Over 12.5->7.5 2.25->1.8 (espnbet)
+2026-11-22T21:20:09+00:00 Move NFL Jacksonville Jaguars @ New York Giants | player_reception_yds Bhayshul Tuten Under 13.5->13.5 1.83->1.87 (espnbet)
+2026-11-22T21:20:09+00:00 Move NFL Jacksonville Jaguars @ New York Giants | player_reception_yds Bhayshul Tuten Over 13.5->13.5 1.91->1.87 (espnbet)
+2026-11-22T21:20:09+00:00 Move NFL Jacksonville Jaguars @ New York Giants | player_pass_tds Trevor Lawrence Over 1.5->1.5 1.65->1.62 (espnbet)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Under 10.5->8.5 1.92->1.88 (betrivers)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Over 10.5->8.5 1.83->1.85 (betrivers)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Cam Skattebo Under 56.5->57.5 1.88->1.88 (betonlineag)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Cam Skattebo Over 56.5->57.5 1.88->1.88 (betonlineag)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Under 10.5->8.5 1.88->1.88 (betonlineag)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Over 10.5->8.5 1.88->1.88 (betonlineag)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_reception_yds Josh Cameron Under 10.5->11.5 1.9->1.93 (betonlineag)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_reception_yds Josh Cameron Over 10.5->11.5 1.86->1.83 (betonlineag)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_anytime_td Malachi Fields Yes None->None 5.5->6.0 (betonlineag)
+2026-11-22T21:20:09+00:00 Sharp NFL Jacksonville Jaguars @ New York Giants | player_anytime_td Parker Washington Yes None->None 2.4->2.3 (betonlineag)
+2026-11-22T21:20:09+00:00 Move NFL Jacksonville Jaguars @ New York Giants | player_anytime_td Chris Rodriguez Jr. Yes None->None 3.6->3.4 (fanduel)
+2026-11-22T21:20:09+00:00 Move NFL Jacksonville Jaguars @ New York Giants | player_anytime_td Chris Rodriguez Jr. Yes None->None 3.7->3.5 (williamhill_us)
+2026-11-22T21:20:09+00:00 Steam NFL Jacksonville Jaguars @ New York Giants | player_rush_yds Devin Singletary Under 9.5->7.5 1.89->1.96 (draftkings)
 
 UPCOMING BOARD (Pinnacle or sharpest; decimal odds):
 NFL 2026-11-22T18:02:41Z New Orleans Saints @ Chicago Bears  id=3ea90704fb576633bd1e2fa5aafd9ea3
@@ -357,15 +344,15 @@ NFL 2026-11-22T21:05:00Z New York Jets @ Los Angeles Chargers  id=4b20b742b6168a
    TOTAL: Over 43.0 1.88 (open 40.0 1.92, best 1.91) / Under 43.0 2.02 (open 40.0 1.95, best 2.02)
    moves: {'Move': 218, 'Sharp': 118, 'Steam': 383}
 NFL 2026-11-22T21:25:00Z Las Vegas Raiders @ Denver Broncos  id=1940706a79cbcbafacdcbf231069716b
-   ML: Denver Broncos  1.15 (open 1.19, best 1.26) / Las Vegas Raiders  6.19 (open 5.02, best 6.4)
-   SPREAD: Denver Broncos -11.5 1.9 (open -10.0 1.96, best 1.94) / Las Vegas Raiders 11.5 2.0 (open 10.0 1.93, best 2.0)
-   TOTAL: Over 41.0 1.88 (open 40.0 1.93, best 1.93) / Under 41.0 2.02 (open 40.0 1.94, best 2.02)
-   moves: {'Move': 184, 'Sharp': 110, 'Steam': 225}
+   ML: Denver Broncos  1.18 (open 1.19, best 1.26) / Las Vegas Raiders  5.39 (open 5.02, best 6.28)
+   SPREAD: Denver Broncos -11.5 1.93 (open -10.0 1.96, best 1.95) / Las Vegas Raiders 11.5 1.98 (open 10.0 1.93, best 1.99)
+   TOTAL: Over 41.0 1.87 (open 40.0 1.93, best 1.93) / Under 41.0 2.02 (open 40.0 1.94, best 2.02)
+   moves: {'Move': 184, 'Sharp': 119, 'Steam': 228}
 NFL 2026-11-22T21:25:00Z Jacksonville Jaguars @ New York Giants  id=8ba112fabf4e87639338a5f437c5abfe
-   ML: Jacksonville Jaguars  1.35 (open 1.37, best 1.41) / New York Giants  3.47 (open 3.3, best 3.55)
-   SPREAD: Jacksonville Jaguars -6.0 1.88 (open -6.0 1.94, best 1.92) / New York Giants 6.0 2.02 (open 6.0 1.94, best 2.02)
-   TOTAL: Over 45.0 1.99 (open 46.5 1.93, best 1.99) / Under 45.0 1.9 (open 46.5 1.94, best 1.91)
-   moves: {'Move': 143, 'Sharp': 117, 'Steam': 179}
+   ML: Jacksonville Jaguars  1.38 (open 1.37, best 1.41) / New York Giants  3.31 (open 3.3, best 3.63)
+   SPREAD: Jacksonville Jaguars -6.0 1.91 (open -6.0 1.94, best 1.92) / New York Giants 6.0 2.0 (open 6.0 1.94, best 2.0)
+   TOTAL: Over 44.0 1.9 (open 46.5 1.93, best 1.9) / Under 44.0 1.99 (open 46.5 1.94, best 1.99)
+   moves: {'Move': 151, 'Sharp': 137, 'Steam': 200}
 NFL 2026-11-23T01:20:00Z Minnesota Vikings @ San Francisco 49ers  id=60e1d27b083a335b722c2c852ea85612
    ML: Minnesota Vikings  2.71 (open 2.37, best 2.74) / San Francisco 49ers  1.52 (open 1.65, best 1.56)
    SPREAD: Minnesota Vikings 3.5 2.01 (open 3.0 1.91, best 2.01) / San Francisco 49ers -3.5 1.9 (open -3.0 1.98, best 1.92)
@@ -702,7 +689,7 @@ UFC 2027-01-13T03:00:00Z Alex Pereira @ Sergey Pavlovich [UFC 335: Oliveira vs. 
    ML: Alex Pereira  2.69 (open 2.65, best 2.69) / Sergey Pavlovich  1.5 (open 1.51, best 1.5)
 
 FIX v1.3 (fix-v1.3.1-2026-11-21; price version locked at price-v9, filters no longer reset the 150-bet clock):
-  soft-book-led stop: on | stopped 207 of 1258 edges checked since start | last: 2026-11-22T21:10+00:00 Malik Nabers Under: soft book led: draftkings moved line our way (0m ago), pinnacle 0.0pp
+  soft-book-led stop: on | stopped 207 of 1261 edges checked since start | last: 2026-11-22T21:10+00:00 Malik Nabers Under: soft book led: draftkings moved line our way (0m ago), pinnacle 0.0pp
   steam holdout: holdout 16/100 new graded bets since 2026-11-20T03:59Z; plays do not require steam yet
   steam vs no steam (graded paper price edges):
     not enough graded price edges with a steam reading yet
@@ -785,16 +772,16 @@ PROBABILITY TRACK (prob-v2-2026-11-13; every 30 min): 2026-11-22T21:02:33+00:00 
   NBA 7:10 PM | Aaron Gordon Under 5.5 rebounds | 57% | last 10 8/10, season 10/14 | Chicago Bulls allows 0.87x league rebounds to forwards (n 16) | DK 1.74 / FD 1.62 | MISMATCH
 
 
-WATCHDOG (every 15 min; Telegram only when something is wrong): 2026-11-22T21:02:12+00:00 2 open, 0 message line(s) sent
+WATCHDOG (every 15 min; Telegram only when something is wrong): 2026-11-22T21:17:13+00:00 2 open, 0 message line(s) sent
   deploy: in sync with choomah-gif/Jerrybot@main (boot.py, jerry_desk.py, jerry_live.py)
-  OPEN since 2026-11-22T17:46Z: Credits run out early: ~661/day for 8.1 days needs 5372, only 5233 above the reserve.
-  OPEN since 2026-11-22T19:17Z: Stale prices: 11 of 16 edges inside the 2-hour play window were stopped by the freshness check in the last 2 h. If this holds, raise FRESH_SHARP_MAX_MIN to 20 in Railway.
+  OPEN since 2026-11-22T17:46Z: Credits run out early: ~661/day for 8.1 days needs 5365, only 5212 above the reserve.
+  OPEN since 2026-11-22T19:17Z: Stale prices: 13 of 17 edges inside the 2-hour play window were stopped by the freshness check in the last 2 h. If this holds, raise FRESH_SHARP_MAX_MIN to 20 in Railway.
 
 
 KRONOS FIX (rules-v2-2026-11-10: plays at DraftKings/FanDuel only, live-money gate, projection gate, alt/early paper, news credit priority, learning-layer cleanup, signal audit):
   patches: books ['jerry_reason.BET_BOOKS', 'kronos_ledger.CT_BOOKS', 'kronos_edge.CT', 'kronos_drops.CT_BOOKS']; ledger ok; learning ok; edge ok; rulebook 11 rules (v2); learning loop ok; desk ['BETTABLE', 'BACKFILL_SHARE', 'SHARP_EVERY']
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  last build 2026-11-22T21:15:08+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
+  last build 2026-11-22T21:25:10+00:00: 0 plays, 0 paper-only edges, 0 held by correlation caps
   PLAYS SCORECARD (every play sent): 34 plays | 16-18-0 | -0.42u | ROI -4.4% | pending 0
   PLAYS SENT (last 3 days, newest first):
   LIVE-MONEY GATE (rules v2: LIVE = 150+ closed bets with a valid CLV on the current price version and the 95% floor of mean CLV above 0; no pilot tier; everything else PAPER):
@@ -812,23 +799,23 @@ KRONOS FIX (rules-v2-2026-11-10: plays at DraftKings/FanDuel only, live-money ga
    UCL margin: off · projection not used for staking: KRONOS miss 2.02 vs market 1.92 over 17 games (needs 100+ games and a smaller miss than the market)
    UCL total: off · projection not used for staking: KRONOS miss 1.63 vs market 1.58 over 17 games (needs 100+ games and a smaller miss than the market)
   SIGNAL AUDIT (each signal's high half vs low half, measured as wins beyond what the price expected; |z| >= 2 is a real effect; NFL props model rows excluded):
-   steam: n 761 | beat the price by +6.2pp (high) vs -2.7pp (low) | z +2.2 REAL | CLV high vs low +0.35 vs -1.07
-   edge: n 1002 | beat the price by -3.4pp (high) vs +0.7pp (low) | z -1.3 | CLV high vs low +0.15 vs -0.92
-   drop_1h: n 923 | beat the price by -7.5pp (high) vs -0.3pp (low) | z -1.2 | CLV high vs low -0.42 vs -0.34
+   steam: n 764 | beat the price by +6.2pp (high) vs -2.8pp (low) | z +2.2 REAL | CLV high vs low +0.35 vs -1.08
+   edge: n 1005 | beat the price by -3.4pp (high) vs +0.6pp (low) | z -1.3 | CLV high vs low +0.15 vs -0.93
+   drop_1h: n 926 | beat the price by -7.5pp (high) vs -0.4pp (low) | z -1.2 | CLV high vs low -0.42 vs -0.35
    out_diff: n 302 | beat the price by +3.1pp (high) vs -2.6pp (low) | z +1.0 | CLV high vs low -1.47 vs -1.80
-   rlm: n 761 | beat the price by +5.2pp (high) vs -1.0pp (low) | z +0.9 | CLV high vs low -1.72 vs -0.65
-   shade_pp: n 559 | beat the price by +0.5pp (high) vs -2.9pp (low) | z +0.8 | CLV high vs low -2.06 vs -1.78
+   rlm: n 764 | beat the price by +5.2pp (high) vs -1.0pp (low) | z +0.9 | CLV high vs low -1.72 vs -0.66
    coach_ats: n 49 | beat the price by +16.4pp (high) vs +6.3pp (low) | z +0.7 | CLV high vs low -1.50 vs -2.16
+   shade_pp: n 561 | beat the price by +0.3pp (high) vs -2.7pp (low) | z +0.7 | CLV high vs low -2.05 vs -1.78
    is_fav: n 392 | beat the price by +1.7pp (high) vs -0.9pp (low) | z +0.5 | CLV high vs low -1.77 vs +2.43
+   drop_pct: n 905 | beat the price by +0.5pp (high) vs -1.2pp (low) | z +0.5 | CLV high vs low -0.23 vs -0.43
    rest_diff: n 296 | beat the price by -2.9pp (high) vs +0.1pp (low) | z -0.5 | CLV high vs low -1.73 vs -1.60
-   hours: n 1002 | beat the price by -0.5pp (high) vs -2.0pp (low) | z +0.5 | CLV high vs low -1.11 vs +0.19
-   drop_pct: n 902 | beat the price by +0.5pp (high) vs -1.2pp (low) | z +0.5 | CLV high vs low -0.23 vs -0.42
+   hours: n 1005 | beat the price by -0.6pp (high) vs -2.0pp (low) | z +0.4 | CLV high vs low -1.12 vs +0.19
    h2h_ats: n 24 | beat the price by +1.8pp (high) vs +8.9pp (low) | z -0.4 | CLV high vs low -1.30 vs -1.84
    role_ats: n 54 | beat the price by +5.1pp (high) vs +9.4pp (low) | z -0.3 | CLV high vs low -1.11 vs -2.04
    is_home: n 392 | beat the price by +1.0pp (high) vs -0.3pp (low) | z +0.3 | CLV high vs low +0.45 vs +0.10
    spot_ats: n 42 | beat the price by +6.4pp (high) vs +3.5pp (low) | z +0.2 | CLV high vs low -2.82 vs -0.87
    b2b_flag: n 296 | beat the price by -0.3pp (high) vs -1.1pp (low) | z +0.2 | CLV high vs low -1.62 vs -1.65
-   pin_led: n 923 | beat the price by -1.5pp (high) vs -0.8pp (low) | z -0.1 | CLV high vs low +1.39 vs -0.55
+   pin_led: n 926 | beat the price by -1.5pp (high) vs -0.9pp (low) | z -0.1 | CLV high vs low +1.39 vs -0.56
   LEARNING LOOP (fix-v1.2): sharp move = Pinnacle's no-vig price at start minus at flag time, on our side; it confirms an edge in ~100-200 bets where results need ~1,600.
    signal holdout (found on old bets, must repeat on the next 100 new ones): hours holdout 84/100 (found z -2.2)
    No calls logged yet. Log one: call Bears +3.5 1.84 conf 5
@@ -840,8 +827,8 @@ KRONOS FIX (rules-v2-2026-11-10: plays at DraftKings/FanDuel only, live-money ga
     NHL props (price edge): -0.35pp (n 84, 35% toward us, z -3.0)
    Signals in holdout: hours holdout 84/100
    No calls logged yet. Log one: call Bears +3.5 1.84 conf 5
-  alt (paper only, flat 1u): 229 picks | 49-43 | -5.82u | CLV not measured (no same-rung close)
-  early (paper only, flat 1u): 161 picks | 61-41 | +7.48u
+  alt (paper only, flat 1u): 229 picks | 49-44 | -6.82u | CLV not measured (no same-rung close)
+  early (paper only, flat 1u): 161 picks | 64-47 | +3.88u
 
 
 KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boost checker, alternate lines, early NFL scan):
@@ -849,7 +836,7 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   GAME CARD (checklist #15: play/sit/confidence, one line per game today; game lines only, logged 90 min before start; the prop shadow card is separate):
    no games locked yet today
   No plays right now. A play needs a DraftKings or FanDuel price 2%+ better than the sharp fair price, inside 2 hours of start, in a market the ledger has proven.
-  news scan: {"ts": "2026-11-22T21:10:19+00:00", "NFL": {"listed": 800, "new_outs": 0}, "NBA": {"listed": 108, "new_outs": 2}, "NHL": {"listed": 116, "new_outs": 0}}
+  news scan: {"ts": "2026-11-22T21:20:20+00:00", "NFL": {"listed": 800, "new_outs": 0}, "NBA": {"listed": 108, "new_outs": 0}, "NHL": {"listed": 116, "new_outs": 0}}
   2026-11-22T21:00:19+00:00 news NHL: KRONOS NEWS: Zemgus Girgensons (Tampa Bay Lightning) now listed Out | Buffalo Sabres @ Tampa Bay Lightning, Sun 5:10 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-22T20:30:17+00:00 news NBA: KRONOS NEWS: Nic Claxton (Chicago Bulls) now listed Out | Denver Nuggets @ Chicago Bulls, Sun 7:10 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-22T20:20:16+00:00 news NFL: KRONOS NEWS: Darius Alexander (New York Giants) now listed Out | Jacksonville Jaguars @ New York Giants, Sun 4:25 PM ET | Daily re-pull limit (6) reached; check prices by hand.
@@ -862,32 +849,11 @@ KRONOS EDGE (edge-v1-2026-11-01: BET tier on EV at CT prices, news re-pulls, boo
   2026-11-22T20:20:12+00:00 news NFL: KRONOS NEWS: Jalen Huskey (Jacksonville Jaguars) now listed Out | Jacksonville Jaguars @ New York Giants, Sun 4:25 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-22T20:20:12+00:00 news NFL: KRONOS NEWS: Albert Regis (Jacksonville Jaguars) now listed Out | Jacksonville Jaguars @ New York Giants, Sun 4:25 PM ET | Daily re-pull limit (6) reached; check prices by hand.
   2026-11-22T20:20:11+00:00 news NFL: KRONOS NEWS: CJ Williams (Jacksonville Jaguars) now listed Out | Jacksonville Jaguars @ New York Giants, Sun 4:25 PM ET | Daily re-pull limit (6) reached; check prices by hand.
-  alt: 229 picks, 49-43, -2.58u, CLV None
-  early: 161 picks, 61-41, +0.33u, CLV -2.18
+  alt: 229 picks, 49-44, -2.58u, CLV None
+  early: 161 picks, 64-47, +0.33u, CLV -2.18
 
 
 GAME CHECKLIST (checklist-v1-2026-11-01: the owner's 15-point analysis items with data behind them; trends shown as hits-losses, rate, n, against the 52.4% break-even; every trend is weight 0 until the learning layer proves it):
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | coaches Klint Kubiak @ Sean Payton | referee not published | nflverse line home 10.5, total 40.5
-   #5 Sean Payton ATS as favourite (last 3+ seasons): 21-14 (60%, n 35; break-even 52.4%; clears break-even)
-   #5 Klint Kubiak ATS as underdog (last 3+ seasons): 5-4 (56%, n 9; break-even 52.4%; small sample)
-   #5 coach H2H: Sean Payton and Klint Kubiak have not met in 10 seasons
-   #6 officials: crew not in the free data yet (nflverse fills referees in late); check the weekly assignment
-   #8 DEN ATS as home fav (last 3+ seasons): 16-9 (64%, n 25; break-even 52.4%; clears break-even)
-   #8 LV ATS as road dog (last 3+ seasons): 13-14 (48%, n 27; break-even 52.4%; below break-even)
-   #9 series: DEN straight up in the last 10 meetings: 4-6 (40%, n 10; break-even 52.4%; small sample)
-   #9 series: DEN ATS in the last 10 meetings: 2-8 (20%, n 10; break-even 52.4%; small sample)
-   #10 rhyme (weight 0, never moves a pick): 11/22 digits sum to 6
-NFL 2026-11-22T21:25Z Jacksonville Jaguars @ New York Giants | coaches Liam Coen @ John Harbaugh | referee not published | nflverse line home -6.0, total 45.5
-   #5 John Harbaugh ATS as underdog (last 3+ seasons): 7-6 (54%, n 13; break-even 52.4%; small sample)
-   #5 Liam Coen ATS as favourite (last 3+ seasons): 12-5 (71%, n 17; break-even 52.4%; small sample)
-   #5 coach H2H: John Harbaugh and Liam Coen have not met in 10 seasons
-   #6 officials: crew not in the free data yet (nflverse fills referees in late); check the weekly assignment
-   #7 JAX in a let-down (won by 14+) spot: league-wide ATS (10 seasons): 467-483 (49%, n 950; break-even 52.4%; below break-even)
-   #8 NYG ATS as home dog (last 3+ seasons): 14-12 (54%, n 26; break-even 52.4%; clears break-even)
-   #8 JAX ATS as road fav (last 3+ seasons): 8-5 (62%, n 13; break-even 52.4%; small sample)
-   #9 series: NYG straight up in the last 2 meetings: 1-1 (50%, n 2; break-even 52.4%; small sample)
-   #9 series: NYG ATS in the last 2 meetings: 1-1 (50%, n 2; break-even 52.4%; small sample)
-   #10 rhyme (weight 0, never moves a pick): 11/22 digits sum to 6, the same as the spread (6)
 NFL 2026-11-23T01:20Z Minnesota Vikings @ San Francisco 49ers | coaches Kevin O'Connell @ Kyle Shanahan | referee not published | nflverse line home 3.5, total 46.5
    #5 Kyle Shanahan ATS as favourite (last 3+ seasons): 28-24 (54%, n 52; break-even 52.4%; clears break-even)
    #5 Kevin O'Connell ATS as underdog (last 3+ seasons): 14-11 (56%, n 25; break-even 52.4%; clears break-even)
@@ -915,7 +881,7 @@ NFL 2026-11-24T01:15Z Cincinnati Bengals @ Washington Commanders | coaches Zac T
 
 
 KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match, logged 90 min before kickoff, graded free from ESPN; BET = +EV at a CT book (0.25/0.5/1u by EV), LEAN = 0u for learning):
-  model coverage next 48h: NFL 4/4 games (nfl-v4-anchor15-2026-11-05); NBA 6/6 games (nba-v1-2026-10-26); NHL 11/11 games (nhl-v3-goaliejson-2026-10-26); EPL 1/1 games (epl-soccer-v1-2026-11-01); UCL 8/9 games (ucl-soccer-v1-2026-11-01); UFC 0/0 games (ufc-v1-2026-10-24)
+  model coverage next 48h: NFL 2/2 games (nfl-v4-anchor15-2026-11-05); NBA 6/6 games (nba-v1-2026-10-26); NHL 11/11 games (nhl-v3-goaliejson-2026-10-26); EPL 1/1 games (epl-soccer-v1-2026-11-01); UCL 8/9 games (ucl-soccer-v1-2026-11-01); UFC 0/0 games (ufc-v1-2026-10-24)
   EPL model: 36 picks, 0 pending | 18-17-1 | +0.46u on 0.45u (+102.2%) | CLV avg 6.42pp, beat close 50%
   NBA market: 7 picks, 0 pending | 3-4-0 | +0.00u on 0.00u (n/a) | CLV avg -0.98pp, beat close 0%
   NBA model: 188 picks, 0 pending | 79-106-3 | -0.63u on 4.25u (-14.8%) | CLV avg -1.76pp, beat close 12%
@@ -925,7 +891,7 @@ KRONOS LEDGER (ledger-v2-2026-11-01: one pick per market for every tracked match
   UCL market: 3 picks, 0 pending | 0-2-1 | +0.00u on 0.00u (n/a) | CLV avg 2.62pp, beat close 67%
   UCL model: 51 picks, 0 pending | 18-32-1 | +0.00u on 0.00u (n/a) | CLV avg 8.55pp, beat close 74%
   by grade: B 1-1 -0.04u; BET 6-4 +0.21u; C 9-9 -0.52u; D 7-3 +0.35u; LEAN 266-250 +0.00u
-  last grading pass: 2026-11-22T21:08:04+00:00 {"due": 26, "graded": 13, "held_extra_time": 0}
+  last grading pass: 2026-11-22T21:18:04+00:00 {"due": 13, "graded": 13, "held_extra_time": 0}
   soccer model: {"data": {"espn_calls": 0, "rows": 0, "europe_days_left": 0, "matches_on_file": 5726, "errors": []}, "fit": "cached 2026-11-22T18:04:21+00:00", "rows": 45, "matched": 9, "unmatched": ["LASK @ Bod\u00f8/Glimt"]}
 
 
@@ -939,321 +905,290 @@ KRONOS MASTER (master-v1-2026-11-01: shared rulebook, roster + schedule layers, 
   backtest EPL: {"sport": "EPL", "seasons": ["2425", "2526", "2627"], "matches": 368, "log_loss": {"model": 0.9874, "market_close": 0.9747, "blend": 0.9753}, "picks_vs_open": {"n": 293, "clv_avg_pp": -0.8, "beat_close": 0.348, "roi_flat": 0.018}, "read": "market alone is still better than the blend; raw model worse than market by 0.0127 log loss", "ts": "2026-11-22T09:10:05+00:00"}
 
 
-DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-22T21:15:08+00:00; 28 sides):
+DROPPING ODDS (KRONOS's own 20-book tape, next 48h; odds drop % = (old-new)/old, positive = shortened; flag >=5%, heavy >=10%; computed 2026-11-22T21:25:10+00:00; 25 sides):
   rules: R1 only SHARP-LED drops count as sharp evidence; R2 RETAIL-ONLY drops are public money; R3 PRICED IN (best CT EV < 0) = do not chase; R4 act only on STALE CT PRICE (Pinnacle >=5% in 1h, CT EV >= +2%); R5 a drop on confirmed team news is information, not an edge
 EPL Mon 3:00PM ET Everton @ Brentford | h2h Everton to win | Pinnacle open +19.1% 1h +0.0% 6h +0.0% 24h +9.2% | all books open +9.7% 1h +0.0% (15 books) | NONE | best CT FanDuel 3.10 EV -4.2% | [HEAVY DROP · PRICED IN]
-NBA Sun 8:10PM ET Indiana Pacers @ New York Knicks | h2h Indiana Pacers to win | Pinnacle open +13.5% 1h +0.3% 6h +10.6% 24h +13.5% | all books open +15.6% 1h -0.1% (10 books) | SHARP-LED | best CT DraftKings 3.40 EV -5.1% | [HEAVY DROP · SHARP-LED DROP · PRICED IN]
+NBA Sun 8:10PM ET Indiana Pacers @ New York Knicks | h2h Indiana Pacers to win | Pinnacle open +13.5% 1h +0.0% 6h +10.6% 24h +13.5% | all books open +15.6% 1h +0.0% (10 books) | SHARP-LED | best CT DraftKings 3.40 EV -5.1% | [HEAVY DROP · SHARP-LED DROP · PRICED IN]
 NHL Sun 7:10PM ET Edmonton Oilers @ St Louis Blues | h2h St Louis Blues to win | Pinnacle open +7.1% 1h -0.5% 6h +5.2% 24h +7.1% | all books open +11.5% 1h -0.2% (9 books) | SHARP-LED | best CT DraftKings 1.80 EV -4.0% | [HEAVY DROP · SHARP-LED DROP · PRICED IN]
-NBA Sun 7:10PM ET Orlando Magic @ Washington Wizards | h2h Washington Wizards to win | Pinnacle open +9.3% 1h +0.0% 6h +2.1% 24h +9.3% | all books open +6.5% 1h -0.1% (10 books) | SHARP-LED | best CT FanDuel 2.66 EV -5.1% | [DROPPING · SHARP-LED DROP · PRICED IN]
+NBA Sun 7:10PM ET Orlando Magic @ Washington Wizards | h2h Washington Wizards to win | Pinnacle open +9.3% 1h +0.0% 6h +2.1% 24h +9.3% | all books open +6.5% 1h +0.0% (10 books) | SHARP-LED | best CT FanDuel 2.66 EV -5.1% | [DROPPING · SHARP-LED DROP · PRICED IN]
 NBA Sun 8:40PM ET Boston Celtics @ Golden State Warriors | h2h Golden State Warriors to win | Pinnacle open +6.5% 1h +0.0% 6h +1.3% 24h +6.5% | all books open +8.0% 1h +0.0% (10 books) | SHARP-LED | best CT FanDuel 3.85 EV -1.1% | [DROPPING · SHARP-LED DROP · PRICED IN]
 NFL Sun 8:20PM ET Minnesota Vikings @ San Francisco 49ers | h2h San Francisco 49ers to win | Pinnacle open +7.9% 1h +0.0% 6h +4.4% 24h +3.2% | all books open +1.9% 1h +0.0% (12 books) | SHARP-LED | best CT DraftKings 1.53 EV -2.0% | [DROPPING · SHARP-LED DROP · PRICED IN]
-NBA Sun 6:10PM ET Oklahoma City Thunder @ Miami Heat | h2h Miami Heat to win | Pinnacle open +6.4% 1h +0.0% 6h +1.2% 24h +6.4% | all books open +7.7% 1h +0.1% (10 books) | SHARP-LED | best CT DraftKings 1.58 EV -4.7% | [DROPPING · SHARP-LED DROP · PRICED IN]
+NBA Sun 6:10PM ET Oklahoma City Thunder @ Miami Heat | h2h Miami Heat to win | Pinnacle open +6.4% 1h +0.0% 6h +1.2% 24h +6.4% | all books open +7.7% 1h +0.0% (10 books) | SHARP-LED | best CT DraftKings 1.58 EV -4.7% | [DROPPING · SHARP-LED DROP · PRICED IN]
 UCL Tue 12:45PM ET LASK @ Bodø/Glimt | h2h LASK to win | Pinnacle open +7.4% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.9% 1h +0.0% (10 books) | NONE | best CT FanDuel 4.90 EV -4.4% | [DROPPING · PRICED IN]
 EPL Mon 3:00PM ET Everton @ Brentford | spreads Everton +0.25 | Pinnacle open +6.4% 1h +0.0% 6h +0.0% 24h +5.9% | all books open +6.4% 1h +0.0% (1 book) | NONE | line 0.5->0.25 | no CT price | [DROPPING · LINE MOVE]
-NBA Sun 8:10PM ET Indiana Pacers @ New York Knicks | totals Under 213.5 | Pinnacle open +5.5% 1h +0.5% 6h +5.5% 24h +5.5% | all books open +1.4% 1h +0.1% (8 books) | SHARP-LED | line 216.5->213.5 | best CT DraftKings 1.88 EV -3.3% | [DROPPING · SHARP-LED DROP · PRICED IN · LINE MOVE]
+NBA Sun 8:10PM ET Indiana Pacers @ New York Knicks | totals Under 213.5 | Pinnacle open +5.5% 1h +0.0% 6h +5.5% 24h +5.5% | all books open +1.4% 1h +0.0% (8 books) | SHARP-LED | line 216.5->213.5 | best CT DraftKings 1.88 EV -3.3% | [DROPPING · SHARP-LED DROP · PRICED IN · LINE MOVE]
 NHL Sun 7:10PM ET Edmonton Oilers @ St Louis Blues | spreads St Louis Blues -1.5 | Pinnacle open +5.4% 1h -0.3% 6h +5.1% 24h +5.4% | all books open +3.6% 1h -0.0% (9 books) | SHARP-LED | line 1.5->-1.5 | best CT DraftKings 3.10 EV -4.4% | [DROPPING · SHARP-LED DROP · PRICED IN · LINE MOVE]
-NFL Sun 4:25PM ET Las Vegas Raiders @ Denver Broncos | spreads Denver Broncos -11.5 | Pinnacle open +5.0% 1h +2.6% 6h +5.0% 24h +5.0% | all books open +1.8% 1h +1.5% (9 books) | SHARP-LED | line -10->-11.5 | best CT DraftKings 1.94 EV -0.5% | [DROPPING · SHARP-LED DROP · PRICED IN · LINE MOVE]
 NBA Sun 7:10PM ET Denver Nuggets @ Chicago Bulls | spreads Denver Nuggets -9.5 | Pinnacle open +5.0% 1h +0.0% 6h +5.0% 24h +5.0% | all books open +0.7% 1h +0.0% (7 books) | SHARP-LED | line -8.5->-9.5 | best CT DraftKings 1.87 EV -4.1% | [DROPPING · SHARP-LED DROP · PRICED IN · LINE MOVE]
-NFL Sun 4:25PM ET Las Vegas Raiders @ Denver Broncos | totals Over 41 | Pinnacle open +4.1% 1h +0.0% 6h +2.1% 24h +2.6% | all books open +0.7% 1h +0.0% (6 books) | SHARP-LED | line 40->41 | no CT price | [LINE MOVE]
 NBA Sun 8:40PM ET Boston Celtics @ Golden State Warriors | spreads Golden State Warriors +8.5 | Pinnacle open +2.0% 1h +0.0% 6h +2.0% 24h +2.0% | all books open +0.0% 1h +0.0% (9 books) | SHARP-LED | line 9.5->8.5 | best CT DraftKings 1.93 EV -2.3% | [LINE MOVE]
-NFL Sun 4:25PM ET Jacksonville Jaguars @ New York Giants | totals Under 45 | Pinnacle open +1.6% 1h +4.5% 6h +2.1% 24h +1.6% | all books open +0.1% 1h +0.8% (6 books) | MIXED | line 46.5->45 | no CT price | [LINE MOVE]
-NBA Sun 7:10PM ET Dallas Mavericks @ Utah Jazz | spreads Utah Jazz +1.5 | Pinnacle open +1.0% 1h +1.0% 6h +1.0% 24h +1.0% | all books open +1.2% 1h +0.1% (8 books) | SHARP-LED | line 2->1.5 | best CT DraftKings 1.94 EV -6.2% | [LINE MOVE]
+NBA Sun 7:10PM ET Dallas Mavericks @ Utah Jazz | spreads Utah Jazz +1.5 | Pinnacle open +1.0% 1h +0.0% 6h +1.0% 24h +1.0% | all books open +1.2% 1h +0.0% (8 books) | SHARP-LED | line 2->1.5 | best CT DraftKings 1.94 EV -6.2% | [LINE MOVE]
 NHL Mon 9:50PM ET Anaheim Ducks @ Seattle Kraken | totals Under 6.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +1.1% 1h +0.0% (8 books) | MIXED | line 7->6.5 | best CT DraftKings 2.05 EV -3.1% | [LINE MOVE]
 NFL Sun 8:20PM ET Minnesota Vikings @ San Francisco 49ers | totals Under 45 | Pinnacle open +0.5% 1h +0.0% 6h +0.5% 24h +0.5% | all books open +0.5% 1h +0.0% (1 book) | NONE | line 45.5->45 | no CT price | [LINE MOVE]
 NBA Sun 6:10PM ET Oklahoma City Thunder @ Miami Heat | spreads Miami Heat -4 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (4 books) | NONE | line -2.5->-4 | no CT price | [LINE MOVE]
 NBA Sun 7:10PM ET Denver Nuggets @ Chicago Bulls | totals Under 236.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (2 books) | NONE | line 237.5->236.5 | best CT FanDuel 1.89 EV -4.8% | [LINE MOVE]
-NBA Sun 7:10PM ET Orlando Magic @ Washington Wizards | spreads Washington Wizards +4.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open -0.1% 1h -0.1% (7 books) | NONE | line 5.5->4.5 | best CT DraftKings 1.95 EV -5.2% | [LINE MOVE]
+NBA Sun 7:10PM ET Orlando Magic @ Washington Wizards | spreads Washington Wizards +4.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open -0.1% 1h +0.0% (7 books) | NONE | line 5.5->4.5 | best CT DraftKings 1.95 EV -5.2% | [LINE MOVE]
 NBA Sun 7:10PM ET Orlando Magic @ Washington Wizards | totals Under 220 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (1 book) | NONE | line 221->220 | no CT price | [LINE MOVE]
 NBA Sun 7:10PM ET Dallas Mavericks @ Utah Jazz | totals Over 227 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (4 books) | NONE | line 225.5->227 | no CT price | [LINE MOVE]
 NBA Sun 8:10PM ET Indiana Pacers @ New York Knicks | spreads Indiana Pacers +7.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open +0.0% 1h +0.0% (9 books) | NONE | line 9.5->7.5 | best CT DraftKings 1.91 EV -3.3% | [LINE MOVE]
 NFL Sun 8:20PM ET Minnesota Vikings @ San Francisco 49ers | spreads San Francisco 49ers -3.5 | Pinnacle open +0.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open -1.5% 1h +0.0% (11 books) | MIXED | line -3->-3.5 | best CT FanDuel 1.91 EV -1.8% | [LINE MOVE]
 NFL Mon 8:15PM ET Cincinnati Bengals @ Washington Commanders | spreads Cincinnati Bengals -6.5 | Pinnacle open -2.0% 1h +0.0% 6h +0.0% 24h +0.0% | all books open -1.2% 1h +0.0% (8 books) | NONE | line -5.5->-6.5 | no CT price | [LINE MOVE]
 NFL Mon 8:15PM ET Cincinnati Bengals @ Washington Commanders | totals Over 55 | Pinnacle open -3.1% 1h +0.0% 6h -3.1% 24h -3.1% | all books open -1.3% 1h +0.0% (5 books) | NONE | line 53->55 | no CT price | [LINE MOVE]
-  telegram: 2026-11-22T21:00:19+00:00 ok
+  telegram: 2026-11-22T21:22:28+00:00 ok
 
 
-GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 119 sides; computed 2026-11-22T21:15:08+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
-NFL 2026-11-22T21:25Z Las Vegas Raiders @ Denver Broncos | KRONOS Las Vegas Raiders 15.3 @ Denver Broncos 27.0 | market margin +11.5 total 41.0
-  h2h Denver Broncos | sharp book 1.15 fair 86.0% | KRONOS 85.2% [Sit] | sim (raw projection) 81.6% | best CT draftkings 1.15 (EV -1.1%) | money [SHARP]
-      signals: drop_pct +4.7%, steam +3.50, rlm 0, shade_pp -2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -1.1%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.076, role_ats 0.159, spot_ats n/a, h2h_ats -0.3, ref_over n/a, out_diff -1, rest_diff 7, b2b_flag 0
-  h2h Las Vegas Raiders | sharp book 6.19 fair 14.0% | KRONOS 14.8% [see home row] | sim (raw projection) 18.4% | best CT fanduel 6 (EV -16.0%) | money [NEUTRAL]
-      signals: drop_pct -17.3%, steam -3.50, rlm 0, shade_pp +2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -16.0%, is_fav 0, is_home 0, drop_1h -0.025, pin_led 0, coach_ats 0.032, role_ats -0.159, spot_ats n/a, h2h_ats 0.3, ref_over n/a, out_diff 1, rest_diff -7, b2b_flag 0
-  spreads Denver Broncos -11.5 | sharp book 1.9 fair 51.3% | KRONOS 51.3% [Sit] | sim (raw projection) 50.6% | best CT draftkings 1.94 (EV -0.4%) | money [SHARP]
-      signals: drop_pct n/a, steam +25.50, rlm 0, shade_pp -3.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -0.4%, is_fav 1, is_home 1, drop_1h 0.026, pin_led 1, coach_ats 0.076, role_ats 0.159, spot_ats n/a, h2h_ats -0.3, ref_over n/a, out_diff -1, rest_diff 7, b2b_flag 0
-  spreads Las Vegas Raiders +11.5 | sharp book 2 fair 48.7% | KRONOS 48.7% [see home row] | sim (raw projection) 49.4% | best CT fanduel 1.91 (EV -7.0%) | money [AGAINST]
-      signals: drop_pct n/a, steam -25.50, rlm 0, shade_pp +3.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -7.0%, is_fav 0, is_home 0, drop_1h -0.026, pin_led 0, coach_ats 0.032, role_ats -0.159, spot_ats n/a, h2h_ats 0.3, ref_over n/a, out_diff 1, rest_diff -7, b2b_flag 0
-  totals Over 41 | sharp book 1.88 fair 51.9% | KRONOS 52.3% [see Under row] | sim (raw projection) 53.8% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +9.20, rlm 0, shade_pp -4.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -2.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
-  totals Under 41 | sharp book 2.02 fair 48.1% | KRONOS 47.7% [Sit] | sim (raw projection) 46.2% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam -9.20, rlm 0, shade_pp +4.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.7, hours 0.16, edge -2.8%, is_fav n/a, is_home n/a, drop_1h -0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
-      contradiction check: clear
-NFL 2026-11-22T21:25Z Jacksonville Jaguars @ New York Giants | KRONOS Jacksonville Jaguars 25.7 @ New York Giants 20.3 | market margin -6.0 total 45.0
-  h2h Jacksonville Jaguars | sharp book 1.35 fair 73.0% | KRONOS 71.0% [see home row] | sim (raw projection) 66.2% | best CT draftkings 1.38 (EV +0.7%) | money [SHARP]
-      signals: drop_pct +1.6%, steam +8.70, rlm 0, shade_pp -3.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge +0.7%, is_fav 1, is_home 0, drop_1h 0.007, pin_led 1, coach_ats 0.182, role_ats 0.077, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 0
-  h2h New York Giants | sharp book 3.47 fair 27.0% | KRONOS 29.0% [Sit (edge too large — check inputs)] | sim (raw projection) 33.8% | best CT fanduel 3.35 (EV -9.4%) | money [AGAINST]
-      signals: drop_pct -5.3%, steam -8.70, rlm 0, shade_pp +3.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge -9.4%, is_fav 0, is_home 1, drop_1h -0.015, pin_led 0, coach_ats 0.014, role_ats -0.077, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag 0
-  spreads Jacksonville Jaguars -6 | sharp book 1.88 fair 51.9% | KRONOS 50.0% [see home row] | sim (raw projection) 48.3% | best CT draftkings 1.91 (EV -0.9%) | money [SHARP]
-      signals: drop_pct +0.3%, steam +11.90, rlm 0, shade_pp -3.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge -0.9%, is_fav 1, is_home 0, drop_1h 0.021, pin_led 1, coach_ats 0.182, role_ats 0.077, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 0
-  spreads New York Giants +6 | sharp book 2.02 fair 48.1% | KRONOS 50.0% [Sit] | sim (raw projection) 51.7% | best CT draftkings 1.91 (EV -8.1%) | money [AGAINST]
-      signals: drop_pct -0.5%, steam -11.90, rlm 0, shade_pp +3.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge -8.1%, is_fav 0, is_home 1, drop_1h -0.015, pin_led 0, coach_ats 0.014, role_ats -0.077, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag 0
-  totals Over 45 | sharp book 1.99 fair 48.8% | KRONOS 49.3% [see Under row] | sim (raw projection) 53.1% | best CT no CT price | money [AGAINST]
-      signals: drop_pct +0.0%, steam -20.50, rlm 1, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge -2.9%, is_fav n/a, is_home n/a, drop_1h -0.047, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
-  totals Under 45 | sharp book 1.9 fair 51.2% | KRONOS 50.7% [Sit] | sim (raw projection) 46.9% | best CT no CT price | money [SHARP]
-      signals: drop_pct +0.0%, steam +20.50, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 6.3, hours 0.16, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0.045, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
-      contradiction check: clear
+GAME SIGNALS (all 22 KRONOS signals on both sides of every game line, every tracked game in the next 36h; 107 sides; computed 2026-11-22T21:25:10+00:00; signals still at weight 0 until graduated, so they inform but do not move prices; pick-time copy frozen 90 min before start; 0 pending paper bets given signals this pass):
 NHL 2026-11-22T22:10Z Buffalo Sabres @ Tampa Bay Lightning | KRONOS Buffalo Sabres 2.8 @ Tampa Bay Lightning 4.2
   h2h Buffalo Sabres | sharp book 2.93 fair 32.6% | KRONOS 31.5% [see home row] | sim (raw projection) 30.3% | best CT draftkings 2.7 (EV -12.0%) | money [NEUTRAL]
-      signals: drop_pct -1.9%, steam +7.70, rlm 0, shade_pp +3.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge -12.0%, is_fav 0, is_home 0, drop_1h -0.007, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
+      signals: drop_pct -1.9%, steam +7.50, rlm 0, shade_pp +3.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge -12.0%, is_fav 0, is_home 0, drop_1h -0.007, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
   h2h Tampa Bay Lightning | sharp book 1.46 fair 67.4% | KRONOS 68.5% [Sit (goalie unconfirmed)] | sim (raw projection) 69.7% | best CT fanduel 1.5 (EV +1.1%) | money [NEUTRAL]
-      signals: drop_pct +1.1%, steam -7.70, rlm 0, shade_pp -3.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge +1.1%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
+      signals: drop_pct +1.1%, steam -7.50, rlm 0, shade_pp -3.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge +1.1%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
   spreads Buffalo Sabres +1.5 | sharp book 1.75 fair 55.8% | KRONOS 54.7% [see home row] | sim (raw projection) 52.4% | best CT draftkings 1.7 (EV -5.1%) | money [AGAINST]
-      signals: drop_pct -1.1%, steam -2.00, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge -5.1%, is_fav 1, is_home 0, drop_1h -0.006, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
+      signals: drop_pct -1.1%, steam -1.90, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge -5.1%, is_fav 1, is_home 0, drop_1h -0.006, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
   spreads Tampa Bay Lightning -1.5 | sharp book 2.19 fair 44.2% | KRONOS 45.3% [Sit (goalie unconfirmed)] | sim (raw projection) 47.6% | best CT fanduel 2.22 (EV -1.9%) | money [SHARP]
-      signals: drop_pct +1.5%, steam +2.00, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge -1.9%, is_fav 0, is_home 1, drop_1h 0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
+      signals: drop_pct +1.5%, steam +1.90, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge -1.9%, is_fav 0, is_home 1, drop_1h 0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
   totals Over 6.5 | sharp book 1.96 fair 49.6% | KRONOS 51.1% [see Under row] | sim (raw projection) 54.1% | best CT fanduel 1.91 (EV -5.3%) | money [SHARP]
-      signals: drop_pct -0.3%, steam +7.50, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge -5.3%, is_fav n/a, is_home n/a, drop_1h 0.005, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -0.3%, steam +7.40, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge -5.3%, is_fav n/a, is_home n/a, drop_1h 0.005, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 1.93 fair 50.4% | KRONOS 48.9% [Sit (goalie unconfirmed)] | sim (raw projection) 45.9% | best CT draftkings 1.93 (EV -2.7%) | money [AGAINST]
-      signals: drop_pct +0.2%, steam -7.50, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.91, edge -2.7%, is_fav n/a, is_home n/a, drop_1h -0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.2%, steam -7.40, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 0.75, edge -2.7%, is_fav n/a, is_home n/a, drop_1h -0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-22T23:10Z Oklahoma City Thunder @ Miami Heat | KRONOS Oklahoma City Thunder 116.0 @ Miami Heat 113.8 | market margin +4.0 total 231.0
   h2h Miami Heat | sharp book 1.6 fair 60.9% | KRONOS 43.0% [Lean Oklahoma City Thunder] | sim (raw projection) 42.8% | best CT draftkings 1.58 (EV -3.8%) | money [SHARP]
-      signals: drop_pct +8.4%, steam +23.70, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 7, rest_diff 2, b2b_flag -1
+      signals: drop_pct +8.4%, steam +23.20, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 7, rest_diff 2, b2b_flag -1
   h2h Oklahoma City Thunder | sharp book 2.43 fair 39.1% | KRONOS 57.0% [see home row] | sim (raw projection) 57.2% | best CT draftkings 2.46 (EV -3.7%) | money [NEUTRAL]
-      signals: drop_pct -11.4%, steam -23.70, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.7%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -7, rest_diff -2, b2b_flag 1
+      signals: drop_pct -11.4%, steam -23.20, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.7%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -7, rest_diff -2, b2b_flag 1
   spreads Miami Heat -4 | sharp book 1.94 fair 49.9% | KRONOS 31.0% [Sit] | sim (raw projection) 30.3% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +19.20, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.3%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 7, rest_diff 2, b2b_flag -1
+      signals: drop_pct n/a, steam +18.90, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.3%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 7, rest_diff 2, b2b_flag -1
   spreads Oklahoma City Thunder +4 | sharp book 1.93 fair 50.1% | KRONOS 69.0% [see home row] | sim (raw projection) 69.7% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam -19.20, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -7, rest_diff -2, b2b_flag 1
+      signals: drop_pct n/a, steam -18.90, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -7, rest_diff -2, b2b_flag 1
   totals Over 231 | sharp book 1.9 fair 50.7% | KRONOS 47.4% [see Under row] | sim (raw projection) 47.2% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct -1.1%, steam +0.50, rlm 1, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -1.1%, steam +0.60, rlm 1, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 231 | sharp book 1.95 fair 49.3% | KRONOS 52.6% [Sit] | sim (raw projection) 52.8% | best CT no CT price | money [SHARP]
-      signals: drop_pct +2.6%, steam -0.50, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.91, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +2.6%, steam -0.60, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 1.75, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-23T00:10Z Denver Nuggets @ Chicago Bulls | KRONOS Denver Nuggets 117.9 @ Chicago Bulls 113.5 | market margin -9.5 total 236.5
   h2h Chicago Bulls | sharp book 4.32 fair 21.1% | KRONOS 36.1% [Lean Chicago Bulls] | sim (raw projection) 35.5% | best CT fanduel 4.6 (EV -2.9%) | money [AGAINST]
-      signals: drop_pct -12.7%, steam -20.00, rlm 0, shade_pp -2.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.9%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
+      signals: drop_pct -12.7%, steam -19.60, rlm 0, shade_pp -2.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.9%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
   h2h Denver Nuggets | sharp book 1.25 fair 78.9% | KRONOS 63.9% [see home row] | sim (raw projection) 64.5% | best CT draftkings 1.23 (EV -3.0%) | money [SHARP]
-      signals: drop_pct +4.1%, steam +20.00, rlm 0, shade_pp +2.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.0%, is_fav 1, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
+      signals: drop_pct +4.1%, steam +19.60, rlm 0, shade_pp +2.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.0%, is_fav 1, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
   spreads Chicago Bulls +9.5 | sharp book 2 fair 48.7% | KRONOS 65.7% [Sit] | sim (raw projection) 66.3% | best CT draftkings 1.95 (EV -5.1%) | money [AGAINST]
-      signals: drop_pct n/a, steam -21.00, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -5.1%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
+      signals: drop_pct n/a, steam -20.60, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -5.1%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
   spreads Denver Nuggets -9.5 | sharp book 1.9 fair 51.3% | KRONOS 34.3% [see home row] | sim (raw projection) 33.7% | best CT draftkings 1.87 (EV -4.0%) | money [SHARP]
-      signals: drop_pct n/a, steam +21.00, rlm 0, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -4.0%, is_fav 1, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
+      signals: drop_pct n/a, steam +20.60, rlm 0, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -4.0%, is_fav 1, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
   totals Over 236.5 | sharp book 1.96 fair 49.6% | KRONOS 38.8% [see Under row] | sim (raw projection) 38.2% | best CT fanduel 1.93 (EV -4.3%) | money [AGAINST]
-      signals: drop_pct n/a, steam -17.00, rlm 1, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -4.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -16.70, rlm 1, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -4.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 236.5 | sharp book 1.93 fair 50.4% | KRONOS 61.2% [Sit] | sim (raw projection) 61.8% | best CT fanduel 1.89 (EV -4.7%) | money [SHARP]
-      signals: drop_pct n/a, steam +17.00, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -4.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +16.70, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -4.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-23T00:10Z Orlando Magic @ Washington Wizards | KRONOS Orlando Magic 113.8 @ Washington Wizards 111.7 | market margin -4.5 total 220.0
   h2h Orlando Magic | sharp book 1.52 fair 64.8% | KRONOS 56.7% [see home row] | sim (raw projection) 57.0% | best CT draftkings 1.51 (EV -2.1%) | money [AGAINST]
-      signals: drop_pct -4.3%, steam -17.00, rlm 1, shade_pp -0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.1%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
+      signals: drop_pct -4.3%, steam -16.70, rlm 1, shade_pp -0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.1%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
   h2h Washington Wizards | sharp book 2.74 fair 35.2% | KRONOS 43.3% [Lean Washington Wizards] | sim (raw projection) 43.0% | best CT fanduel 2.66 (EV -6.4%) | money [SHARP]
-      signals: drop_pct +7.0%, steam +17.00, rlm 0, shade_pp +0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -6.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
+      signals: drop_pct +7.0%, steam +16.70, rlm 0, shade_pp +0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -6.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
   spreads Orlando Magic -4.5 | sharp book 1.9 fair 51.5% | KRONOS 42.5% [see home row] | sim (raw projection) 42.2% | best CT fanduel 1.88 (EV -3.3%) | money [NEUTRAL]
-      signals: drop_pct n/a, steam -11.80, rlm 1, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.3%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
+      signals: drop_pct n/a, steam -11.60, rlm 1, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.3%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
   spreads Washington Wizards +4.5 | sharp book 2.01 fair 48.5% | KRONOS 57.5% [Sit] | sim (raw projection) 57.8% | best CT draftkings 1.95 (EV -5.3%) | money [SHARP]
-      signals: drop_pct n/a, steam +11.80, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -5.3%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
+      signals: drop_pct n/a, steam +11.60, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -5.3%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 0, b2b_flag 1
   totals Over 220 | sharp book 2 fair 48.4% | KRONOS 62.1% [see Under row] | sim (raw projection) 62.8% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct n/a, steam -0.80, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -0.70, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 220 | sharp book 1.88 fair 51.6% | KRONOS 37.9% [Sit] | sim (raw projection) 37.2% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +0.80, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +0.70, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-23T00:10Z Dallas Mavericks @ Utah Jazz | KRONOS Dallas Mavericks 113.6 @ Utah Jazz 112.2 | market margin -1.5 total 227.0
   h2h Dallas Mavericks | sharp book 1.8 fair 54.5% | KRONOS 54.5% [see home row] | sim (raw projection) 54.6% | best CT draftkings 1.77 (EV -3.6%) | money [SHARP]
-      signals: drop_pct +2.0%, steam +7.40, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.6%, is_fav 1, is_home 0, drop_1h -0.011, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag -1
+      signals: drop_pct +2.0%, steam +7.20, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.6%, is_fav 1, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag -1
   h2h Utah Jazz | sharp book 2.14 fair 45.5% | KRONOS 45.5% [Sit] | sim (raw projection) 45.4% | best CT fanduel 2.12 (EV -3.5%) | money [AGAINST]
-      signals: drop_pct -2.7%, steam -7.40, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.5%, is_fav 0, is_home 1, drop_1h 0.009, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 1
+      signals: drop_pct -2.7%, steam -7.20, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.5%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 1
   spreads Dallas Mavericks -1.5 | sharp book 1.89 fair 51.7% | KRONOS 49.7% [see home row] | sim (raw projection) 49.7% | best CT draftkings 1.87 (EV -3.3%) | money [NEUTRAL]
-      signals: drop_pct -0.4%, steam +6.60, rlm 1, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.3%, is_fav 1, is_home 0, drop_1h -0.011, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag -1
+      signals: drop_pct -0.4%, steam +6.50, rlm 1, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.3%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 2, b2b_flag -1
   spreads Utah Jazz +1.5 | sharp book 2.02 fair 48.3% | KRONOS 50.3% [Sit] | sim (raw projection) 50.3% | best CT draftkings 1.94 (EV -6.3%) | money [NEUTRAL]
-      signals: drop_pct +0.6%, steam -6.60, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -6.3%, is_fav 0, is_home 1, drop_1h 0.01, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 1
+      signals: drop_pct +0.6%, steam -6.50, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -6.3%, is_fav 0, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff -2, b2b_flag 1
   totals Over 227 | sharp book 1.98 fair 49.1% | KRONOS 47.2% [see Under row] | sim (raw projection) 47.0% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +14.50, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +14.20, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 227 | sharp book 1.91 fair 50.9% | KRONOS 52.8% [Sit] | sim (raw projection) 53.0% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam -14.50, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -14.20, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-23T00:10Z Pittsburgh Penguins @ Dallas Stars | KRONOS Pittsburgh Penguins 2.7 @ Dallas Stars 3.6
   h2h Dallas Stars | sharp book 1.45 fair 67.8% | KRONOS 66.6% [Sit (goalie unconfirmed)] | sim (raw projection) 63.8% | best CT draftkings 1.43 (EV -3.0%) | money [SHARP]
-      signals: drop_pct +1.5%, steam +1.40, rlm 0, shade_pp +0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.0%, is_fav 1, is_home 1, drop_1h 0.007, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
+      signals: drop_pct +1.5%, steam +1.40, rlm 0, shade_pp +0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.0%, is_fav 1, is_home 1, drop_1h 0.007, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
   h2h Pittsburgh Penguins | sharp book 2.96 fair 32.2% | KRONOS 33.4% [see home row] | sim (raw projection) 36.2% | best CT draftkings 2.9 (EV -6.7%) | money [AGAINST]
-      signals: drop_pct -2.7%, steam -1.40, rlm 0, shade_pp -0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -6.7%, is_fav 0, is_home 0, drop_1h -0.01, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
+      signals: drop_pct -2.7%, steam -1.40, rlm 0, shade_pp -0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -6.7%, is_fav 0, is_home 0, drop_1h -0.01, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
   spreads Dallas Stars -1.5 | sharp book 2.12 fair 45.6% | KRONOS 43.5% [Sit (goalie unconfirmed)] | sim (raw projection) 39.9% | best CT draftkings 2.1 (EV -4.3%) | money [SHARP]
-      signals: drop_pct +1.1%, steam +1.40, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -4.3%, is_fav 0, is_home 1, drop_1h 0.009, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
+      signals: drop_pct +1.1%, steam +1.40, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -4.3%, is_fav 0, is_home 1, drop_1h 0.009, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff 1, b2b_flag -1
   spreads Pittsburgh Penguins +1.5 | sharp book 1.79 fair 54.4% | KRONOS 56.5% [see home row] | sim (raw projection) 60.1% | best CT draftkings 1.77 (EV -3.7%) | money [AGAINST]
-      signals: drop_pct -1.0%, steam -1.40, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.7%, is_fav 1, is_home 0, drop_1h -0.006, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
+      signals: drop_pct -1.0%, steam -1.40, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.7%, is_fav 1, is_home 0, drop_1h -0.006, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 0, rest_diff -1, b2b_flag 1
   totals Over 6 | sharp book 1.85 fair 52.7% | KRONOS 52.2% [see Under row] | sim (raw projection) 43.2% | best CT no CT price | money [SHARP]
-      signals: drop_pct +0.9%, steam 0, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.6%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.9%, steam 0, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.6%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6 | sharp book 2.05 fair 47.3% | KRONOS 47.8% [Sit (goalie unconfirmed)] | sim (raw projection) 40.8% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct -1.2%, steam 0, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.0%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -1.2%, steam 0, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.0%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-23T00:10Z Edmonton Oilers @ St Louis Blues | KRONOS Edmonton Oilers 2.8 @ St Louis Blues 2.9
   h2h Edmonton Oilers | sharp book 2.09 fair 46.6% | KRONOS 47.0% [see home row] | sim (raw projection) 48.0% | best CT draftkings 2.05 (EV -4.5%) | money [NEUTRAL]
-      signals: drop_pct -11.6%, steam -10.50, rlm 1, shade_pp +0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -4.5%, is_fav 0, is_home 0, drop_1h 0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
+      signals: drop_pct -11.6%, steam -10.30, rlm 1, shade_pp +0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -4.5%, is_fav 0, is_home 0, drop_1h 0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
   h2h St Louis Blues | sharp book 1.83 fair 53.4% | KRONOS 53.0% [Sit] | sim (raw projection) 52.0% | best CT draftkings 1.8 (EV -3.8%) | money [SHARP]
-      signals: drop_pct +13.1%, steam +10.50, rlm 0, shade_pp -0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -3.8%, is_fav 1, is_home 1, drop_1h -0.005, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
+      signals: drop_pct +13.1%, steam +10.30, rlm 0, shade_pp -0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -3.8%, is_fav 1, is_home 1, drop_1h -0.005, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
   spreads Edmonton Oilers +1.5 | sharp book 1.4 fair 70.1% | KRONOS 70.9% [see home row] | sim (raw projection) 72.6% | best CT fanduel 1.4 (EV -1.8%) | money [NEUTRAL]
-      signals: drop_pct n/a, steam -9.60, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -1.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
+      signals: drop_pct n/a, steam -9.40, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -1.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
   spreads St Louis Blues -1.5 | sharp book 3.14 fair 29.9% | KRONOS 29.1% [Sit] | sim (raw projection) 27.4% | best CT draftkings 3.1 (EV -7.3%) | money [SHARP]
-      signals: drop_pct n/a, steam +9.60, rlm 0, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -7.3%, is_fav 0, is_home 1, drop_1h -0.003, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
+      signals: drop_pct n/a, steam +9.40, rlm 0, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -7.3%, is_fav 0, is_home 1, drop_1h -0.003, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
   totals Over 6 | sharp book 1.93 fair 50.4% | KRONOS 47.3% [see Under row] | sim (raw projection) 33.6% | best CT no CT price | money [AGAINST]
-      signals: drop_pct -2.2%, steam 0, rlm 1, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -2.2%, steam 0, rlm 1, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6 | sharp book 1.96 fair 49.6% | KRONOS 52.7% [Lean Under] | sim (raw projection) 50.5% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct +2.1%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.91, edge -2.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +2.1%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 2.75, edge -2.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-23T01:10Z Indiana Pacers @ New York Knicks | KRONOS Indiana Pacers 107.0 @ New York Knicks 115.9 | market margin +7.5 total 213.5
   h2h Indiana Pacers | sharp book 3.46 fair 26.7% | KRONOS 23.8% [see home row] | sim (raw projection) 22.8% | best CT draftkings 3.4 (EV -9.1%) | money [SHARP]
-      signals: drop_pct +18.6%, steam +27.10, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -9.1%, is_fav 0, is_home 0, drop_1h 0.003, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
+      signals: drop_pct +18.6%, steam +26.60, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -9.1%, is_fav 0, is_home 0, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
   h2h New York Knicks | sharp book 1.34 fair 73.3% | KRONOS 76.2% [Sit] | sim (raw projection) 77.2% | best CT draftkings 1.34 (EV -1.8%) | money [AGAINST]
-      signals: drop_pct -5.9%, steam -27.10, rlm 1, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -1.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
+      signals: drop_pct -5.9%, steam -26.60, rlm 1, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -1.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
   spreads Indiana Pacers +7.5 | sharp book 1.92 fair 50.7% | KRONOS 45.5% [see home row] | sim (raw projection) 45.3% | best CT draftkings 1.91 (EV -3.2%) | money [SHARP]
-      signals: drop_pct n/a, steam +24.40, rlm 0, shade_pp -1.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -3.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
+      signals: drop_pct n/a, steam +23.90, rlm 0, shade_pp -1.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -3.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -1, b2b_flag 1
   spreads New York Knicks -7.5 | sharp book 1.97 fair 49.3% | KRONOS 54.5% [Sit] | sim (raw projection) 54.7% | best CT fanduel 1.95 (EV -3.8%) | money [AGAINST]
-      signals: drop_pct n/a, steam -24.40, rlm 0, shade_pp +1.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -3.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
+      signals: drop_pct n/a, steam -23.90, rlm 0, shade_pp +1.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -3.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 1, b2b_flag -1
   totals Over 213.5 | sharp book 1.99 fair 48.5% | KRONOS 70.0% [see Under row] | sim (raw projection) 71.0% | best CT fanduel 1.95 (EV -5.4%) | money [AGAINST]
-      signals: drop_pct n/a, steam -21.00, rlm 1, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -5.4%, is_fav n/a, is_home n/a, drop_1h -0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -20.60, rlm 1, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -5.4%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 213.5 | sharp book 1.88 fair 51.5% | KRONOS 30.0% [Sit] | sim (raw projection) 29.0% | best CT draftkings 1.88 (EV -3.2%) | money [SHARP]
-      signals: drop_pct n/a, steam +21.00, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0.005, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +20.60, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-23T01:10Z Chicago Blackhawks @ Vancouver Canucks | KRONOS Chicago Blackhawks 3.7 @ Vancouver Canucks 3.4
   h2h Chicago Blackhawks | sharp book 1.93 fair 50.7% | KRONOS 52.5% [see home row] | sim (raw projection) 55.6% | best CT fanduel 1.88 (EV -4.8%) | money [NEUTRAL]
-      signals: drop_pct +2.1%, steam +4.30, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -4.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff -1, b2b_flag 1
+      signals: drop_pct +2.1%, steam +4.20, rlm 0, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -4.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff -1, b2b_flag 1
   h2h Vancouver Canucks | sharp book 1.98 fair 49.3% | KRONOS 47.5% [Sit (goalie unconfirmed)] | sim (raw projection) 44.4% | best CT draftkings 1.95 (EV -3.8%) | money [NEUTRAL]
-      signals: drop_pct -2.1%, steam -4.30, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -3.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 1, b2b_flag -1
+      signals: drop_pct -2.1%, steam -4.20, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -3.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 1, b2b_flag -1
   spreads Chicago Blackhawks -1.5 | sharp book 3.24 fair 28.9% | KRONOS 30.3% [see home row] | sim (raw projection) 33.2% | best CT draftkings 3.15 (EV -9.1%) | money [NEUTRAL]
-      signals: drop_pct +2.1%, steam +6.70, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -9.1%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff -1, b2b_flag 1
+      signals: drop_pct +2.1%, steam +6.60, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -9.1%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff -1, b2b_flag 1
   spreads Vancouver Canucks +1.5 | sharp book 1.38 fair 71.1% | KRONOS 69.7% [Sit (goalie unconfirmed)] | sim (raw projection) 66.8% | best CT draftkings 1.38 (EV -1.8%) | money [NEUTRAL]
-      signals: drop_pct -1.0%, steam -6.70, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -1.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 1, b2b_flag -1
+      signals: drop_pct -1.0%, steam -6.60, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -1.8%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 1, b2b_flag -1
   totals Over 6.5 | sharp book 1.98 fair 49.1% | KRONOS 51.6% [see Under row] | sim (raw projection) 56.5% | best CT draftkings 1.95 (EV -4.3%) | money [SHARP]
-      signals: drop_pct +0.3%, steam +4.30, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -4.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.3%, steam +4.20, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -4.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 1.91 fair 50.9% | KRONOS 48.4% [Sit (goalie unconfirmed)] | sim (raw projection) 43.5% | best CT fanduel 1.91 (EV -2.7%) | money [AGAINST]
-      signals: drop_pct -0.2%, steam -4.30, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.91, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -0.2%, steam -4.20, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 3.75, edge -2.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NFL 2026-11-23T01:20Z Minnesota Vikings @ San Francisco 49ers | KRONOS Minnesota Vikings 20.5 @ San Francisco 49ers 25.7 | market margin +3.5 total 45.0
   h2h Minnesota Vikings | sharp book 2.71 fair 35.4% | KRONOS 35.3% [see home row] | sim (raw projection) 34.3% | best CT draftkings 2.59 (EV -8.4%) | money [AGAINST]
-      signals: drop_pct -3.0%, steam -17.40, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -8.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.036, role_ats 0.056, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 0
+      signals: drop_pct -3.0%, steam -17.00, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -8.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.036, role_ats 0.056, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 0
   h2h San Francisco 49ers | sharp book 1.52 fair 64.6% | KRONOS 64.7% [Sit] | sim (raw projection) 65.7% | best CT draftkings 1.53 (EV -1.1%) | money [SHARP]
-      signals: drop_pct +2.2%, steam +17.40, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -1.1%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats 0.014, role_ats -0.056, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 0
+      signals: drop_pct +2.2%, steam +17.00, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -1.1%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats 0.014, role_ats -0.056, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 0
   spreads Minnesota Vikings +3.5 | sharp book 2.01 fair 48.5% | KRONOS 48.0% [see home row] | sim (raw projection) 44.7% | best CT draftkings 1.93 (EV -6.3%) | money [AGAINST]
-      signals: drop_pct +0.8%, steam -15.10, rlm 0, shade_pp +2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -6.3%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.036, role_ats 0.056, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 0
+      signals: drop_pct +0.8%, steam -14.80, rlm 0, shade_pp +2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -6.3%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.036, role_ats 0.056, spot_ats -0.032, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 0
   spreads San Francisco 49ers -3.5 | sharp book 1.9 fair 51.5% | KRONOS 52.0% [Sit] | sim (raw projection) 55.3% | best CT fanduel 1.91 (EV -1.7%) | money [SHARP]
-      signals: drop_pct -0.8%, steam +15.10, rlm 0, shade_pp -2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -1.7%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.014, role_ats -0.056, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 0
+      signals: drop_pct -0.8%, steam +14.80, rlm 0, shade_pp -2.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -1.7%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats 0.014, role_ats -0.056, spot_ats 0.032, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 0
   totals Over 45 | sharp book 1.88 fair 51.6% | KRONOS 51.9% [see Under row] | sim (raw projection) 53.5% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam -8.20, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -8.10, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 45 | sharp book 2 fair 48.4% | KRONOS 48.1% [Sit] | sim (raw projection) 46.5% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +8.20, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 4.08, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +8.10, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 4.9, hours 3.91, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NBA 2026-11-23T01:40Z Boston Celtics @ Golden State Warriors | KRONOS Boston Celtics 113.6 @ Golden State Warriors 110.1 | market margin -8.5 total 210.5
   h2h Boston Celtics | sharp book 1.3 fair 75.6% | KRONOS 61.1% [see home row] | sim (raw projection) 61.5% | best CT draftkings 1.29 (EV -2.5%) | money [AGAINST]
-      signals: drop_pct -3.0%, steam -9.90, rlm 1, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -2.5%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 3, rest_diff 1, b2b_flag 0
+      signals: drop_pct -3.0%, steam -9.70, rlm 1, shade_pp +0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -2.5%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 3, rest_diff 1, b2b_flag 0
   h2h Golden State Warriors | sharp book 3.76 fair 24.4% | KRONOS 38.9% [Lean Golden State Warriors] | sim (raw projection) 38.5% | best CT fanduel 3.85 (EV -6.1%) | money [SHARP]
-      signals: drop_pct +8.8%, steam +9.90, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -6.1%, is_fav 0, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -3, rest_diff -1, b2b_flag 0
+      signals: drop_pct +8.8%, steam +9.70, rlm 0, shade_pp -0.7, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -6.1%, is_fav 0, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -3, rest_diff -1, b2b_flag 0
   spreads Boston Celtics -8.5 | sharp book 1.97 fair 49.3% | KRONOS 34.5% [see home row] | sim (raw projection) 33.9% | best CT fanduel 1.91 (EV -5.8%) | money [NEUTRAL]
-      signals: drop_pct n/a, steam -11.80, rlm 1, shade_pp +2.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -5.8%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 3, rest_diff 1, b2b_flag 0
+      signals: drop_pct n/a, steam -11.50, rlm 1, shade_pp +2.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -5.8%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 3, rest_diff 1, b2b_flag 0
   spreads Golden State Warriors +8.5 | sharp book 1.92 fair 50.7% | KRONOS 65.5% [Sit] | sim (raw projection) 66.1% | best CT draftkings 1.93 (EV -2.2%) | money [SHARP]
-      signals: drop_pct n/a, steam +11.80, rlm 0, shade_pp -2.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -2.2%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -3, rest_diff -1, b2b_flag 0
+      signals: drop_pct n/a, steam +11.50, rlm 0, shade_pp -2.0, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -2.2%, is_fav 1, is_home 1, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -3, rest_diff -1, b2b_flag 0
   totals Over 210.5 | sharp book 1.93 fair 50.0% | KRONOS 76.9% [see Under row] | sim (raw projection) 78.2% | best CT fanduel 1.93 (EV -3.5%) | money [NEUTRAL]
-      signals: drop_pct -1.0%, steam -3.00, rlm 1, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -3.5%, is_fav n/a, is_home n/a, drop_1h -0.005, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -1.0%, steam -2.90, rlm 1, shade_pp +0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -3.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 210.5 | sharp book 1.93 fair 50.0% | KRONOS 23.1% [Lean Over] | sim (raw projection) 21.8% | best CT draftkings 1.95 (EV -2.5%) | money [SHARP]
-      signals: drop_pct +1.6%, steam +3.00, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.41, edge -2.5%, is_fav n/a, is_home n/a, drop_1h 0.01, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +1.6%, steam +2.90, rlm 0, shade_pp -0.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 4.25, edge -2.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 EPL 2026-11-23T20:00Z Everton @ Brentford | KRONOS Everton 1.1 @ Brentford 1.4 | market margin +0.2 total 2.8
   h2h Brentford | sharp book 2.32 fair 42.1% | KRONOS 42.0% [Sit] | sim n/a | best CT draftkings 2.3 (EV -3.2%) | money [AGAINST]
-      signals: drop_pct -9.8%, steam -2.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -3.2%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -9.8%, steam -2.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -3.2%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   h2h Draw | sharp book 3.56 fair 27.1% | KRONOS 27.8% [Sit] | sim n/a | best CT draftkings 3.5 (EV -5.2%) | money [SHARP]
-      signals: drop_pct +2.6%, steam +0.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -5.2%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +2.6%, steam +0.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -5.2%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   h2h Everton | sharp book 3.14 fair 30.8% | KRONOS 30.3% [Sit] | sim n/a | best CT fanduel 3.1 (EV -4.4%) | money [SHARP]
-      signals: drop_pct +11.7%, steam +2.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -4.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +11.7%, steam +2.00, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -4.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   spreads Brentford -0.25 | sharp book 2.01 fair 48.5% | KRONOS 49.3% [Sit] | sim n/a | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam -0.30, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -2.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -0.30, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -2.4%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   spreads Everton +0.25 | sharp book 1.9 fair 51.5% | KRONOS n/a | sim n/a | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam +0.30, rlm 0, shade_pp n/a, role_change n/a, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -2.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +0.30, rlm 0, shade_pp n/a, role_change n/a, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -2.2%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Over 2.75 | sharp book 2.08 fair 46.7% | KRONOS 43.8% [Sit (not offered at your books)] | sim n/a | best CT no CT price | money [AGAINST]
-      signals: drop_pct -5.8%, steam -0.30, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -5.8%, steam -0.30, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 2.75 | sharp book 1.83 fair 53.3% | KRONOS n/a | sim n/a | best CT no CT price | money [SHARP]
-      signals: drop_pct +2.7%, steam +0.30, rlm 0, shade_pp n/a, role_change n/a, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.75, edge -2.4%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +2.7%, steam +0.30, rlm 0, shade_pp n/a, role_change n/a, injury_q 0, snap_pct n/a, wind_mph n/a, hours 22.58, edge -2.4%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T00:10Z Columbus Blue Jackets @ New Jersey Devils | KRONOS Columbus Blue Jackets 2.9 @ New Jersey Devils 3.6
   h2h Columbus Blue Jackets | sharp book 2.75 fair 34.6% | KRONOS 35.7% [see home row] | sim (raw projection) 38.0% | best CT draftkings 2.7 (EV -6.5%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.91, edge -6.5%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.75, edge -6.5%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 0, b2b_flag 1
   h2h New Jersey Devils | sharp book 1.5 fair 65.4% | KRONOS 64.3% [Sit (goalie unconfirmed)] | sim (raw projection) 62.0% | best CT draftkings 1.49 (EV -2.6%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.91, edge -2.6%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.75, edge -2.6%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff 0, b2b_flag 1
   totals Over 6 | sharp book 1.92 fair 50.1% | KRONOS 47.5% [see Under row] | sim (raw projection) 47.2% | best CT no CT price | money [PUBLIC]
-      signals: drop_pct -0.3%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.91, edge -3.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -0.3%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.75, edge -3.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6 | sharp book 1.93 fair 49.9% | KRONOS 52.5% [Sit (goalie unconfirmed)] | sim (raw projection) 37.0% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct +0.4%, steam 0, rlm 0, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.91, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.4%, steam 0, rlm 0, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 26.75, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T00:40Z Calgary Flames @ Ottawa Senators | KRONOS Calgary Flames 2.5 @ Ottawa Senators 3.7
   h2h Calgary Flames | sharp book 2.79 fair 34.1% | KRONOS 32.6% [see home row] | sim (raw projection) 32.0% | best CT draftkings 2.8 (EV -4.4%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -4.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 1, b2b_flag -1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -4.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 1, b2b_flag -1
   h2h Ottawa Senators | sharp book 1.49 fair 65.9% | KRONOS 67.4% [Sit (goalie unconfirmed)] | sim (raw projection) 68.0% | best CT draftkings 1.46 (EV -3.8%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -3.9%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff -1, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -3.9%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff -1, b2b_flag 1
   totals Over 6 | sharp book 2.07 fair 46.5% | KRONOS 54.9% [see Under row] | sim (raw projection) 43.4% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6 | sharp book 1.81 fair 53.5% | KRONOS 45.1% [Sit (goalie unconfirmed)] | sim (raw projection) 40.6% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -3.1%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -3.1%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T00:40Z Los Angeles Kings @ Montréal Canadiens | KRONOS Los Angeles Kings 2.7 @ Montréal Canadiens 3.4
   h2h Los Angeles Kings | sharp book 2.28 fair 42.2% | KRONOS 41.3% [see home row] | sim (raw projection) 39.1% | best CT draftkings 2.24 (EV -5.4%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -5.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 6, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -5.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 6, rest_diff 0, b2b_flag 1
   h2h Montréal Canadiens | sharp book 1.69 fair 57.8% | KRONOS 58.7% [Sit (goalie unconfirmed)] | sim (raw projection) 60.9% | best CT fanduel 1.69 (EV -2.4%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -2.4%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -6, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -2.4%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -6, rest_diff 0, b2b_flag 1
   totals Over 6.5 | sharp book 2.09 fair 46.1% | KRONOS 44.6% [see Under row] | sim (raw projection) 41.6% | best CT fanduel 2.1 (EV -3.2%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 1.8 fair 53.9% | KRONOS 55.4% [Sit (goalie unconfirmed)] | sim (raw projection) 58.4% | best CT draftkings 1.8 (EV -3.0%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.3, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T00:40Z Toronto Maple Leafs @ New York Islanders | KRONOS Toronto Maple Leafs 2.7 @ New York Islanders 3.7
   h2h New York Islanders | sharp book 1.69 fair 57.8% | KRONOS 60.6% [Sit (goalie unconfirmed)] | sim (raw projection) 64.9% | best CT draftkings 1.68 (EV -3.0%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -2.9%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 9, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -2.9%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 9, rest_diff 0, b2b_flag 1
   h2h Toronto Maple Leafs | sharp book 2.28 fair 42.2% | KRONOS 39.4% [see home row] | sim (raw projection) 35.1% | best CT fanduel 2.34 (EV -1.2%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -1.2%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -9, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -1.2, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -1.2%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -9, rest_diff 0, b2b_flag 1
   totals Over 6.5 | sharp book 1.94 fair 49.6% | KRONOS 48.5% [see Under row] | sim (raw projection) 46.9% | best CT fanduel 2.04 (EV +1.2%) | money [NEUTRAL]
-      signals: drop_pct +0.1%, steam 0, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge +1.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.1%, steam 0, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge +1.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 1.91 fair 50.4% | KRONOS 51.5% [Sit (goalie unconfirmed)] | sim (raw projection) 53.1% | best CT draftkings 1.89 (EV -4.7%) | money [PUBLIC]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -4.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -4.7%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T00:40Z Utah Mammoth @ Winnipeg Jets | KRONOS Utah Mammoth 3.6 @ Winnipeg Jets 3.4
   h2h Utah Mammoth | sharp book 1.92 fair 50.4% | KRONOS 51.6% [see home row] | sim (raw projection) 52.7% | best CT draftkings 1.89 (EV -4.7%) | money [PUBLIC]
-      signals: drop_pct +0.3%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -4.7%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.3%, steam 0, rlm 0, shade_pp +1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -4.7%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
   h2h Winnipeg Jets | sharp book 1.95 fair 49.6% | KRONOS 48.4% [Sit (goalie unconfirmed)] | sim (raw projection) 47.3% | best CT fanduel 2 (EV -0.8%) | money [NEUTRAL]
-      signals: drop_pct -0.3%, steam 0, rlm 0, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -0.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
+      signals: drop_pct -0.3%, steam 0, rlm 0, shade_pp -1.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -0.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
   totals Over 6.5 | sharp book 1.93 fair 50.0% | KRONOS 51.8% [see Under row] | sim (raw projection) 55.6% | best CT fanduel 1.93 (EV -3.5%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -3.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -3.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 1.93 fair 50.0% | KRONOS 48.2% [Sit (goalie unconfirmed)] | sim (raw projection) 44.4% | best CT draftkings 1.91 (EV -4.5%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.41, edge -4.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.5, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 27.25, edge -4.5%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NFL 2026-11-24T01:15Z Cincinnati Bengals @ Washington Commanders | KRONOS Cincinnati Bengals 31.3 @ Washington Commanders 24.6 | market margin -6.5 total 55.0
   h2h Cincinnati Bengals | sharp book 1.35 fair 72.7% | KRONOS 72.1% [see home row] | sim (raw projection) 69.7% | best CT draftkings 1.34 (EV -2.6%) | money [SHARP]
-      signals: drop_pct +5.4%, steam 0, rlm 0, shade_pp -1.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -2.6%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.032, role_ats 0.292, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -3, b2b_flag 0
+      signals: drop_pct +5.4%, steam 0, rlm 0, shade_pp -1.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -2.6%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.032, role_ats 0.292, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -3, b2b_flag 0
   h2h Washington Commanders | sharp book 3.39 fair 27.3% | KRONOS 27.9% [Sit] | sim (raw projection) 30.3% | best CT draftkings 3.41 (EV -6.9%) | money [AGAINST]
-      signals: drop_pct -10.9%, steam 0, rlm 0, shade_pp +1.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -6.9%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats -0.041, role_ats -0.292, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 3, b2b_flag 0
+      signals: drop_pct -10.9%, steam 0, rlm 0, shade_pp +1.8, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -6.9%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats -0.041, role_ats -0.292, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 3, b2b_flag 0
   spreads Cincinnati Bengals -6.5 | sharp book 2.01 fair 48.3% | KRONOS 48.6% [see home row] | sim (raw projection) 50.6% | best CT no CT price | money [SHARP]
-      signals: drop_pct n/a, steam -0.90, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -3.0%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.032, role_ats 0.292, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -3, b2b_flag 0
+      signals: drop_pct n/a, steam -0.90, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -3.0%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats 0.032, role_ats 0.292, spot_ats -0.035, h2h_ats n/a, ref_over n/a, out_diff -2, rest_diff -3, b2b_flag 0
   spreads Washington Commanders +6.5 | sharp book 1.88 fair 51.7% | KRONOS 51.4% [Sit] | sim (raw projection) 49.4% | best CT no CT price | money [AGAINST]
-      signals: drop_pct n/a, steam +0.90, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -2.7%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats -0.041, role_ats -0.292, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 3, b2b_flag 0
+      signals: drop_pct n/a, steam +0.90, rlm 0, shade_pp n/a, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -2.7%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats -0.041, role_ats -0.292, spot_ats 0.035, h2h_ats n/a, ref_over n/a, out_diff 2, rest_diff 3, b2b_flag 0
   totals Over 55 | sharp book 2 fair 48.4% | KRONOS 49.1% [see Under row] | sim (raw projection) 52.8% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct n/a, steam -3.60, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam -3.50, rlm 0, shade_pp +1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -3.2%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 55 | sharp book 1.88 fair 51.6% | KRONOS 50.9% [Sit] | sim (raw projection) 47.2% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct n/a, steam +3.60, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 28, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct n/a, steam +3.50, rlm 0, shade_pp -1.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph 10.8, hours 27.83, edge -2.9%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 1, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T02:50Z Anaheim Ducks @ Seattle Kraken | KRONOS Anaheim Ducks 3.5 @ Seattle Kraken 3.9
   h2h Anaheim Ducks | sharp book 1.98 fair 48.8% | KRONOS 46.8% [see home row] | sim (raw projection) 43.4% | best CT fanduel 1.98 (EV -3.4%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.58, edge -3.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.41, edge -3.4%, is_fav 0, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
   h2h Seattle Kraken | sharp book 1.89 fair 51.2% | KRONOS 53.2% [Sit (goalie unconfirmed)] | sim (raw projection) 56.6% | best CT draftkings 1.87 (EV -4.2%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.58, edge -4.2%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.41, edge -4.2%, is_fav 1, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
   totals Over 6.5 | sharp book 1.83 fair 52.9% | KRONOS 55.3% [see Under row] | sim (raw projection) 60.8% | best CT fanduel 1.91 (EV +1.0%) | money [AGAINST]
-      signals: drop_pct -1.3%, steam -7.10, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.58, edge +1.0%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -1.3%, steam -6.90, rlm 0, shade_pp -2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.41, edge +1.0%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6.5 | sharp book 2.04 fair 47.1% | KRONOS 44.7% [Sit (goalie unconfirmed)] | sim (raw projection) 39.2% | best CT draftkings 2.05 (EV -3.4%) | money [SHARP]
-      signals: drop_pct +1.8%, steam +7.10, rlm 0, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.58, edge -3.4%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +1.8%, steam +6.90, rlm 0, shade_pp +2.1, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.41, edge -3.4%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 NHL 2026-11-24T03:10Z Minnesota Wild @ San Jose Sharks | KRONOS Minnesota Wild 3.5 @ San Jose Sharks 2.2
   h2h Minnesota Wild | sharp book 1.48 fair 66.3% | KRONOS 68.0% [see home row] | sim (raw projection) 70.3% | best CT fanduel 1.48 (EV -1.8%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.91, edge -1.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp -0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.75, edge -1.8%, is_fav 1, is_home 0, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff 1, rest_diff 0, b2b_flag 1
   h2h San Jose Sharks | sharp book 2.83 fair 33.7% | KRONOS 32.0% [Sit (goalie unconfirmed)] | sim (raw projection) 29.7% | best CT draftkings 2.8 (EV -5.8%) | money [NEUTRAL]
-      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.91, edge -5.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
+      signals: drop_pct +0.0%, steam 0, rlm 0, shade_pp +0.4, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.75, edge -5.8%, is_fav 0, is_home 1, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff -1, rest_diff 0, b2b_flag 1
   totals Over 6 | sharp book 1.83 fair 52.9% | KRONOS 45.0% [see Under row] | sim (raw projection) 35.8% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct -0.4%, steam 0, rlm 0, shade_pp -0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.91, edge -3.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct -0.4%, steam 0, rlm 0, shade_pp -0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.75, edge -3.3%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
   totals Under 6 | sharp book 2.04 fair 47.1% | KRONOS 55.0% [Sit (goalie unconfirmed)] | sim (raw projection) 48.2% | best CT no CT price | money [NEUTRAL]
-      signals: drop_pct +0.6%, steam 0, rlm 0, shade_pp +0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.91, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
+      signals: drop_pct +0.6%, steam 0, rlm 0, shade_pp +0.6, role_change 0, injury_q 0, snap_pct n/a, wind_mph n/a, hours 29.75, edge -3.8%, is_fav n/a, is_home n/a, drop_1h 0, pin_led 0, coach_ats n/a, role_ats n/a, spot_ats n/a, h2h_ats n/a, ref_over n/a, out_diff n/a, rest_diff n/a, b2b_flag n/a
       contradiction check: clear
 
 
