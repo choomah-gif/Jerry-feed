@@ -11785,6 +11785,860 @@ _v14_thr.Thread(target=_v14_loop, daemon=True).start()
 print(f"[v1.4] {V14} loaded", flush=True)
 
 
+# ================================================================= fix-v1.5 (2026-11-24): numbers layer + game sim
+# Owner asked (2026-11-24):
+#  A) NUMEROLOGY, all sports, expanded. Every upcoming game side and player prop is scanned for number alignments:
+#     - significant numbers: master 11/22/33, every repdigit (44, 55 ... 111, 222, 333 ... 1111), karmic 13/14/16/19,
+#       7, and round milestones (every 50 and 100). Extra numbers: Railway NUM_EXTRA=23,69 (comma list).
+#     - date numerology of the game day (ET): m+d+20+yy, m+d+yy, m+d, all digits, short digits, day of year, days left.
+#     - gematria of team, coach and player names in four ciphers (English ordinal, full reduction, reverse ordinal,
+#       reverse reduction); a match is a cipher value that equals one of the date values, or a significant number.
+#     - milestones: the team's next win number this season (NFL/NBA/NHL), the NFL head coach's next career win
+#       (nflverse games since 1999, which covers every active coach's full career except anyone who started earlier),
+#       a player's next TD (NFL, this season) or next goal (NHL, this season), a player's season points total
+#       crossing a significant number at tonight's line (NBA), and jersey numbers (ESPN rosters, daily).
+#     - the line itself: a spread, total or prop line whose whole number is significant.
+#     Every alignment is logged with the side it favours and the sharp fair price at the time, then graded from
+#     final scores and box scores. A number TYPE earns weight the same way every KRONOS signal does: it must beat
+#     the fair price on its own (z >= 2, 200+ graded sides). Earned types shift the sim's win/cover % by their
+#     measured effect, shown as "numbers-adjusted". Unearned types are shown, never counted. Plays (rules v2) are
+#     untouched: real-money plays still need a DK/FD price edge in a LIVE market.
+#  B) SIM on every tracked game, every sport: 10,000 runs from KRONOS's own projected score (not the market's),
+#     whole-number projected final, win % (draw % in soccer), cover % and Over/Under % at the sharp line, next to the
+#     sharp fair price. NFL/NBA spread uses the measured projection error; NHL/soccer use Poisson goals.
+#     (Time of possession needs a play-by-play sim: it stays in the full-analysis pages, not the desk.)
+import math as _v15_math, os as _v15_os, re as _v15_re, sys as _v15_sys, threading as _v15_thr, time as _v15_time
+import json as _v15_json, sqlite3 as _v15_sql, unicodedata as _v15_ud
+from datetime import datetime as _v15_dt, timedelta as _v15_td, timezone as _v15_tz
+
+V15 = "fix-v1.5-2026-11-24"
+_V15_UTC = _v15_tz.utc
+NUMBERS_ON = _v15_os.environ.get("NUMBERS", "1") != "0"
+SIM_ON = _v15_os.environ.get("KRONOS_SIM", "1") != "0"
+SIM_N = int(_v15_os.environ.get("SIM_N", "10000"))
+NUM_EARN_N, NUM_EARN_Z = 200, 2.0
+_V15 = {"numbers": "not run yet", "grade": "not run yet", "rosters": "not run yet", "sim": "not run yet",
+        "sim_lines": [], "num_lines": [], "score_lines": []}
+try:
+    from zoneinfo import ZoneInfo as _v15_Z
+    _V15_ET = _v15_Z("America/New_York")
+except Exception:                                                      # noqa: BLE001
+    _V15_ET = _V15_UTC
+
+
+def _v15_db():
+    c = _v15_sql.connect(_v15_os.path.join(_v15_os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
+    c.row_factory = _v15_sql.Row
+    try:
+        c.execute("pragma busy_timeout=60000")
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return c
+
+
+def _v15_ts(x):
+    try:
+        t = _v15_dt.fromisoformat(str(x).replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=_V15_UTC)
+    except Exception:                                                  # noqa: BLE001
+        return None
+
+
+def _v15_norm(s):
+    s = _v15_ud.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    s = _v15_re.sub(r"[^a-z0-9 ]+", " ", s)
+    s = _v15_re.sub(r"\b(jr|sr|ii|iii|iv|fc|cf|afc|sc)\b", " ", s)
+    return " ".join(s.split())
+
+
+def _v15_same(a, b):
+    a, b = _v15_norm(a), _v15_norm(b)
+    if not a or not b:
+        return False
+    if a == b or a in b or b in a:
+        return True
+    ta, tb = set(a.split()), set(b.split())
+    return len(ta & tb) / max(min(len(ta), len(tb)), 1) >= 0.6
+
+
+# ---------------------------------------------------------------- number classes
+def _v15_extra():
+    out = set()
+    for x in _v15_os.environ.get("NUM_EXTRA", "").split(","):
+        try:
+            out.add(int(x.strip()))
+        except ValueError:
+            pass
+    return out
+
+
+NUM_EXTRA = _v15_extra()
+
+
+def num_type(n):
+    """The class of a significant whole number, or None. Order matters: the most specific class wins."""
+    try:
+        n = int(n)
+    except (TypeError, ValueError):
+        return None
+    if n <= 0:
+        return None
+    s = str(n)
+    if n in (11, 22, 33):
+        return "master"
+    if len(s) >= 2 and len(set(s)) == 1:
+        return "repdigit"
+    if n in (13, 14, 16, 19):
+        return "karmic"
+    if n == 7:
+        return "seven"
+    if n in NUM_EXTRA:
+        return "extra"
+    if n >= 50 and n % 50 == 0:
+        return "milestone"
+    return None
+
+
+# ---------------------------------------------------------------- gematria + date numerology
+def _v15_red(n):
+    while n > 9 and n not in (11, 22, 33):
+        n = sum(int(c) for c in str(n))
+    return n
+
+
+def gematria(name):
+    """Four standard ciphers on the letters of a name."""
+    letters = [c for c in _v15_norm(name) if "a" <= c <= "z"]
+    if not letters:
+        return {}
+    o = [ord(c) - 96 for c in letters]
+    return {"ordinal": sum(o), "reduction": sum(_v15_red(v) if v > 9 else v for v in o),
+            "reverse": sum(27 - v for v in o), "rev_reduction": sum(_v15_red(27 - v) if 27 - v > 9 else 27 - v for v in o)}
+
+
+def date_values(dt_et):
+    m, d, y = dt_et.month, dt_et.day, dt_et.year
+    yy = y % 100
+    digits = [int(c) for c in f"{m}{d}{y}"]
+    sdig = [int(c) for c in f"{m}{d}{yy}"]
+    doy = dt_et.timetuple().tm_yday
+    days_in = 366 if (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)) else 365
+    return {"m+d+20+yy": m + d + 20 + yy, "m+d+yy": m + d + yy, "m+d": m + d, "digits": sum(digits),
+            "short digits": sum(sdig), "day of year": doy, "days left": days_in - doy}
+
+
+def name_alignments(name, dvals, who):
+    """Cipher values of a name that equal a date value or are significant numbers."""
+    out = []
+    for cipher, v in gematria(name).items():
+        hit_d = [k for k, dv in dvals.items() if dv == v]
+        if hit_d:
+            out.append(("date-gematria", f"{who} {cipher} {v} = date {hit_d[0]}"))
+        t = num_type(v)
+        if t:
+            out.append((t, f"{who} {cipher} = {v}"))
+    return out
+
+
+# ---------------------------------------------------------------- data: records, coaches, players, rosters
+_V15C = {"nfl": None, "nfl_ts": 0.0, "nflw": None, "nflw_ts": 0.0}
+
+
+def _v15_nfl_games():
+    ck = _v15_sys.modules.get("kronos_checklist")
+    if ck is None or not hasattr(ck, "games"):
+        return [], {}
+    if _V15C["nfl"] is None or _v15_time.time() - _V15C["nfl_ts"] > 6 * 3600:
+        try:
+            _V15C["nfl"] = ck.games()
+            _V15C["nfl_ts"] = _v15_time.time()
+        except Exception:                                              # noqa: BLE001
+            pass
+    return _V15C["nfl"] or [], getattr(ck, "NFL_ABBR", {})
+
+
+def _v15_int(x):
+    try:
+        return int(float(x))
+    except (TypeError, ValueError):
+        return None
+
+
+def nfl_context(team_full, commence):
+    """(season wins so far, head coach, coach career wins since 1999) from nflverse games."""
+    rows, abbr = _v15_nfl_games()
+    ab = abbr.get(team_full)
+    if not rows or not ab:
+        return None, None, None
+    season = commence.year if commence.month >= 3 else commence.year - 1
+    day = commence.astimezone(_V15_ET).date().isoformat()
+    wins, coach, cw, last_coach = 0, None, 0, None
+    for r in rows:
+        hs, as_ = _v15_int(r.get("home_score")), _v15_int(r.get("away_score"))
+        side = "home" if r.get("home_team") == ab else "away" if r.get("away_team") == ab else None
+        if side is None:
+            continue
+        if str(r.get("gameday", ""))[:10] == day:
+            coach = r.get(f"{side}_coach") or coach
+        if hs is None or as_ is None or str(r.get("gameday", ""))[:10] >= day:
+            continue
+        won = (hs > as_) if side == "home" else (as_ > hs)
+        if _v15_int(r.get("season")) == season and r.get("game_type", "REG") == "REG" and won:
+            wins += 1
+        last_coach = r.get(f"{side}_coach") or last_coach
+    coach = coach or last_coach
+    if coach:
+        for r in rows:
+            hs, as_ = _v15_int(r.get("home_score")), _v15_int(r.get("away_score"))
+            if hs is None or as_ is None or str(r.get("gameday", ""))[:10] >= day:
+                continue
+            if r.get("home_coach") == coach and hs > as_:
+                cw += 1
+            elif r.get("away_coach") == coach and as_ > hs:
+                cw += 1
+    return wins, coach, (cw if coach else None)
+
+
+def season_wins_box(con, sport, team, commence):
+    """NBA/NHL wins this season from stored ESPN/NHL results."""
+    start = f"{commence.year if commence.month >= 8 else commence.year - 1}-08-01"
+    day = commence.astimezone(_V15_ET).date().isoformat()
+    w = n = 0
+    for r in con.execute("select home, away, home_score, away_score from game_results where sport=? and game_date>=? and game_date<?",
+                         (sport, start, day)):
+        if _v15_same(r["home"], team):
+            n += 1
+            w += (r["home_score"] or 0) > (r["away_score"] or 0)
+        elif _v15_same(r["away"], team):
+            n += 1
+            w += (r["away_score"] or 0) > (r["home_score"] or 0)
+    return (w, n) if n else (None, 0)
+
+
+def season_stat_box(con, sport, player, stat, commence):
+    start = f"{commence.year if commence.month >= 8 else commence.year - 1}-08-01"
+    day = commence.astimezone(_V15_ET).date().isoformat()
+    pn = _v15_norm(player)
+    tot, games = 0.0, 0
+    for r in con.execute("select stats from box_lines where sport=? and game_date>=? and game_date<? and player_norm=?",
+                         (sport, start, day, pn)):
+        try:
+            v = _v15_json.loads(r["stats"]).get(stat)
+        except Exception:                                              # noqa: BLE001
+            v = None
+        if v is not None:
+            tot += float(v)
+            games += 1
+    return (tot, games) if games else (None, 0)
+
+
+def _v15_nfl_week_df(season):
+    jg = _v15_sys.modules.get("jerry_grade")
+    if jg is None:
+        return None
+    if _V15C["nflw"] is None or _v15_time.time() - _V15C["nflw_ts"] > 3 * 3600:
+        p = _v15_os.path.join(getattr(jg, "CACHE", "/data/cache"), f"player_week_{season}.csv.gz")
+        try:
+            import pandas as _pd
+            _V15C["nflw"] = _pd.read_csv(p, low_memory=False) if _v15_os.path.exists(p) else None
+        except Exception:                                              # noqa: BLE001
+            _V15C["nflw"] = None
+        _V15C["nflw_ts"] = _v15_time.time()
+    return _V15C["nflw"]
+
+
+def _v15_name_col(df):
+    for c in ("player_display_name", "player_name", "full_name", "name"):
+        if c in df.columns:
+            return c
+    return None
+
+
+def nfl_player_tds(player, season, before_week):
+    df = _v15_nfl_week_df(season)
+    if df is None or "week" not in df.columns:
+        return None
+    nc = _v15_name_col(df)
+    if not nc:
+        return None
+    pn = _v15_norm(player)
+    sub = df[(df[nc].map(_v15_norm) == pn) & (df["week"] < before_week)]
+    if "season" in df.columns:
+        sub = sub[sub["season"] == season]
+    if sub.empty:
+        return None
+    tot = 0.0
+    for c in ("rushing_tds", "receiving_tds"):
+        if c in sub.columns:
+            tot += float(sub[c].fillna(0).sum())
+    return int(tot)
+
+
+ESPN_PATH = {"NFL": "football/nfl", "NBA": "basketball/nba", "NHL": "hockey/nhl", "EPL": "soccer/eng.1",
+             "UCL": "soccer/uefa.champions"}
+
+
+def _v15_get_json(url, timeout=20):
+    import requests
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (KRONOS desk)"})
+    r.raise_for_status()
+    return r.json()
+
+
+def refresh_rosters(con, now, get=_v15_get_json):
+    """Jersey numbers from ESPN team rosters, once a day per sport. Free endpoint, no Odds API credits."""
+    con.execute("""create table if not exists num_roster(sport text, team text, player text, player_norm text, jersey int,
+                   ts text, primary key(sport, player_norm))""")
+    done = []
+    for sp, path in ESPN_PATH.items():
+        last = con.execute("select max(ts) from num_roster where sport=?", (sp,)).fetchone()[0]
+        if last and (_v15_ts(last) or now) > now - _v15_td(hours=24):
+            continue
+        n = 0
+        try:
+            teams = get(f"https://site.api.espn.com/apis/site/v2/sports/{path}/teams?limit=100")
+            tl = [t.get("team", t) for lg in teams.get("sports", [{}])[0].get("leagues", [{}]) for t in lg.get("teams", [])]
+        except Exception:                                              # noqa: BLE001
+            tl = []
+        for t in tl:
+            try:
+                js = get(f"https://site.api.espn.com/apis/site/v2/sports/{path}/teams/{t['id']}/roster")
+            except Exception:                                          # noqa: BLE001
+                continue
+            ath = []
+            for a in js.get("athletes", []) or []:
+                ath.extend(a.get("items", []) if isinstance(a, dict) and "items" in a else [a])
+            for a in ath:
+                nm = a.get("fullName") or a.get("displayName")
+                j = _v15_int(a.get("jersey"))
+                if nm and j is not None:
+                    con.execute("insert or replace into num_roster values(?,?,?,?,?,?)",
+                                (sp, t.get("displayName", ""), nm, _v15_norm(nm), j, now.isoformat(timespec="seconds")))
+                    n += 1
+        con.commit()
+        done.append(f"{sp} {n}")
+    return ", ".join(done) or "up to date"
+
+
+def jersey_of(con, sport, player):
+    r = con.execute("select jersey from num_roster where sport=? and player_norm=?", (sport, _v15_norm(player))).fetchone()
+    return r[0] if r else None
+
+
+# ---------------------------------------------------------------- fair prices
+def _v15_devig(prices):
+    jr = _v15_sys.modules.get("jerry_reason")
+    if jr is not None and hasattr(jr, "power_devig"):
+        return jr.power_devig(prices)
+    raw = [1.0 / p for p in prices if p and p > 1]
+    return [x / sum(raw) for x in raw] if len(raw) >= 2 else None
+
+
+SHARP_ORDER = ("pinnacle", "betonlineag", "lowvig", "betfair_ex_eu")
+
+
+def game_fairs(con, event_id):
+    """{(market, outcome): (line, fair)} from the sharpest book quoting the market."""
+    out = {}
+    q = [dict(r) for r in con.execute("""select market, outcome, line, book, price from last_quote where event_id=?
+                                         and coalesce(player,'')='' and market in ('h2h','spreads','totals')""", (event_id,))]
+    for mk in ("h2h", "spreads", "totals"):
+        for bk in SHARP_ORDER:
+            rs = [r for r in q if r["market"] == mk and r["book"] == bk and r["price"]]
+            if mk == "h2h" and len(rs) in (2, 3) or mk != "h2h" and len(rs) == 2:
+                fw = _v15_devig([r["price"] for r in rs])
+                if fw:
+                    for r, f in zip(rs, fw):
+                        out[(mk, r["outcome"])] = (r["line"], f)
+                break
+    return out
+
+
+def prop_fairs(con, event_id):
+    """{(market, player, outcome): (line, fair)}: average de-vig across books quoting both sides at one line."""
+    q = [dict(r) for r in con.execute("""select market, player, outcome, line, book, price from last_quote where event_id=?
+                                         and coalesce(player,'')<>''""", (event_id,))]
+    by = {}
+    for r in q:
+        by.setdefault((r["market"], r["player"], r["book"], r["line"]), {})[r["outcome"]] = r["price"]
+    acc = {}
+    for (mk, pl, bk, ln), sides in by.items():
+        if len(sides) != 2:
+            continue
+        ks = list(sides)
+        fw = _v15_devig([sides[k] for k in ks])
+        if not fw:
+            continue
+        for k, f in zip(ks, fw):
+            acc.setdefault((mk, pl, k, ln), []).append(f)
+    out = {}
+    for (mk, pl, k, ln), fs in acc.items():
+        key = (mk, pl, k)
+        if key not in out or len(fs) > out[key][2]:
+            out[key] = (ln, sum(fs) / len(fs), len(fs))
+    return {k: (v[0], v[1]) for k, v in out.items()}
+
+
+# ---------------------------------------------------------------- the scan
+NBA_STAT = {"player_points": "pts", "player_rebounds": "reb", "player_assists": "ast", "player_blocks": "blk",
+            "player_threes": "fg3m"}
+NHL_STAT = {"player_goals": "goals", "player_shots_on_goal": "sog", "player_points": "points", "player_assists": "assists"}
+
+
+def _v15_ensure(con):
+    con.execute("""create table if not exists num_signals(event_id text, sport text, commence text, market text, outcome text,
+                   player text, line real, fair real, hits text, types text, ts text, result text, graded_ts text,
+                   primary key(event_id, market, outcome, player))""")
+    con.execute("""create table if not exists kronos_sim(event_id text primary key, sport text, home text, away text,
+                   commence text, home_score int, away_score int, p_home real, p_draw real, p_away real, spread_line real,
+                   p_home_cover real, total_line real, p_over real, fair_home real, fair_home_cover real, fair_over real,
+                   n int, ts text)""")
+    con.execute("""create table if not exists num_roster(sport text, team text, player text, player_norm text, jersey int,
+                   ts text, primary key(sport, player_norm))""")
+
+
+def team_hits(con, sport, team, commence, dvals):
+    hits = list(name_alignments(team, dvals, team))
+    nick = team.split()[-1] if team.split() else team
+    if nick != team:
+        hits += [(t, d) for t, d in name_alignments(nick, dvals, nick) if t == "date-gematria"]
+    try:
+        hits += _v15_team_milestones(con, sport, team, commence, dvals)
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return hits
+
+
+def _v15_team_milestones(con, sport, team, commence, dvals):
+    hits = []
+    if sport == "NFL":
+        w, coach, cw = nfl_context(team, commence)
+        if w is not None and num_type(w + 1):
+            hits.append((num_type(w + 1), f"{team} going for win #{w + 1} this season"))
+        if coach:
+            hits += [(t, d) for t, d in name_alignments(coach, dvals, f"coach {coach}") if t == "date-gematria"]
+            if cw is not None and num_type(cw + 1):
+                hits.append((num_type(cw + 1), f"coach {coach} going for career win #{cw + 1}"))
+    elif sport in ("NBA", "NHL"):
+        w, n = season_wins_box(con, sport, team, commence)
+        if w is not None and num_type(w + 1):
+            hits.append((num_type(w + 1), f"{team} going for win #{w + 1} this season ({n} games on file)"))
+    return hits
+
+
+def player_hits(con, sport, player, market, line, commence, dvals):
+    hits = [(t, d) for t, d in name_alignments(player, dvals, player) if t == "date-gematria"]
+    j = jersey_of(con, sport, player)
+    if j is not None:
+        if num_type(j):
+            hits.append((num_type(j), f"{player} wears #{j}"))
+        dk = [k for k, v in dvals.items() if v == j]
+        if dk:
+            hits.append(("date-gematria", f"{player} #{j} = date {dk[0]}"))
+    if line is not None and num_type(int(float(line))):
+        hits.append((num_type(int(float(line))), f"line {line}"))
+    try:
+        if sport == "NFL" and market == "player_anytime_td":
+            ck = _v15_sys.modules.get("jerry_grade")
+            wk = ck.nfl_week_of(commence.isoformat()) if ck and hasattr(ck, "nfl_week_of") else None
+            season = commence.year if commence.month >= 3 else commence.year - 1
+            td = nfl_player_tds(player, season, wk) if wk else None
+            if td is not None and num_type(td + 1):
+                hits.append((num_type(td + 1), f"{player} going for TD #{td + 1} this season"))
+        elif sport == "NHL" and market in ("player_goals", "player_points"):
+            stat = NHL_STAT[market]
+            tot, _g = season_stat_box(con, sport, player, stat, commence)
+            if tot is not None and num_type(int(tot) + 1):
+                hits.append((num_type(int(tot) + 1), f"{player} going for {stat[:-1] if stat.endswith('s') else stat} #{int(tot) + 1} this season"))
+        elif sport == "NBA" and market in NBA_STAT and line is not None:
+            tot, _g = season_stat_box(con, sport, player, NBA_STAT[market], commence)
+            if tot is not None:
+                lo, hi = int(tot) + 1, int(tot + float(line)) + 1
+                cross = [n for n in range(lo, hi + 1) if num_type(n) in ("master", "repdigit", "milestone")]
+                if cross:
+                    hits.append((num_type(cross[-1]), f"{player} season {NBA_STAT[market]} {int(tot)} -> {cross[-1]} reachable at the line"))
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return hits
+
+
+def _v15_types(hits):
+    return ",".join(sorted({t for t, _d in hits}))
+
+
+def scan_numbers(con, now):
+    """Log every number alignment for games in the next 48h with the fair price at the time. Locked at start."""
+    _v15_ensure(con)
+    hi = (now + _v15_td(hours=48)).isoformat(timespec="seconds")
+    evs = [dict(r) for r in con.execute("select event_id, sport, home, away, commence from events where commence>? and commence<?",
+                                        (now.isoformat(timespec="seconds"), hi))]
+    n_side = n_prop = 0
+    lines = []
+    for ev in evs:
+        c = _v15_ts(ev["commence"])
+        if c is None or ev["sport"] not in ("NFL", "NBA", "NHL", "EPL", "UCL", "UFC"):
+            continue
+        dvals = date_values(c.astimezone(_V15_ET))
+        fairs = game_fairs(con, ev["event_id"])
+        per_team = {}
+        for team in (ev["home"], ev["away"]):
+            per_team[team] = team_hits(con, ev["sport"], team, c, dvals)
+        sp = fairs.get(("spreads", ev["home"]))
+        tot = fairs.get(("totals", "Over"))
+        line_hits = []
+        if sp and sp[0] is not None and num_type(int(abs(float(sp[0])))):
+            line_hits.append((num_type(int(abs(float(sp[0])))), f"spread {abs(float(sp[0])):g}"))
+        if tot and tot[0] is not None and num_type(int(float(tot[0]))):
+            line_hits.append((num_type(int(float(tot[0]))), f"total {float(tot[0]):g}"))
+        for team, hits in per_team.items():
+            for mk in ("h2h", "spreads"):
+                f = fairs.get((mk, team))
+                if not f or not hits:
+                    continue
+                con.execute("""insert into num_signals(event_id, sport, commence, market, outcome, player, line, fair, hits, types, ts)
+                               values(?,?,?,?,?,'',?,?,?,?,?) on conflict(event_id, market, outcome, player) do update set
+                               line=excluded.line, fair=excluded.fair, hits=excluded.hits, types=excluded.types, ts=excluded.ts
+                               where num_signals.result is null""",
+                            (ev["event_id"], ev["sport"], ev["commence"], mk, team, f[0], round(f[1], 4),
+                             _v15_json.dumps([d for _t, d in hits]), _v15_types(hits), now.isoformat(timespec="seconds")))
+                n_side += 1
+        pf = prop_fairs(con, ev["event_id"])
+        prop_lines = []
+        for (mk, pl, oc), (ln, f) in pf.items():
+            if oc not in ("Over", "Yes"):
+                continue
+            hits = player_hits(con, ev["sport"], pl, mk, ln, c, dvals)
+            if not hits:
+                continue
+            con.execute("""insert into num_signals(event_id, sport, commence, market, outcome, player, line, fair, hits, types, ts)
+                           values(?,?,?,?,?,?,?,?,?,?,?) on conflict(event_id, market, outcome, player) do update set
+                           line=excluded.line, fair=excluded.fair, hits=excluded.hits, types=excluded.types, ts=excluded.ts
+                           where num_signals.result is null""",
+                        (ev["event_id"], ev["sport"], ev["commence"], mk, oc, pl, ln, round(f, 4),
+                         _v15_json.dumps([d for _t, d in hits]), _v15_types(hits), now.isoformat(timespec="seconds")))
+            n_prop += 1
+            if any(t != "date-gematria" for t, _d in hits) or len(hits) >= 2:
+                prop_lines.append(f"{pl} {oc} {'' if ln is None else ln} {mk.replace('player_', '')}: " + "; ".join(d for _t, d in hits[:3]))
+        if any(per_team.values()) or line_hits:
+            when = c.astimezone(_V15_ET).strftime("%a %m/%d %I:%M%p ET")
+            lines.append(f"  {ev['sport']} {when} {ev['away']} @ {ev['home']} | date {dvals['m+d+20+yy']}/{dvals['m+d+yy']}/{dvals['digits']}")
+            for team, hits in per_team.items():
+                if hits:
+                    lines.append(f"     {team}: " + "; ".join(d for _t, d in hits[:6]))
+            if line_hits:
+                lines.append("     lines: " + "; ".join(d for _t, d in line_hits))
+            for pl_ in prop_lines[:6]:
+                lines.append(f"     prop {pl_}")
+    con.commit()
+    _V15["num_lines"] = lines[:120]
+    return f"{now.isoformat(timespec='minutes')} {len(evs)} games, {n_side} team sides and {n_prop} props with alignments logged"
+
+
+# ---------------------------------------------------------------- grading
+def _v15_settle_side(market, outcome, line, home, away, hs, as_):
+    if hs is None or as_ is None:
+        return None
+    if market == "h2h":
+        if outcome == "Draw":
+            return "W" if hs == as_ else "L"
+        mine, theirs = (hs, as_) if _v15_same(outcome, home) else (as_, hs) if _v15_same(outcome, away) else (None, None)
+        if mine is None:
+            return None
+        return "W" if mine > theirs else "L" if mine < theirs else "P"
+    if market == "spreads" and line is not None:
+        if abs(float(line) * 4) % 2 == 1:
+            return None                                                # quarter (Asian) lines: not graded here
+        mine, theirs = (hs, as_) if _v15_same(outcome, home) else (as_, hs) if _v15_same(outcome, away) else (None, None)
+        if mine is None:
+            return None
+        m = mine + float(line) - theirs
+        return "W" if m > 0 else "L" if m < 0 else "P"
+    return None
+
+
+def _v15_final(con, ev):
+    r = con.execute("select home_score, away_score from final_scores where event_id=?", (ev["event_id"],)).fetchone() \
+        if con.execute("select 1 from sqlite_master where name='final_scores'").fetchone() else None
+    if r and r[0] is not None:
+        return float(r[0]), float(r[1])
+    if ev["sport"] in ("NBA", "NHL") and con.execute("select 1 from sqlite_master where name='game_results'").fetchone():
+        c = _v15_ts(ev["commence"])
+        days = {(c - _v15_td(hours=8)).astimezone(_V15_ET).date().isoformat(), c.astimezone(_V15_ET).date().isoformat()}
+        for g in con.execute(f"select home, away, home_score, away_score from game_results where sport=? and game_date in ({','.join('?' * len(days))})",
+                             (ev["sport"], *days)):
+            if _v15_same(g["home"], ev["home"]) and _v15_same(g["away"], ev["away"]):
+                return float(g["home_score"]), float(g["away_score"])
+    return None
+
+
+def _v15_prop_value(con, row):
+    sport, mk = row["sport"], row["market"]
+    c = _v15_ts(row["commence"])
+    if sport in ("NBA", "NHL"):
+        stat = (NBA_STAT if sport == "NBA" else NHL_STAT).get(mk)
+        if not stat:
+            return None
+        days = {(c - _v15_td(hours=8)).astimezone(_V15_ET).date().isoformat(), c.astimezone(_V15_ET).date().isoformat()}
+        r = con.execute(f"select stats from box_lines where sport=? and player_norm=? and game_date in ({','.join('?' * len(days))})",
+                        (sport, _v15_norm(row["player"]), *days)).fetchone()
+        if not r:
+            return None
+        st = _v15_json.loads(r["stats"])
+        if st.get("played") is False:
+            return "V"
+        return st.get(stat)
+    if sport == "NFL":
+        jg = _v15_sys.modules.get("jerry_grade")
+        if jg is None:
+            return None
+        season = c.year if c.month >= 3 else c.year - 1
+        wk = jg.nfl_week_of(row["commence"]) if hasattr(jg, "nfl_week_of") else None
+        df = _v15_nfl_week_df(season)
+        if df is None or wk is None:
+            return None
+        nc = _v15_name_col(df)
+        sub = df[(df[nc].map(_v15_norm) == _v15_norm(row["player"])) & (df["week"] == wk)] if nc else None
+        if sub is None or sub.empty:
+            return None
+        col, _style = getattr(jg, "NFL_PROP_COLUMN", {}).get(mk, (None, None))
+        if col == "_anytime_td":
+            return sum(float(sub.iloc[0].get(k) or 0) for k in ("rushing_tds", "receiving_tds"))
+        return float(sub.iloc[0].get(col)) if col and col in sub.columns else None
+    return None
+
+
+def grade_numbers(con, now):
+    _v15_ensure(con)
+    cut = (now - _v15_td(hours=4)).isoformat(timespec="seconds")
+    old = (now - _v15_td(days=8)).isoformat(timespec="seconds")
+    rows = [dict(r) for r in con.execute("select * from num_signals where result is null and commence<? and commence>?", (cut, old))]
+    jg = _v15_sys.modules.get("jerry_grade")
+    g = 0
+    for r in rows:
+        ev = con.execute("select event_id, sport, home, away, commence from events where event_id=?", (r["event_id"],)).fetchone()
+        if not ev:
+            continue
+        res = None
+        if not r["player"]:
+            fs = _v15_final(con, dict(ev))
+            if fs:
+                res = _v15_settle_side(r["market"], r["outcome"], r["line"], ev["home"], ev["away"], fs[0], fs[1]) or "X"
+        else:
+            v = _v15_prop_value(con, r)
+            if v == "V":
+                res = "V"
+            elif v is not None and jg is not None and hasattr(jg, "settle_prop"):
+                res = jg.settle_prop(r["market"], r["outcome"], r["line"], v)
+        if res:
+            con.execute("update num_signals set result=?, graded_ts=? where event_id=? and market=? and outcome=? and player=?",
+                        (res, now.isoformat(timespec="seconds"), r["event_id"], r["market"], r["outcome"], r["player"]))
+            g += 1
+    stale = con.execute("update num_signals set result='X' where result is null and commence<=?", (old,)).rowcount
+    con.commit()
+    return f"{now.isoformat(timespec='minutes')} graded {g} of {len(rows)} due ({stale} too old to grade)"
+
+
+def number_scorecard(con):
+    """Per number type: graded sides carrying it, hit rate minus fair (beat the price?), z, earned or not."""
+    _v15_ensure(con)
+    rows = [dict(r) for r in con.execute("select types, fair, result from num_signals where result in ('W','L') and fair>0 and fair<1")]
+    out, eff = [], {}
+    if not rows:
+        return ["  no graded alignments yet (games grade ~4h after the final)"], eff
+    types = sorted({t for r in rows for t in (r["types"] or "").split(",") if t})
+    for t in types + ["ANY"]:
+        sub = rows if t == "ANY" else [r for r in rows if t in (r["types"] or "").split(",")]
+        n = len(sub)
+        if n == 0:
+            continue
+        d = sum((r["result"] == "W") - r["fair"] for r in sub) / n
+        se = _v15_math.sqrt(sum(r["fair"] * (1 - r["fair"]) for r in sub)) / n
+        z = d / se if se > 0 else 0.0
+        w = sum(r["result"] == "W" for r in sub)
+        earned = n >= NUM_EARN_N and z >= NUM_EARN_Z
+        if earned and t != "ANY":
+            eff[t] = d
+        tag = "EARNED: shifts the sim" if earned else ("hurting (z <= -2)" if z <= -2 and n >= 50 else f"not proven ({n}/{NUM_EARN_N}, needs z >= {NUM_EARN_Z:g})")
+        out.append(f"  {t}: {w}/{n} hit ({w / n:.0%}) vs fair {sum(r['fair'] for r in sub) / n:.0%} | beat the price by {d * 100:+.1f}pp (z {z:+.1f}) | {tag}")
+    return out, eff
+
+
+# ---------------------------------------------------------------- B) the sim
+_V15_SD = {"NFL": (13.5, 13.5), "NBA": (14.0, 19.0)}           # margin, total sd fallbacks
+
+
+def _v15_sds(con, sport):
+    jr = _v15_sys.modules.get("jerry_reason")
+    try:
+        v = (jr.grade_spins(con) or {}).get(sport) if jr is not None else None
+    except Exception:                                                  # noqa: BLE001
+        v = None
+    sm, st = _V15_SD.get(sport, (13.5, 13.5))
+    if v and (v.get("games") or 0) >= 30:
+        if v.get("margin_mae_jerry"):
+            sm = float(v["margin_mae_jerry"]) * 1.2533
+        if v.get("total_mae_jerry"):
+            st = float(v["total_mae_jerry"]) * 1.2533
+    return sm, st
+
+
+def sim_game(sport, home_pts, away_pts, spread_home, total, sds=None, n=SIM_N, seed=11):
+    import numpy as _np
+    rng = _np.random.default_rng(seed)
+    if sport in ("NHL", "EPL", "UCL"):
+        h = rng.poisson(max(home_pts, 0.05), n).astype(float)
+        a = rng.poisson(max(away_pts, 0.05), n).astype(float)
+    else:
+        sm, st = sds or _V15_SD.get(sport, (13.5, 13.5))
+        vm, vt = sm ** 2, st ** 2
+        var = (vm + vt) / 4
+        rho = max(min((vt - vm) / (vt + vm), 0.9), -0.9)
+        cov = [[var, rho * var], [rho * var, var]]
+        hs = rng.multivariate_normal([home_pts, away_pts], cov, n)
+        h, a = _np.maximum(_np.round(hs[:, 0]), 0), _np.maximum(_np.round(hs[:, 1]), 0)
+    m, t = h - a, h + a
+    if sport in ("EPL", "UCL"):
+        p_home, p_draw, p_away = float((m > 0).mean()), float((m == 0).mean()), float((m < 0).mean())
+    else:
+        tie = float((m == 0).mean())                                    # NFL/NHL overtime (NBA ties are rounding): coin flip
+        p_home, p_draw, p_away = float((m > 0).mean()) + tie / 2, 0.0, float((m < 0).mean()) + tie / 2
+    out = {"home": int(round(float(_np.median(h)))), "away": int(round(float(_np.median(a)))),
+           "p_home": p_home, "p_draw": p_draw, "p_away": p_away, "n": n}
+    if out["home"] == out["away"] and sport not in ("EPL", "UCL"):
+        if p_home >= p_away:
+            out["home"] += 1
+        else:
+            out["away"] += 1
+    if spread_home is not None:
+        cv = m + float(spread_home)
+        dec = float((cv != 0).mean())
+        out["p_home_cover"] = float((cv > 0).mean()) / dec if dec else None
+    if total is not None:
+        dec = float((t != float(total)).mean())
+        out["p_over"] = float((t > float(total)).mean()) / dec if dec else None
+    return out
+
+
+def run_sims(con, now):
+    _v15_ensure(con)
+    if not con.execute("select 1 from sqlite_master where name='jerry_numbers'").fetchone():
+        return "no projections table yet"
+    hi = (now + _v15_td(days=4)).isoformat(timespec="seconds")
+    rows = [dict(r) for r in con.execute("""select event_id, sport, home, away, commence, home_pts, away_pts from jerry_numbers
+                                            where commence>? and commence<? and home_pts is not null and away_pts is not null
+                                            order by commence""", (now.isoformat(timespec="seconds"), hi))]
+    _o, eff = number_scorecard(con)
+    sds_cache, lines = {}, []
+    for r in rows:
+        sp = r["sport"]
+        if sp not in sds_cache and sp in ("NFL", "NBA"):
+            sds_cache[sp] = _v15_sds(con, sp)
+        f = game_fairs(con, r["event_id"])
+        s_home = f.get(("spreads", r["home"]))
+        t_over = f.get(("totals", "Over"))
+        res = sim_game(sp, float(r["home_pts"]), float(r["away_pts"]), s_home[0] if s_home else None,
+                       t_over[0] if t_over else None, sds_cache.get(sp))
+        fh = f.get(("h2h", r["home"]))
+        con.execute("insert or replace into kronos_sim values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (r["event_id"], sp, r["home"], r["away"], r["commence"], res["home"], res["away"], res["p_home"],
+                     res["p_draw"], res["p_away"], s_home[0] if s_home else None, res.get("p_home_cover"),
+                     t_over[0] if t_over else None, res.get("p_over"), fh[1] if fh else None,
+                     s_home[1] if s_home else None, t_over[1] if t_over else None, res["n"], now.isoformat(timespec="seconds")))
+        c = _v15_ts(r["commence"]).astimezone(_V15_ET).strftime("%a %m/%d %I:%M%p ET")
+        win = (f"{r['home']} {res['p_home']:.0%} / draw {res['p_draw']:.0%} / {r['away']} {res['p_away']:.0%}"
+               if sp in ("EPL", "UCL") else f"{r['home']} win {res['p_home']:.0%}")
+        if fh:
+            win += f" (fair {fh[1]:.0%})"
+        L = [f"  {sp} {c} {r['away']} @ {r['home']} | KRONOS sim {r['away']} {res['away']} - {r['home']} {res['home']} | {win}"]
+        bits = []
+        if s_home and res.get("p_home_cover") is not None:
+            bits.append(f"{r['home']} {float(s_home[0]):+g} covers {res['p_home_cover']:.0%} (fair {s_home[1]:.0%})")
+        if t_over and res.get("p_over") is not None:
+            bits.append(f"total {float(t_over[0]):g}: Over {res['p_over']:.0%} / Under {1 - res['p_over']:.0%} (fair Over {t_over[1]:.0%})")
+        if eff:
+            ns = con.execute("select outcome, market, types from num_signals where event_id=? and coalesce(player,'')='' and market in ('h2h','spreads')",
+                             (r["event_id"],)).fetchall()
+            adj = []
+            for x in ns:
+                sh = sum(eff.get(t, 0.0) for t in (x["types"] or "").split(","))
+                if sh:
+                    base = res["p_home"] if x["market"] == "h2h" and x["outcome"] == r["home"] else \
+                        res["p_away"] if x["market"] == "h2h" else \
+                        (res.get("p_home_cover") if x["outcome"] == r["home"] else 1 - (res.get("p_home_cover") or 0.5))
+                    if base is not None:
+                        adj.append(f"{x['outcome']} {x['market'].replace('h2h', 'win').replace('spreads', 'cover')} "
+                                   f"{min(max(base + sh, 0.01), 0.99):.0%} numbers-adjusted")
+            if adj:
+                bits.append("; ".join(adj))
+        if bits:
+            L.append("     " + " | ".join(bits))
+        lines += L
+    con.commit()
+    _V15["sim_lines"] = lines[:160]
+    return f"{now.isoformat(timespec='minutes')} {len(rows)} games x {SIM_N:,} runs"
+
+
+# ---------------------------------------------------------------- loop + feed block
+def _v15_pass():
+    now = _v15_dt.now(_V15_UTC)
+    c = _v15_db()
+    try:
+        def step(key, fn):
+            try:
+                _V15[key] = fn()
+            except Exception as e:                                     # noqa: BLE001
+                _V15[key] = f"failed: {str(e)[:150]}"
+                print(f"[v1.5] {key} failed: {e}", flush=True)
+        if NUMBERS_ON:
+            step("rosters", lambda: refresh_rosters(c, now))
+            step("numbers", lambda: scan_numbers(c, now))
+            step("grade", lambda: grade_numbers(c, now))
+            try:
+                _V15["score_lines"] = number_scorecard(c)[0]
+            except Exception as e:                                     # noqa: BLE001
+                _V15["score_lines"] = [f"  scorecard failed: {str(e)[:150]}"]
+        if SIM_ON:
+            step("sim", lambda: run_sims(c, now))
+    finally:
+        c.close()
+
+
+def _v15_loop():
+    _v15_time.sleep(240)                                               # after the desk's first pulls and model run
+    while True:
+        try:
+            _v15_pass()
+        except Exception as e:                                         # noqa: BLE001
+            print(f"[v1.5] pass failed: {e}", flush=True)
+        _v15_time.sleep(int(_v15_os.environ.get("NUMBERS_EVERY_SEC", "1800")))
+
+
+def _v15_block():
+    L_ = ["", "", f"KRONOS SIM ({V15}; {SIM_N:,} runs per game from KRONOS's own projection, at the sharp line; fair = sharp no-vig): {_V15['sim']}"]
+    L_ += _V15["sim_lines"] or ["  no games simulated yet"]
+    L_ += ["", "KRONOS NUMBERS (numerology + gematria + milestones, all sports; logged with the fair price, graded, earns weight only by beating the price):",
+           f"  scan: {_V15['numbers']} | grading: {_V15['grade']} | rosters: {_V15['rosters']}",
+           "  scorecard by number type (hit rate vs the fair price):"]
+    L_ += _V15["score_lines"] or ["  not run yet"]
+    L_.append("  alignments, next 48h:")
+    L_ += _V15["num_lines"] or ["  none found yet"]
+    return "\n".join(L_) + "\n"
+
+
+_orig_edge_block_v15 = _edge_block
+
+
+def _edge_block():
+    try:
+        return _v15_block() + _orig_edge_block_v15()
+    except Exception as _e:                                            # noqa: BLE001
+        return f"\n\nKRONOS SIM/NUMBERS: block failed ({str(_e)[:120]})\n" + _orig_edge_block_v15()
+
+
+_v15_thr.Thread(target=_v15_loop, daemon=True).start()
+print(f"[v1.5] {V15} loaded", flush=True)
+
+
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
     runpy.run_path("jerry_desk.py", run_name="__main__")
