@@ -11336,6 +11336,455 @@ _v13_thr.Thread(target=_v13_loop, daemon=True).start()
 print(f"[v1.3] {V13} loaded", flush=True)
 
 
+# ================================================================= fix-v1.4 (2026-11-24): honest numbers batch
+# Owner asked (2026-11-24) for one consolidated batch after the Jerry check:
+#  1) SOCCER CLV. The desk de-vigged a 3-way 1X2 close using only ONE other outcome (a two-way power de-vig),
+#     so a 17.0 longshot "closed" at ~35% and every soccer moneyline row showed +18..+22pp CLV. The close is
+#     now de-vigged over all three outcomes, and every stored soccer h2h CLV is recomputed once.
+#  2) HONEST CLV. "Beat close" on a price edge is mostly the edge we started with (soft price vs Pinnacle fair),
+#     so it read 78-96% while results lost. The block below adds the real test: did Pinnacle's no-vig price
+#     move toward us between the flag and the close (close fair - fair at flag). The old tables get a warning.
+#  3) FAIR HAIRCUT. Graded candidates hit 3.4pp less often than "fair" said (n 1,423). Each edge must now
+#     clear the 1.5% minimum AFTER fair is cut by the measured shortfall (lower 1-SE bound, per sport and
+#     props/game lines, capped at 4pp). Stopped rows log as "unavailable: fair haircut" so the raw fair keeps
+#     being measured — no feedback loop. Filters do not reset the 150-bet clock (price version stays price-v9).
+#  4) MODEL LEANS. Models that have not beaten the market's line over 100+ games (all of them today) no longer
+#     post Leans on the summary, the edges tab or the game board. They are still logged to paper and graded.
+#  5) CREDITS. NBA, NHL and NFL props drop the 6h and 1h pulls (keep 2h/30m/15m/T-5); NBA game lines inside the
+#     2-hour window pull every 20 min instead of 10. Saves roughly 160-180 credits a day (~816/day -> ~640/day).
+#  6) SIGNAL GRADUATION is shown signal by signal (status + z) so "none yet" can be checked. Logic unchanged:
+#     steam is borderline (audit z +2.1, fitted z below 2) and is already in the 100-bet holdout.
+# Railway switches: HAIRCUT=0 turns 3 off; HIDE_MODEL_LEANS=0 turns 4 off; NBA_WINDOW_MULT=1 and
+# PROP_SLOTS_NBA / PROP_SLOTS_NHL / PROP_SLOTS_NFL = 360,120,60,30,15,5 undo 5.
+import math as _v14_math, os as _v14_os, sys as _v14_sys, threading as _v14_thr, time as _v14_time
+from datetime import datetime as _v14_dt, timezone as _v14_tz
+
+V14 = "fix-v1.4-2026-11-24"
+_V14_UTC = _v14_tz.utc
+HAIRCUT_ON = _v14_os.environ.get("HAIRCUT", "1") != "0"
+HAIRCUT_CAP = float(_v14_os.environ.get("HAIRCUT_CAP", "0.04"))
+HAIRCUT_MIN_N = 150                       # a group below this uses the all-edges haircut
+HIDE_LEANS_ON = _v14_os.environ.get("HIDE_MODEL_LEANS", "1") != "0"
+NBA_WINDOW_MULT = max(1, int(_v14_os.environ.get("NBA_WINDOW_MULT", "2")))
+# 2026-11-24 usage fix: NBA, NHL and NFL props drop the 6h and 1h pulls (2h/30m/15m/T-5 stay; paper and plays
+# only log inside 2h). Override per sport in Railway, e.g. PROP_SLOTS_NFL=360,120,60,30,15,5 restores the full set.
+_V14_TRIM = "120,30,15,5"
+PROP_SLOTS_V14 = {}
+for _sp, _dflt in (("NBA", _V14_TRIM), ("NHL", _V14_TRIM), ("NFL", _V14_TRIM)):
+    _raw = _v14_os.environ.get(f"PROP_SLOTS_{_sp}", _v14_os.environ.get("NBA_PROP_SLOTS", _dflt) if _sp == "NBA" else _dflt)
+    try:
+        PROP_SLOTS_V14[_sp] = tuple(int(x) for x in _raw.split(",") if x.strip()) or (120, 30, 15, 5)
+    except ValueError:
+        PROP_SLOTS_V14[_sp] = (120, 30, 15, 5)
+NBA_PROP_SLOTS = PROP_SLOTS_V14["NBA"]
+SOCCER_3WAY = ("EPL", "UCL")
+_V14 = {"haircut": {}, "haircut_ts": 0.0, "hc_checked": 0, "hc_stopped": 0, "hc_last": None,
+        "hidden": 0, "desk": "not patched yet", "repair": "not run yet", "fresh": False}
+
+
+def _v14_db():
+    c = _v14_sql.connect(_v14_os.path.join(_v14_os.environ.get("JERRY_DATA_DIR", "/data"), "desk.db"), timeout=60)
+    c.row_factory = _v14_sql.Row
+    try:
+        c.execute("pragma busy_timeout=60000")
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return c
+
+
+import sqlite3 as _v14_sql  # noqa: E402
+
+
+# ---------------------------------------------------------------- 1) 3-way soccer close
+def _v14_devig(prices):
+    jr = _v14_sys.modules.get("jerry_reason")
+    if jr is not None and hasattr(jr, "power_devig"):
+        return jr.power_devig(prices)
+    raw = [1.0 / p for p in prices if p and p > 1.0]
+    if len(raw) < 2:
+        return None
+    lo, hi = 0.2, 3.0
+    for _ in range(80):
+        k = (lo + hi) / 2
+        s = sum(x ** k for x in raw)
+        lo, hi = (k, hi) if s > 1.0 else (lo, k)
+    out = [x ** ((lo + hi) / 2) for x in raw]
+    return [o / sum(out) for o in out]
+
+
+def three_way_fair(con, event_id, selection, book, commence, price):
+    """No-vig close for one side of a 3-way 1X2 market: the closing book's latest price on EVERY other outcome."""
+    others = con.execute("""select distinct outcome from ticks where event_id=? and market='h2h' and coalesce(player,'')=''
+                            and book=? and outcome<>? and ts<=?""", (event_id, book, selection, commence)).fetchall()
+    if len(others) != 2:
+        return None
+    ps = [float(price)]
+    for (o,) in others:
+        r = con.execute("""select price from ticks where event_id=? and market='h2h' and coalesce(player,'')='' and book=?
+                           and outcome=? and ts<=? order by ts desc limit 1""", (event_id, book, o, commence)).fetchone()
+        if not r or not r[0]:
+            return None
+        ps.append(float(r[0]))
+    fw = _v14_devig(ps)
+    return fw[0] if fw else None
+
+
+def _v14_is_3way(con, b):
+    try:
+        if b["market"] != "h2h":
+            return False
+        sp = b["sport"] if "sport" in b.keys() else None
+        if sp in SOCCER_3WAY:
+            return True
+        n = con.execute("""select count(distinct outcome) from ticks where event_id=? and market='h2h'
+                           and coalesce(player,'')=''""", (b["event_id"],)).fetchone()[0]
+        return n == 3
+    except Exception:                                                  # noqa: BLE001
+        return False
+
+
+def _v14_wrap_close_fair(g):
+    orig = g.get("_close_fair")
+    if orig is None or getattr(orig, "_v14", False):
+        return False
+
+    def _close_fair(con, b, c):
+        try:
+            if con is not None and _v14_is_3way(con, b):
+                return three_way_fair(con, b["event_id"], b["selection"], c["book"], b["commence"], c["price"])
+        except Exception:                                              # noqa: BLE001
+            return None
+        return orig(con, b, c)
+
+    _close_fair._v14 = True
+    g["_close_fair"] = _close_fair
+    return True
+
+
+def repair_soccer_clv(con):
+    """One-time: recompute every stored soccer 1X2 CLV with the 3-way close. clv_valid is left as it was;
+    a row whose 3-way close cannot be rebuilt gets clv_pp NULL (no CLV beats a wrong one)."""
+    key = "clv_fix_2026_11_24_3way"
+    if con.execute("select 1 from meta where k=?", (key,)).fetchone():
+        return con.execute("select v from meta where k=?", (key,)).fetchone()[0]
+    jr = _v14_sys.modules.get("jerry_reason")
+    if jr is None:
+        return "waiting for jerry_reason"
+    rows = con.execute(f"""select id, event_id, sport, market, selection, line, price, commence, close_book, close_line,
+                           close_price, clv_pp from bets where market='h2h' and sport in ({",".join("?" * len(SOCCER_3WAY))})
+                           and close_price is not null and clv_pp is not null""", SOCCER_3WAY).fetchall()
+    n = fixed = blank = 0
+    before, after = [], []
+    for b in rows:
+        n += 1
+        fair = three_way_fair(con, b["event_id"], b["selection"], b["close_book"], b["commence"], b["close_price"])
+        v = jr.clv_pp(b["line"], b["price"], b["close_line"], b["close_price"], "h2h", b["selection"],
+                      close_fair=fair) if fair is not None else None
+        before.append(float(b["clv_pp"]))
+        if v is None:
+            blank += 1
+        else:
+            fixed += 1
+            after.append(v)
+        con.execute("update bets set clv_pp=? where id=?", (v, b["id"]))
+    msg = (f"{_v14_dt.now(_V14_UTC).isoformat(timespec='minutes')} {n} soccer 1X2 rows: {fixed} recomputed, {blank} blanked; "
+           f"avg CLV {sum(before) / len(before) if before else 0:+.2f}pp -> {sum(after) / len(after) if after else 0:+.2f}pp")
+    con.execute("insert or replace into meta(k,v) values(?,?)", (key, msg))
+    con.commit()
+    return msg
+
+
+# ---------------------------------------------------------------- 3) fair haircut
+def haircut_table(con):
+    """{group: (haircut, bias, se, n)} from graded candidates. haircut = shortfall at its 1-SE lower bound."""
+    if not con.execute("select 1 from sqlite_master where name='candidates'").fetchone():
+        return {}
+    cols = {r[1] for r in con.execute("pragma table_info(candidates)")}
+    if "result" not in cols:
+        return {}
+    rows = con.execute("select sport, player, fair, result from candidates where result in ('W','L') and fair>0 and fair<1").fetchall()
+    groups = {"all": rows}
+    for r in rows:
+        groups.setdefault(f"{r['sport']} {'props' if r['player'] else 'game lines'}", []).append(r)
+    out = {}
+    for g, rs in groups.items():
+        n = len(rs)
+        if n < 30:
+            continue
+        bias = sum((r["result"] == "W") - float(r["fair"]) for r in rs) / n
+        se = _v14_math.sqrt(sum(float(r["fair"]) * (1 - float(r["fair"])) for r in rs)) / n
+        out[g] = (min(max(-bias - se, 0.0), HAIRCUT_CAP), bias, se, n)
+    return out
+
+
+def haircut_for(con, sport, player):
+    if _v14_time.time() - _V14["haircut_ts"] > 3600 or not _V14["haircut"]:
+        try:
+            _V14["haircut"] = haircut_table(con)
+        except Exception as e:                                         # noqa: BLE001
+            _V14["hc_last"] = f"table failed: {str(e)[:100]}"
+        _V14["haircut_ts"] = _v14_time.time()
+    t = _V14["haircut"]
+    g = t.get(f"{sport} {'props' if player else 'game lines'}")
+    if g and g[3] >= HAIRCUT_MIN_N:
+        return g[0]
+    return t["all"][0] if "all" in t else 0.0
+
+
+def _v14_wrap_fresh():
+    jl = _v14_sys.modules.get("jerry_live")
+    if jl is None or getattr(jl, "_v14_fresh", False) or not hasattr(jl, "fresh_check"):
+        return False
+    if not getattr(jl, "_v13_fresh", False):
+        return False                                                   # wrap on top of v1.3, never under it
+    orig = jl.fresh_check
+
+    def fresh_check(con, event_id, market, sharp_book, soft_book, now):
+        pe = _v14_sys._getframe(1).f_locals                            # price_edges(): the row being checked
+        # v1.3's wrapper reads 'r' and 'player' from ITS caller's frame, which is now this one
+        r = pe.get("r")
+        player = pe.get("player")
+        why = orig(con, event_id, market, sharp_book, soft_book, now)
+        if why or not HAIRCUT_ON or r is None:
+            return why
+        try:
+            f_use, ev = pe.get("f_use"), pe.get("ev")
+            if f_use is None or not r["price"]:
+                return None
+            _V14["fresh"] = True
+            _V14["hc_checked"] += 1
+            h = haircut_for(con, ev["sport"] if ev else "", player or "")
+            if h <= 0:
+                return None
+            mins = jl.PRICE_EDGE_MIN_ADJ if pe.get("adj") else jl.PRICE_EDGE_MIN
+            ev_cut = float(r["price"]) * (float(f_use) - h) - 1
+            if ev_cut < mins:
+                _V14["hc_stopped"] += 1
+                _V14["hc_last"] = (f"{now.isoformat(timespec='minutes')} {player or market} {r['outcome']} {r['book']} "
+                                   f"{r['price']}: EV {float(r['price']) * float(f_use) - 1:+.1%} -> {ev_cut:+.1%} after {h * 100:.1f}pp haircut")
+                return f"fair haircut {h * 100:.1f}pp leaves EV {ev_cut:+.1%}"
+            return None
+        except Exception as e:                                         # noqa: BLE001
+            _V14["hc_last"] = f"check failed: {str(e)[:100]}"
+            return None
+
+    jl.fresh_check, jl._v14_fresh = fresh_check, True
+    return True
+
+
+# ---------------------------------------------------------------- 4) + 5) desk patches
+def _v14_unproven(con, sport, market, player):
+    if player:
+        return True                                                    # no prop model has a graded record vs the market
+    kf = _v14_sys.modules.get("kronos_fix")
+    if kf is None or not hasattr(kf, "projection_gate"):
+        return True
+    ok, _why = kf.projection_gate(con, sport, "totals" if market == "totals" else "spreads")
+    return not ok
+
+
+def _v14_patch_desk(g):
+    done = []
+    if _v14_wrap_close_fair(g):
+        done.append("3-way close")
+    slots = g.get("PROP_SLOTS_BY_SPORT")
+    if isinstance(slots, dict):
+        for _sp, _sl in PROP_SLOTS_V14.items():
+            slots[_sp] = _sl
+        done.append("prop slots " + ", ".join(f"{k} {'/'.join(str(x) for x in v)}" for k, v in PROP_SLOTS_V14.items()))
+    D = g.get("Desk")
+    if D is None:
+        return done
+    if not getattr(D, "_v14", False):
+        _due0, _edges0, _board0, _sum0 = D._due, D.edges, D.board, D.summary_text
+
+        def _due(self, con, k, every_min, now):
+            if k == "tape_NBA" and every_min == g.get("SHARP_EVERY") and NBA_WINDOW_MULT > 1:
+                every_min = every_min * NBA_WINDOW_MULT
+            return _due0(self, con, k, every_min, now)
+
+        def edges(self, *a, **kw):
+            rows = _edges0(self, *a, **kw)
+            if not HIDE_LEANS_ON:
+                return rows
+            con = g["db"]()
+            try:
+                keep = [r for r in rows if not _v14_unproven(con, r.get("sport"), r.get("market"), r.get("player"))]
+            except Exception:                                          # noqa: BLE001
+                keep = rows
+            finally:
+                con.close()
+            _V14["hidden"] = len(rows) - len(keep)
+            return keep
+
+        def board(self, sport):
+            out = _board0(self, sport)
+            if not HIDE_LEANS_ON:
+                return out
+            con = g["db"]()
+            try:
+                for e in out:
+                    for k, v in (e.get("model") or {}).items():
+                        mk = k.split("|", 1)[0]
+                        call = str(v.get("call") or "")
+                        if (call.startswith("Lean") or call.startswith("Play")) and _v14_unproven(con, sport, mk, ""):
+                            v["call"], v["plain"] = "Sit: model unproven (colour only)", None
+            except Exception:                                          # noqa: BLE001
+                pass
+            finally:
+                con.close()
+            return out
+
+        def summary_text(self):
+            t = _sum0(self)
+            note = ("  [v1.4: for PRICE EDGES 'beat close' and CLV are mostly the starting edge, not market movement. "
+                    "The real test is HONEST CLV in the FIX v1.4 block.]")
+            for head in ("PAPER LEDGER (every call auto-logged", "FLAG SCORECARD (paper bets by money flag"):
+                i = t.find(head)
+                if i >= 0:
+                    j = t.find("\n", i)
+                    t = t[:j + 1] + note + "\n" + t[j + 1:] if j >= 0 else t + "\n" + note
+            if HIDE_LEANS_ON:
+                t = t.replace("MODEL EDGES (KRONOS models vs Pinnacle fair price;",
+                              f"MODEL EDGES (v1.4: unproven models hidden, {_V14['hidden']} Leans held back; KRONOS models vs Pinnacle fair price;", 1)
+            return t
+
+        D._due, D.edges, D.board, D.summary_text, D._v14 = _due, edges, board, summary_text, True
+        done += [f"NBA window x{NBA_WINDOW_MULT}", "edges/board filter", "summary notes"]
+    return done
+
+
+# ---------------------------------------------------------------- 2) honest CLV + block
+def honest_clv(con):
+    """Paper rows with a valid close and a fair-at-flag: did the sharp no-vig price move toward us?"""
+    rows = con.execute("""select sport, market, coalesce(player,'') player, coalesce(note,'') note, coalesce(sharp_flag,'NO READ') flag,
+                          price, fair_prob, clv_pp, result, pnl, stake from bets where paper=1 and clv_pp is not null
+                          and fair_prob is not null and fair_prob>0 and fair_prob<1 and price>1""").fetchall()
+    groups, flags = {}, {}
+    for r in rows:
+        mv = float(r["clv_pp"]) / 100 + 1 / float(r["price"]) - float(r["fair_prob"])
+        kind = "price edge" if r["note"].startswith("price edge") else "model"
+        fam = "props" if r["player"] else "game lines"
+        item = (mv, r)
+        groups.setdefault(f"{kind}: all", []).append(item)
+        groups.setdefault(f"{kind}: {r['sport']} {fam}", []).append(item)
+        if kind == "price edge":
+            flags.setdefault(r["flag"], []).append(item)
+
+    def line(name, its):
+        n = len(its)
+        m = sum(x for x, _ in its) / n
+        sd = _v14_math.sqrt(sum((x - m) ** 2 for x, _ in its) / (n - 1)) if n > 1 else 0.0
+        z = m / (sd / _v14_math.sqrt(n)) if sd > 0 else 0.0
+        tw = sum(x > 0.0005 for x, _ in its) / n
+        done = [r for _, r in its if r["result"] in ("W", "L", "P")]
+        st = sum(float(r["stake"] or 0) for r in done)
+        u = sum(float(r["pnl"] or 0) for r in done)
+        rec = f"{sum(r['result'] == 'W' for r in done)}-{sum(r['result'] == 'L' for r in done)}"
+        roi = f"{u / st:+.1%}" if st else "n/a"
+        verdict = "REAL edge" if z >= 2 else "losing value" if z <= -2 else "not proven"
+        return f"    {name}: n {n} | sharp move {m * 100:+.2f}pp (z {z:+.1f}, {tw:.0%} toward us) | {rec} | ROI {roi} | {verdict}"
+
+    out = ["  HONEST CLV (Pinnacle no-vig at close minus at flag, on our side; + = the sharp market agreed with us):"]
+    for k in sorted(groups, key=lambda k: (not k.endswith(": all"), k)):
+        if len(groups[k]) >= 15:
+            out.append(line(k, groups[k]))
+    out.append("  same, price edges by money flag (n 15+):")
+    for k, its in sorted(flags.items(), key=lambda kv: -len(kv[1])):
+        if len(its) >= 15:
+            out.append(line(f"[{k}]", its))
+    return out
+
+
+def graduation_lines(con):
+    r = con.execute("select v from meta where k='signal_weights'").fetchone()
+    if not r:
+        return ["  signal graduation: no fit stored yet"]
+    try:
+        js = _v14_json.loads(r[0])
+    except Exception:                                                  # noqa: BLE001
+        return ["  signal graduation: unreadable fit"]
+    st, z = js.get("status") or {}, js.get("z") or {}
+    items = sorted(st.items(), key=lambda kv: -abs(z.get(kv[0], 0)))
+    s = "; ".join(f"{k} {v}" + (f" z {z[k]:+.1f}" if k in z and "z " not in v else "") for k, v in items)
+    return [f"  signal graduation (fit {js.get('ts', '?')}, {js.get('n_rows', '?')} rows; needs |z| >= 2 in the fitted test): {s}"]
+
+
+import json as _v14_json  # noqa: E402
+
+
+def _v14_block():
+    L_ = ["", "", f"FIX v1.4 ({V14}; honest-numbers batch):",
+          f"  desk patches: {_V14['desk']}",
+          f"  soccer 1X2 CLV repair: {_V14['repair']}"]
+    t = _V14["haircut"]
+    if HAIRCUT_ON:
+        hc = ", ".join(f"{g} {v[0] * 100:.1f}pp (hit-fair {v[1] * 100:+.1f}±{v[2] * 100:.1f}, n {v[3]})"
+                       for g, v in sorted(t.items(), key=lambda kv: -kv[1][3])) or "not measured yet"
+        L_ += [f"  fair haircut: on | {hc}",
+               f"    stopped {_V14['hc_stopped']} of {_V14['hc_checked']} edges since start"
+               f"{'' if _V14['fresh'] else ' (no edge checked yet)'} | last: {_V14['hc_last'] or 'none yet'}",
+               "    EV shown on PRICE EDGES is still the raw number; every listed edge has already cleared the haircut."]
+    else:
+        L_.append("  fair haircut: off (HAIRCUT=0)")
+    L_.append(f"  model Leans: {'hidden unless the projection gate is earned' if HIDE_LEANS_ON else 'shown (HIDE_MODEL_LEANS=0)'}"
+              f" | held back at last summary: {_V14['hidden']}")
+    c = _v14_db()
+    try:
+        try:
+            L_ += honest_clv(c)
+        except Exception as e:                                         # noqa: BLE001
+            L_.append(f"  honest CLV failed: {str(e)[:150]}")
+        try:
+            L_ += graduation_lines(c)
+        except Exception as e:                                         # noqa: BLE001
+            L_.append(f"  signal graduation failed: {str(e)[:150]}")
+    finally:
+        c.close()
+    return "\n".join(L_) + "\n"
+
+
+def _v14_loop():
+    for _ in range(240):                                               # modules and the desk register at start-up
+        g = getattr(_v14_sys.modules.get("__main__"), "__dict__", {})
+        if "Desk" in g and "_close_fair" in g and _V14["desk"] == "not patched yet":
+            try:
+                _V14["desk"] = ", ".join(_v14_patch_desk(g)) or "nothing to patch"
+            except Exception as e:                                     # noqa: BLE001
+                _V14["desk"] = f"patch failed: {str(e)[:150]}"
+        _v14_wrap_fresh()
+        if _V14["desk"] != "not patched yet" and getattr(_v14_sys.modules.get("jerry_live"), "_v14_fresh", False):
+            break
+        _v14_time.sleep(5)
+    print(f"[v1.4] desk: {_V14['desk']} | haircut check "
+          f"{'on' if getattr(_v14_sys.modules.get('jerry_live'), '_v14_fresh', False) else 'NOT INSTALLED'}", flush=True)
+    _v14_time.sleep(60)
+    while True:
+        if _V14["repair"] in ("not run yet", "waiting for jerry_reason") or _V14["repair"].startswith("failed"):
+            c = _v14_db()
+            try:
+                _V14["repair"] = repair_soccer_clv(c)
+            except Exception as e:                                     # noqa: BLE001
+                _V14["repair"] = f"failed: {str(e)[:150]}"
+            finally:
+                c.close()
+        _v14_time.sleep(600)
+
+
+_orig_edge_block_v14 = _edge_block
+
+
+def _edge_block():
+    try:
+        return _v14_block() + _orig_edge_block_v14()
+    except Exception as _e:                                            # noqa: BLE001
+        return f"\n\nFIX v1.4: block failed ({str(_e)[:120]})\n" + _orig_edge_block_v14()
+
+
+_v14_thr.Thread(target=_v14_loop, daemon=True).start()
+print(f"[v1.4] {V14} loaded", flush=True)
+
+
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
     runpy.run_path("jerry_desk.py", run_name="__main__")
