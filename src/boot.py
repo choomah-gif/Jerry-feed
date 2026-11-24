@@ -12639,6 +12639,130 @@ _v15_thr.Thread(target=_v15_loop, daemon=True).start()
 print(f"[v1.5] {V15} loaded", flush=True)
 
 
+# ================================================================= fix-v1.5.1 (2026-11-24): one-time clock prop pulls + FK fix
+# Owner asked (2026-11-24) for a one-time NFL prop pull at noon ET on Thanksgiving for all three games, to build a
+# parlay. General form, no upload needed next time: Railway PROP_PULL_AT = "2026-11-26T12:00@NFL" (ET clock time
+# @ sport; several separated by ';'). At that time KRONOS pulls the sport's props (posted markets only, 10 books)
+# for every game that day still to start, once, then runs the price-edge scan and sends a Telegram line.
+# Cost: one credit per prop market per game (NFL: 6 x games). Spends at props priority, never below the reserve.
+# Also: soccer suffixes (FK, FC, SC, AC ...) are no longer read as a team's nickname in the numbers layer.
+V151 = "fix-v1.5.1-2026-11-24"
+_V151 = {"status": "no clock pulls set", "done": []}
+_V151_SUFFIX = {"fk", "fc", "sc", "cf", "afc", "ac", "ss", "sk", "bk", "if", "sv", "vfb", "rc", "as", "ssc", "us"}
+
+
+def _v151_parse(spec):
+    out = []
+    for part in (spec or "").split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        ts, _, sp = part.partition("@")
+        try:
+            t = _v15_dt.fromisoformat(ts.strip()).replace(tzinfo=_V15_ET)
+        except ValueError:
+            continue
+        out.append((t.astimezone(_V15_UTC), (sp.strip() or "NFL").upper(), part))
+    return out
+
+
+def _v151_run(when, sport, key, now):
+    g = getattr(_v15_sys.modules.get("__main__"), "__dict__", {})
+    desk, db = g.get("DESK"), g.get("db")
+    if desk is None or db is None or sport not in g.get("SPORTS", {}):
+        return f"{key}: desk not ready"
+    props = g["SPORTS"][sport]["props"]
+    unit = g.get("BOOK_UNITS", 1)
+    day = when.astimezone(_V15_ET).date()
+    con = db()
+    try:
+        evs = [r["event_id"] for r in con.execute("select event_id, commence from events where sport=? and commence>?",
+                                                   (sport, now.isoformat(timespec="seconds")))
+               if (_v15_ts(r["commence"]) or now).astimezone(_V15_ET).date() == day]
+        got = skipped = 0
+        for eid in evs:
+            if not desk.can_spend(con, len(props) * unit, now, priority="props"):
+                skipped += 1
+                continue
+            try:
+                desk.pull_props(con, sport, eid, now, is_close=False)
+                got += 1
+            except Exception as e:                                     # noqa: BLE001
+                skipped += 1
+                print(f"[v1.5.1] prop pull {eid} failed: {e}", flush=True)
+        con.execute("insert or replace into meta(k,v) values(?,?)", (f"clock_pull_{key}", now.isoformat(timespec="seconds")))
+        n_props = con.execute(f"""select count(distinct player||market) from last_quote where player<>'' and event_id in
+                                  ({",".join("?" * len(evs)) or "''"})""", evs).fetchone()[0] if evs else 0
+        con.commit()
+    finally:
+        con.close()
+    msg = (f"KRONOS clock prop pull ({when.astimezone(_V15_ET).strftime('%a %I:%M %p ET')}, {sport}): "
+           f"{got} of {len(evs)} games pulled, {n_props} player markets on the board" + (f", {skipped} skipped (credits)" if skipped else ""))
+    try:
+        jl = _v15_sys.modules.get("jerry_live")
+        if jl is not None and hasattr(jl, "telegram") and _v15_os.environ.get("TELEGRAM_BOT_TOKEN"):
+            jl.telegram(msg)
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return msg
+
+
+def _v151_loop():
+    _v15_time.sleep(90)
+    while True:
+        try:
+            now = _v15_dt.now(_V15_UTC)
+            jobs = _v151_parse(_v15_os.environ.get("PROP_PULL_AT", ""))
+            pend = []
+            for when, sport, key in jobs:
+                c = _v15_db()
+                try:
+                    done = c.execute("select v from meta where k=?", (f"clock_pull_{key}",)).fetchone()
+                finally:
+                    c.close()
+                if done:
+                    continue
+                if when <= now <= when + _v15_td(minutes=20):
+                    r = _v151_run(when, sport, key, now)
+                    _V151["done"].append(r)
+                    print(f"[v1.5.1] {r}", flush=True)
+                elif now < when:
+                    pend.append(f"{sport} at {when.astimezone(_V15_ET).strftime('%a %m/%d %I:%M %p ET')}")
+            _V151["status"] = ("scheduled: " + ", ".join(pend)) if pend else ("no clock pulls pending" if jobs else "no clock pulls set")
+        except Exception as e:                                         # noqa: BLE001
+            _V151["status"] = f"failed: {str(e)[:150]}"
+        _v15_time.sleep(60)
+
+
+_orig_team_hits_v151 = team_hits
+
+
+def team_hits(con, sport, team, commence, dvals):
+    parts = team.split()
+    hits = list(name_alignments(team, dvals, team))
+    nick = next((p for p in reversed(parts) if _v15_norm(p) not in _V151_SUFFIX and len(_v15_norm(p)) > 2), team)
+    if nick != team:
+        hits += [(t, d) for t, d in name_alignments(nick, dvals, nick) if t == "date-gematria"]
+    try:
+        hits += _v15_team_milestones(con, sport, team, commence, dvals)
+    except Exception:                                                  # noqa: BLE001
+        pass
+    return hits
+
+
+_orig_v15_block_v151 = _v15_block
+
+
+def _v15_block():
+    t = _orig_v15_block_v151()
+    extra = f"  clock prop pulls ({V151}): {_V151['status']}" + "".join(f"\n    {d}" for d in _V151["done"][-5:])
+    return t.replace("\nKRONOS NUMBERS", "\n" + extra + "\n\nKRONOS NUMBERS", 1)
+
+
+_v15_thr.Thread(target=_v151_loop, daemon=True).start()
+print(f"[v1.5.1] {V151} loaded", flush=True)
+
+
 if __name__ == "__main__":
     sys.argv = ["jerry_desk.py"] + sys.argv[1:]
     runpy.run_path("jerry_desk.py", run_name="__main__")
